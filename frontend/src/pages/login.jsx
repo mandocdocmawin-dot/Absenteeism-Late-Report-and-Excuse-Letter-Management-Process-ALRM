@@ -6,6 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { googleLoginUrl } from "../api/client";
+import lvLogo from "../assets/LV_Logo.png";
+import lvPicture from "../assets/LV_Picture.jpg";
 
 function GoogleIcon() {
   return (
@@ -32,52 +35,35 @@ function GoogleIcon() {
 
 function SchoolSeal() {
   return (
-    <div className="grid size-36 place-items-center rounded-full border-[6px] border-[#d9b46a] bg-white shadow-2xl shadow-black/30">
-      <div className="grid size-28 place-items-center rounded-full border-2 border-slate-300 bg-slate-50 text-center text-slate-900">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase leading-none tracking-wide">
-            La Verdad
-          </p>
-          <div className="mx-auto grid size-12 place-items-center rounded-full bg-sky-100 text-lg font-black text-sky-800">
-            LV
-          </div>
-          <p className="text-[10px] font-bold uppercase leading-none">
-            Christian College
-          </p>
-          <p className="text-[10px] font-black leading-none text-slate-600">
-            2005
-          </p>
-        </div>
-      </div>
-    </div>
+    <img
+      src={lvLogo}
+      alt="La Verdad Christian College logo"
+      className="size-36 object-contain drop-shadow-2xl"
+    />
   );
 }
 
 function Login() {
+  function handleGoogleLogin() {
+    window.location.href = googleLoginUrl();
+  }
+
   return (
     <main className="grid min-h-screen bg-white text-slate-900 md:grid-cols-[48%_52%]">
       <section
-        className="relative hidden min-h-screen place-items-center overflow-hidden bg-[#111c2e] px-10 text-white md:grid"
+        className="relative hidden min-h-screen place-items-center overflow-hidden bg-[#07152a] bg-cover bg-center px-10 text-white md:grid"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(17, 28, 46, 0.9), rgba(17, 28, 46, 0.94)), radial-gradient(circle at 30% 15%, rgba(80, 112, 154, 0.2), transparent 34%), linear-gradient(135deg, #1d2b43, #0f1726)",
+          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.92)), url(${lvPicture})`,
         }}
       >
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute bottom-0 left-0 h-3/4 w-full bg-[linear-gradient(155deg,transparent_0_18%,rgba(255,255,255,.12)_18%_19%,transparent_19%_100%)]" />
-          <div className="absolute bottom-0 left-10 h-2/3 w-40 border-l border-r border-white/20" />
-          <div className="absolute bottom-0 left-32 h-4/5 w-56 border-l border-r border-white/10" />
-          <div className="absolute bottom-0 right-16 h-3/4 w-52 border-l border-r border-white/10" />
-        </div>
-
         <div className="relative -mt-20 grid justify-items-center gap-8 text-center">
           <SchoolSeal />
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-black tracking-normal text-white">
+            <h1 className="text-5xl font-black tracking-normal text-white">
               ALRM SYSTEM
             </h1>
-            <p className="mx-auto max-w-[260px] text-base font-bold leading-snug text-slate-100">
+            <p className="mx-auto max-w-[260px] text-xl leading-snug text-slate-100">
               Absence and Late Report Management System
             </p>
           </div>
@@ -97,12 +83,12 @@ function Login() {
           </div>
         </div>
 
-        <Card className="w-full max-w-[360px] border-0 bg-transparent py-0 shadow-none ring-0">
-          <CardHeader className="items-center gap-3 px-0 text-center">
-            <CardTitle className="text-[28px] font-black tracking-normal text-slate-800">
+        <Card className="w-full max-w-[500px] border-0 bg-transparent py-0 shadow-none ring-0">
+          <CardHeader className="items-center gap-2 px-0 text-center">
+            <CardTitle className="text-[48px] font-black tracking-normal text-slate-800">
               Welcome Back!
             </CardTitle>
-            <CardDescription className="text-[15px] text-slate-600">
+            <CardDescription className="text-[18px] text-slate-600">
               Sign in to your account
             </CardDescription>
           </CardHeader>
@@ -111,6 +97,7 @@ function Login() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleGoogleLogin}
               className="h-11 w-full max-w-[282px] gap-3 rounded-[5px] border-slate-300 bg-white text-base font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
               <GoogleIcon />
