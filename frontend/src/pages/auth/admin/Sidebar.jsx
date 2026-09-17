@@ -75,7 +75,7 @@ function SidebarBrand() {
   );
 }
 
-function Sidebar() {
+function Sidebar({ children }) {
   return (
     <SidebarProvider
       style={{
@@ -125,6 +125,7 @@ function Sidebar() {
           </SidebarMenu>
         </SidebarContent>
       </AppSidebar>
+      {children}
     </SidebarProvider>
   );
 }

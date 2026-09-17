@@ -1,6 +1,13 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { apiFetch, setToken } from '../api/client';
+import {
+  activateBrowserSession,
+  clearActiveBrowserSession,
+  clearTrustedOtpDevices,
+  isCurrentBrowserSessionActive,
+  subscribeToActiveSessionChanges,
+} from '../api/authSecurity';
 
 const AuthContext = createContext(null);
 
@@ -15,11 +22,20 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+
+    if (!isCurrentBrowserSessionActive()) {
+      setToken(null);
+      setUser(null);
+      setLoading(false);
+      return null;
+    }
+
     try {
       const res = await apiFetch('/api/me');
       if (res.ok) {
         const { data } = await res.json();
         setUser(data);
+        return data;
       } else {
         setUser(null);
       }
@@ -28,15 +44,27 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
+
+    return null;
   }
 
   useEffect(() => {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    return subscribeToActiveSessionChanges(() => {
+      if (!isCurrentBrowserSessionActive()) {
+        setToken(null);
+        setUser(null);
+      }
+    });
+  }, []);
+
   async function loginWithToken(token) {
     setToken(token);
-    await loadUser();
+    activateBrowserSession();
+    return await loadUser();
   }
 
   async function logout() {
@@ -47,6 +75,8 @@ export function AuthProvider({ children }) {
     }
     setToken(null);
     setUser(null);
+    clearActiveBrowserSession();
+    clearTrustedOtpDevices();
   }
 
   return (

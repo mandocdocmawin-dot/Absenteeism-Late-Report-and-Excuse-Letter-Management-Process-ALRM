@@ -1,5 +1,5 @@
 // src/api/client.js
-const API_URL = import.meta.env.VITE_API_URL;
+export const API_URL = import.meta.env.VITE_API_URL;
 
 function getToken() {
   return localStorage.getItem('auth_token');
@@ -35,6 +35,12 @@ export async function apiFetch(path, options = {}) {
   return res;
 }
 
-export function googleLoginUrl() {
-  return `${API_URL}/api/auth/google/redirect`;
+export function googleLoginUrl(options = {}) {
+  const url = new URL(`${API_URL}/api/auth/google/redirect`);
+
+  if (options.prompt) {
+    url.searchParams.set('prompt', options.prompt);
+  }
+
+  return url.toString();
 }
