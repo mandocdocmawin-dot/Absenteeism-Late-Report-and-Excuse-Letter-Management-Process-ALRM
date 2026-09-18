@@ -34,7 +34,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'program_name'    => ['required', 'string', 'max:255', 'unique:programs,program_name'],
-            'program_head_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'program_head')],
+            'program_head_id' => ['nullable', 'string', 'uuid', Rule::exists('users', 'id')->where('role', 'program_head')],
         ]);
 
         $program = Program::create($validated);
@@ -67,7 +67,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'program_name'    => ['sometimes', 'string', 'max:255', Rule::unique('programs', 'program_name')->ignore($program->id)],
-            'program_head_id' => ['sometimes', 'nullable', 'integer', Rule::exists('users', 'id')->where('role', 'program_head')],
+            'program_head_id' => ['sometimes', 'nullable', 'string', 'uuid', Rule::exists('users', 'id')->where('role', 'program_head')],
         ]);
 
         $program->update($validated);

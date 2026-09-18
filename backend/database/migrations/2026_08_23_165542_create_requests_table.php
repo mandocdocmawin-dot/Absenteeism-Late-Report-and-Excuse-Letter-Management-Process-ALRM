@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('enrollment_id')->constrained('enrollments')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('enrollment_id')->constrained('enrollments')->cascadeOnDelete();
             $table->enum('type', ['absence', 'late']);
             $table->date('start_date_of_absence');
             $table->date('end_date_of_absence')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'noted', 'invalid'])->default('pending');
             $table->timestamp('date_submitted')->nullable();
             $table->timestamp('date_reviewed')->nullable();
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

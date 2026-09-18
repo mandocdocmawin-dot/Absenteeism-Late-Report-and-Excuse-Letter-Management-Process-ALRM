@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuditLoggerService
 {
-    public function log(string $action, string $tableAffected, int $recordId): AuditLog
+    public function log(string $action, string $tableAffected, int|string $recordId): AuditLog
     {
         return AuditLog::create([
             'user_id'        => Auth::id(),

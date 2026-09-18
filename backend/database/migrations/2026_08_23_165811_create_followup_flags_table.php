@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('followup_flags', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('request_id')->constrained('requests')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('request_id')->constrained('requests')->cascadeOnDelete();
             $table->timestamp('flagged_date');
-            $table->foreignId('escalated_to')->constrained('users')->cascadeOnDelete();
+            $table->foreignUuid('escalated_to')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['open', 'resolved'])->default('open');
             $table->timestamps();
         });

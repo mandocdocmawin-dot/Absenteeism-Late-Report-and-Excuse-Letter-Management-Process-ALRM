@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Auth\OtpController;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 
@@ -15,12 +18,26 @@ class AuthController extends Controller
 {
     /**
      * Domains allowed to sign in, mapped to the role they resolve to.
-     * Student domain auto-resolves to 'student'; staff domain resolves
-     * to null (role assigned later by Admin) per README §9 / ALRM.md §2.
+     *
+     * Student domain auto-resolves to 'student'.
+     * Staff domain auto-resolves to 'instructor' — this is a FALLBACK
+     * default, not a final answer. Some staff are actually Program Heads
+     * or Administrators, but there's no way to tell that from the email
+     * domain alone. Those cases are handled after the fact: an Admin
+     * changes the user's role via PATCH /api/admin/users/{user}/role
+     * once it's known the account needs something other than the
+     * instructor default. See UserApprovalController::updateRole().
      */
     private const STUDENT_DOMAIN = 'student.laverdad.edu.ph';
 
     private const STAFF_DOMAIN = 'laverdad.edu.ph';
+
+    /**
+     * Default role assigned to a brand-new staff-domain account on first
+     * login. Deliberately the most common/least-privileged staff role —
+     * Admin promotes from here, never demotes from something over-assigned.
+     */
+    private const DEFAULT_STAFF_ROLE = 'instructor';
 
     /**
      * Step 1 — Send the user's browser to Google's consent screen.
@@ -50,28 +67,31 @@ class AuthController extends Controller
      */
     public function callback(): RedirectResponse
     {
+        Log::debug('Raw code received', [
+            'code' => request()->query('code'),
+            'length' => strlen((string) request()->query('code')),
+        ]);
+
         $frontendUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL')), '/');
 
         try {
             $googleUser = Socialite::driver('google')
                 ->stateless()
                 ->user();
-        } catch (InvalidStateException|\Throwable $e) {
+        } catch (InvalidStateException | \Throwable $e) {
             Log::warning('Google OAuth callback failed', ['error' => $e->getMessage()]);
 
             return redirect()->away(
-                $frontendUrl.'/login?error=oauth_failed'
+                $frontendUrl . '/login?error=oauth_failed'
             );
         }
 
         $email = strtolower((string) $googleUser->getEmail());
         $domain = substr(strrchr($email, '@') ?: '', 1);
 
-        // Reject anything outside both institutional domains, even if
-        // Google auth itself succeeded — per README §9 / ALRM.md §2.
         if (! in_array($domain, [self::STUDENT_DOMAIN, self::STAFF_DOMAIN], true)) {
             return redirect()->away(
-                $frontendUrl.'/login?error=invalid_domain'
+                $frontendUrl . '/login?error=invalid_domain'
             );
         }
 
@@ -85,24 +105,47 @@ class AuthController extends Controller
         $user->name = $googleUser->getName() ?: $user->name;
 
         if ($isNewUser) {
-            // Student email → auto-approved, role locked in immediately.
-            // Staff email → pending, Admin assigns the specific role later.
-            $user->role = $isStudent ? 'student' : null;
-            $user->status = $isStudent ? 'approved' : 'pending';
+            $user->role = $isStudent ? 'student' : self::DEFAULT_STAFF_ROLE;
+            $user->status = 'approved';
             $user->password = null;
         }
-
         $user->save();
 
-        // Revoke old tokens for this user before issuing a new one, so a
-        // re-login doesn't silently pile up valid tokens over time.
-        $user->tokens()->delete();
-
-        $token = $user->createToken('alrm-spa')->plainTextToken;
+        OtpController::issue($user);
 
         return redirect()->away(
-            $frontendUrl.'/auth/callback?token='.urlencode($token)
+            $frontendUrl . '/auth/otp?user_id=' . urlencode($user->id)
         );
+    }
+
+    /**
+     * Step 3 — SPA exchanges the one-time code (from the callback redirect)
+     * for the actual Sanctum token. The code is single-use and expires
+     * after 60 seconds, so a token never sits exposed in the URL/history.
+     *
+     * POST /api/auth/exchange
+     */
+    public function exchange(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $token = Cache::pull("auth_exchange:{$request->string('code')}");
+
+        if (! $token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired code.',
+                'data'    => null,
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OK',
+            'data'    => ['token' => $token],
+        ]);
     }
 
     /**

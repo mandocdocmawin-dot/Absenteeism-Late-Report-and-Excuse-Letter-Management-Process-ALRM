@@ -12,7 +12,10 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
-        "maatwebsite/excel": "^4.0"
+        "maatwebsite/excel": "^4.0",
+        "resend/resend-laravel": "^1.4",
+        "symfony/brevo-mailer": "^8.1",
+        "symfony/http-client": "^8.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

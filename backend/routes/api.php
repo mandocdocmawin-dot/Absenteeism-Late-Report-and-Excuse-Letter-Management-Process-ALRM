@@ -14,6 +14,24 @@ use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\ClassManagementController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\DbTestController;
+
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY — DB / Deploy sanity-check routes (Priority 6)
+|--------------------------------------------------------------------------
+| Not part of the real ALRM feature set. No auth required so they're easy
+| to hit from a browser/Postman right after a deploy. Safe to delete this
+| whole block (and DbTestController.php) once TiDB Cloud + Render are
+| confirmed working end-to-end.
+*/
+
+Route::get('/health', [DbTestController::class, 'health']);
+Route::get('/test/programs', [DbTestController::class, 'index']);
+Route::post('/test/programs', [DbTestController::class, 'store']);
+Route::patch('/test/programs/{program}', [DbTestController::class, 'update']);
+Route::delete('/test/programs/{program}', [DbTestController::class, 'destroy']);
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +42,11 @@ use App\Http\Controllers\Admin\ReportController;
 Route::prefix('auth')->group(function () {
     Route::get('/google/redirect', [AuthController::class, 'redirect']);
     Route::get('/google/callback', [AuthController::class, 'callback']);
+    Route::post('/exchange', [AuthController::class, 'exchange']);
+    Route::post('/otp/verify', [OtpController::class, 'verify'])
+        ->middleware('throttle:10,1');
+    Route::post('/otp/resend', [OtpController::class, 'resend'])
+        ->middleware('throttle:10,1');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -76,11 +99,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
         Route::get('/users', [UserApprovalController::class, 'index']);
-        Route::patch('/users/{user}/approve', [UserApprovalController::class, 'approve']);
+        Route::patch('/users/{user}/role', [UserApprovalController::class, 'updateRole']);
 
         Route::apiResource('programs', ProgramController::class);
         Route::apiResource('classes', ClassManagementController::class);
 
         Route::get('/reports/export', [ReportController::class, 'export']);
+        Route::get('/reports/preview', [ReportController::class, 'preview']);
     });
 });

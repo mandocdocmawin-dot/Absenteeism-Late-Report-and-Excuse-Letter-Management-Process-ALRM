@@ -7,6 +7,7 @@ use App\Models\ExcuseRequest;
 use App\Models\FollowupFlag;
 use App\Models\UserNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class RunAttendanceAutomation extends Command
 {
@@ -16,10 +17,21 @@ class RunAttendanceAutomation extends Command
 
     public function handle(): int
     {
-        $flagged  = $this->flagOverdueRequests();
-        $notified = $this->fireThresholdNotifications();
+        $lock = Cache::lock('alrm:process-automation', 300); 
 
-        $this->info("Flagged {$flagged} overdue request(s). Sent {$notified} threshold notification(s).");
+        if (! $lock->get()) {
+            $this->warn('alrm:process-automation is already running — skipping this invocation.');
+            return self::SUCCESS;
+        }
+
+        try {
+            $flagged  = $this->flagOverdueRequests();
+            $notified = $this->fireThresholdNotifications();
+
+            $this->info("Flagged {$flagged} overdue request(s). Sent {$notified} threshold notification(s).");
+        } finally {
+            $lock->release();
+        }
 
         return self::SUCCESS;
     }
@@ -31,7 +43,7 @@ class RunAttendanceAutomation extends Command
      */
     private function flagOverdueRequests(): int
     {
-        $windowHours = (int) env('FOLLOWUP_RESPONSE_WINDOW_HOURS', 48);
+        $windowHours = (int) config('alrm.followup_response_window_hours');
 
         $overdue = ExcuseRequest::where('status', 'pending')
             ->where('date_submitted', '<=', now()->subHours($windowHours))

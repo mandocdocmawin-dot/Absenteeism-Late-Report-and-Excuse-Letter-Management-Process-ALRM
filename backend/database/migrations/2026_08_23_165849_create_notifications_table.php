@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('request_id')->nullable()->constrained('requests')->nullOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignUuid('request_id')->nullable()->constrained('requests')->nullOnDelete();
             $table->string('type');
             $table->text('message');
             $table->enum('channel', ['email', 'in_app']);

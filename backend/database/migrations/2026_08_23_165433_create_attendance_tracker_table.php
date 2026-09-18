@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attendance_tracker', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('enrollment_id')->constrained('enrollments')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('enrollment_id')->constrained('enrollments')->cascadeOnDelete();
             $table->unsignedInteger('total_lates')->default(0);
             $table->unsignedInteger('total_absences')->default(0);
             $table->unsignedInteger('converted_absences')->default(0);

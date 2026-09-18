@@ -10,6 +10,7 @@ use App\Models\UserNotification;
 use App\Services\AuditLoggerService;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class InstructorRequestController extends Controller
 {
@@ -97,21 +98,38 @@ class InstructorRequestController extends Controller
      */
     private function applyToTracker(ExcuseRequest $request): void
     {
-        $tracker = AttendanceTracker::firstOrCreate(
-            ['enrollment_id' => $request->enrollment_id],
-            ['total_lates' => 0, 'total_absences' => 0, 'converted_absences' => 0, 'status' => 'safe']
-        );
+        
+        [$tracker, $previousStatus] = DB::transaction(function () use ($request) {
+            $tracker = AttendanceTracker::where('enrollment_id', $request->enrollment_id)
+                ->lockForUpdate()
+                ->first();
 
-        if ($request->type === 'late') {
-            $tracker->total_lates++;
-        } else {
-            $tracker->total_absences++;
-        }
+            if (! $tracker) {
+                $tracker = AttendanceTracker::create([
+                    'enrollment_id'       => $request->enrollment_id,
+                    'total_lates'         => 0,
+                    'total_absences'      => 0,
+                    'converted_absences'  => 0,
+                    'status'              => 'safe',
+                ]);
+                $tracker = AttendanceTracker::where('enrollment_id', $request->enrollment_id)
+                    ->lockForUpdate()
+                    ->first();
+            }
 
-        $tracker->save();
+            $previousStatus = $tracker->status;
 
-        $previousStatus = $tracker->status;
-        $tracker->recompute();
+            if ($request->type === 'late') {
+                $tracker->total_lates++;
+            } else {
+                $tracker->total_absences++;
+            }
+
+            $tracker->save();
+            $tracker->recompute();
+
+            return [$tracker, $previousStatus];
+        });
 
         if ($tracker->status === $previousStatus) {
             return; // no new threshold crossed
@@ -137,7 +155,7 @@ class InstructorRequestController extends Controller
                 'request_id'   => $request->id,
                 'flagged_date'   => now(),
                 'escalated_to' => $programHead?->id,
-                'status'       => 'pending',
+                'status'       => 'open',
             ]);
 
             $this->notifyAll(

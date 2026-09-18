@@ -35,9 +35,9 @@ class ClassManagementController extends Controller
     {
         $validated = $request->validate([
             'subject_name'  => ['required', 'string', 'max:255'],
-            'instructor_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'instructor')],
+            'instructor_id' => ['required', 'string', 'uuid', Rule::exists('users', 'id')->where('role', 'instructor')],
             'schedule'      => ['required', 'string'],
-            'program_id'    => ['required', 'integer', 'exists:programs,id'],
+            'program_id'    => ['required', 'string', 'uuid', 'exists:programs,id'],
         ]);
 
         $class = ClassModel::create($validated);
@@ -70,9 +70,9 @@ class ClassManagementController extends Controller
     {
         $validated = $request->validate([
             'subject_name'  => ['sometimes', 'string', 'max:255'],
-            'instructor_id' => ['sometimes', 'integer', Rule::exists('users', 'id')->where('role', 'instructor')],
+            'instructor_id' => ['sometimes', 'string', 'uuid', Rule::exists('users', 'id')->where('role', 'instructor')],
             'schedule'      => ['sometimes', 'string'],
-            'program_id'    => ['sometimes', 'integer', 'exists:programs,id'],
+            'program_id'    => ['sometimes', 'string', 'uuid', 'exists:programs,id'],
         ]);
 
         $class->update($validated);

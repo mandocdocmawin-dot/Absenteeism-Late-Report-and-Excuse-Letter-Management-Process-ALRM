@@ -18,7 +18,7 @@ class RequestController extends Controller
     public function store(HttpRequest $httpRequest)
     {
         $validated = $httpRequest->validate([
-            'class_id'              => ['required', 'integer', 'exists:classes,id'],
+            'class_id'              => ['required', 'string', 'uuid', 'exists:classes,id'],
             'type'                  => ['required', 'in:absence,late'],
             'start_date_of_absence' => ['required', 'date'],
             'end_date_of_absence'   => ['nullable', 'date', 'after_or_equal:start_date_of_absence'],

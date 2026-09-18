@@ -23,7 +23,7 @@ The backend (Laravel REST API) is responsible for:
 
 | Layer | Technology | Note |
 |---|---|---|
-| Framework | **Laravel 13** (PHP ^8.3) | per `composer.json` |
+| Framework | **Laravel 13** (PHP ^8.4) | per `composer.json` |
 | Database | **MySQL** (production and local dev via Laragon) | local dev already on MySQL — no SQLite involved |
 | Auth | **Google OAuth/SSO (Laravel Socialite)** + custom role-based middleware | ✅ Done — see §8 Priority 2 |
 | Authorization | **Policies + Gate** (`app/Policies`, registered in `AppServiceProvider::boot()`) | ⚠️ Just started — see §6.1 |
@@ -380,14 +380,25 @@ Production/cloud database is **TiDB Cloud** (Serverless tier) instead of a local
 - `DB_USERNAME` / `DB_PASSWORD` — TiDB-generated credentials from the Connect panel, not `root`/blank
 - `MYSQL_ATTR_SSL_CA` — **new, required.** TiDB Cloud connections need TLS. Download the CA cert from the Connect panel, store it somewhere in the project (e.g. `storage/certs/tidb-ca.pem`), and point this var at that path.
 
-**`config/database.php` needs the SSL option added to the `mysql` connection's `options` array** (not yet done — flagging for Priority 6):
+**`config/database.php` — ✅ done.** The SSL option was already present in the `mysql` (and `mariadb`) connection's `options` array, using `Pdo\Mysql::ATTR_SSL_CA` instead of `PDO::MYSQL_ATTR_SSL_CA` (functionally identical constant, just the newer PHP 8.4 driver-specific class):
 ```php
+use Pdo\Mysql;
+// ...
 'options' => extension_loaded('pdo_mysql') ? array_filter([
-    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+    Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
 ]) : [],
 ```
 
 Local dev (Laragon) keeps using plain local MySQL — only the production `.env` (and Render's environment variable settings) needs the TiDB Cloud values + SSL cert.
+
+**✅ Live as of this session.** Full chain confirmed working end-to-end:
+- TiDB Cloud Serverless cluster created, `arlm` database created via the SQL Editor (not the default `sys`/`test` schemas).
+- App deployed to Render as a **Web Service using Docker** (not a native runtime — Render has no PHP language option, so a `Dockerfile` was added at the repo root of the `backend/` folder, based on `php:8.4-apache`; started on `8.2-apache` but bumped to `8.4` because `composer.json`'s Symfony packages require PHP ≥8.4.1).
+- Render config: Branch `backend`, Root Directory `backend`, Language `Docker`, Dockerfile Path left as default.
+- Env vars set directly in Render's dashboard (not committed to git): `DB_HOST`, `DB_PORT=4000`, `DB_DATABASE=arlm`, `DB_USERNAME`, `DB_PASSWORD`, `MYSQL_ATTR_SSL_CA=/var/www/html/storage/certs/isrgrootx1.pem` (container path, differs from the local Windows path in Laragon's `.env`).
+- `storage/certs/isrgrootx1.pem` is committed to the repo (CA certs aren't secret, so this is fine to version-control).
+- Dockerfile's `CMD` runs `php artisan config:cache && php artisan migrate --force` on every container start, so migrations apply automatically on deploy — confirmed via TiDB Cloud's SQL Editor showing all expected tables (`users`, `attendance_tracker`, `audit_log`, `enrollments`, `followup_flags`, `programs`, `requests`, etc.) under the `arlm` schema.
+- ⚠️ Follow-up: the TiDB password was exposed in a screenshot during setup — should be rotated via TiDB Cloud's "Reset Password" before this is treated as final production config.
 
 ---
 
@@ -465,7 +476,8 @@ Local dev (Laragon) keeps using plain local MySQL — only the production `.env`
 ### ⚪ Priority 6 — Seeding, Testing, Deploy Prep
 - [ ] Seeders — **real** LVCC programs/subjects/accounts (no placeholder/"John Doe" data — this is a requirement in the README)
 - [ ] Basic Feature tests per endpoint (auth, routing logic, threshold logic)
-- [ ] Point the production `.env` to **TiDB Cloud** (decided — see §7.1) — get connection details + CA cert from the TiDB Cloud dashboard, add `MYSQL_ATTR_SSL_CA` option to `config/database.php`, set the same env vars in Render's dashboard
+- [x] Point the production `.env` to **TiDB Cloud** (decided — see §7.1) — connection details + CA cert pulled from the TiDB Cloud dashboard, `MYSQL_ATTR_SSL_CA` option confirmed already in `config/database.php`, same env vars set in Render's dashboard. Deployed via Docker on Render, migrations confirmed applied against the live `arlm` database. See §7.1 for full deploy notes.
+- [x] Added temporary `DbTestController` (`GET /api/health`, `GET/POST/PATCH/DELETE /api/test/programs`) purely to manually verify the TiDB Cloud connection end-to-end (SELECT/INSERT/UPDATE/DELETE) after the deploy above — **not part of the real feature set, safe to delete once verified.** See `routes/api.php`.
 
 ---
 

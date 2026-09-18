@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('google_id')->nullable()->after('id');
             $table->enum('role', ['administrator', 'program_head', 'instructor', 'student'])->nullable()->after('email');
-            $table->unsignedBigInteger('program_id')->nullable()->after('role');
+            $table->uuid('program_id')->nullable()->after('role');
             $table->enum('status', ['approved', 'pending'])->nullable()->after('program_id');
             $table->string('password')->nullable()->change();
             $table->string('year_level')->nullable();

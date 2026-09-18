@@ -21,6 +21,14 @@ class RoleMiddleware
             ], 401);
         }
 
+        if ($user->status !== 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is not active. Please contact an administrator.',
+                'data'    => null,
+            ], 403);
+        }
+
         $hasDirectRole = $user->role && in_array($user->role, $roles, true);
 
         $hasProgramHeadOverride = ! $hasDirectRole

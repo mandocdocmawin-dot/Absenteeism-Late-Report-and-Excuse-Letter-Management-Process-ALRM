@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('audit_log', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('action');
             $table->string('table_affected');
-            $table->unsignedBigInteger('record_id');
+            $table->uuid('record_id');
             $table->timestamp('timestamp')->useCurrent();
         });
     }
