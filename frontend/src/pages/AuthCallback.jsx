@@ -1,7 +1,7 @@
 // src/pages/AuthCallback.jsx
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { isTrustedOtpDevice } from '../api/authSecurity';
+import { isAccountVerified, isTrustedOtpDevice } from '../api/authSecurity';
 import { API_URL, apiFetch, setToken } from '../api/client';
 import { setPendingOtpSession } from '../api/otp';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +37,7 @@ export function AuthCallback() {
           email: user?.email || fallbackEmail,
         };
 
-        if (isTrustedOtpDevice(identity)) {
+        if (isAccountVerified(user) || isTrustedOtpDevice(identity)) {
           await loginWithToken(nextToken);
           navigate('/', { replace: true });
           return;

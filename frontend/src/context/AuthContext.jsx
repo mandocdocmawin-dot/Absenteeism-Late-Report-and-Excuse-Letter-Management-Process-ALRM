@@ -4,8 +4,8 @@ import { apiFetch, setToken } from '../api/client';
 import {
   activateBrowserSession,
   clearActiveBrowserSession,
-  clearTrustedOtpDevices,
   isCurrentBrowserSessionActive,
+  markTrustedOtpDevice,
   subscribeToActiveSessionChanges,
 } from '../api/authSecurity';
 
@@ -68,6 +68,13 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    if (user) {
+      markTrustedOtpDevice({
+        userId: user.id,
+        email: user.email,
+      });
+    }
+
     try {
       await apiFetch('/api/logout', { method: 'POST' });
     } catch {
@@ -76,7 +83,6 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
     clearActiveBrowserSession();
-    clearTrustedOtpDevices();
   }
 
   return (

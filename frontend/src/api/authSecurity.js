@@ -8,14 +8,19 @@ function randomId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function normalizeIdentity(identity = {}) {
-  return String(identity.userId || identity.email || "").trim().toLowerCase();
+function normalizeIdentityValue(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
-function trustedDeviceKey(identity) {
-  const normalized = normalizeIdentity(identity);
+function trustedDeviceKeys(identity = {}) {
+  const identifiers = [
+    normalizeIdentityValue(identity.userId),
+    normalizeIdentityValue(identity.email),
+  ].filter(Boolean);
 
-  return normalized ? `${TRUSTED_DEVICE_PREFIX}${normalized}` : null;
+  return [...new Set(identifiers)].map(
+    (identifier) => `${TRUSTED_DEVICE_PREFIX}${identifier}`,
+  );
 }
 
 export function getTabSessionId() {
@@ -64,22 +69,36 @@ export function subscribeToActiveSessionChanges(onInactive) {
 }
 
 export function markTrustedOtpDevice(identity) {
-  const key = trustedDeviceKey(identity);
+  const keys = trustedDeviceKeys(identity);
 
-  if (!key) return;
-
-  localStorage.setItem(
-    key,
-    JSON.stringify({
-      trustedAt: new Date().toISOString(),
-    }),
-  );
+  keys.forEach((key) => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        trustedAt: new Date().toISOString(),
+      }),
+    );
+  });
 }
 
 export function isTrustedOtpDevice(identity) {
-  const key = trustedDeviceKey(identity);
+  const keys = trustedDeviceKeys(identity);
 
-  return Boolean(key && localStorage.getItem(key));
+  return keys.some((key) => localStorage.getItem(key));
+}
+
+export function isAccountVerified(user = {}) {
+  return Boolean(
+    user.email_verified_at ||
+      user.emailVerifiedAt ||
+      user.email_verified ||
+      user.emailVerified ||
+      user.is_verified ||
+      user.isVerified ||
+      user.account_verified ||
+      user.accountVerified ||
+      user.verified,
+  );
 }
 
 export function clearTrustedOtpDevices() {

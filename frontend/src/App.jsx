@@ -9,6 +9,7 @@ import AddInstructor from "./pages/auth/admin/AddInstructor";
 import AddStudent from "./pages/auth/admin/AddStudent";
 import Instructors from "./pages/auth/admin/Instructors";
 import Students from "./pages/auth/admin/Students";
+import Settings from "./pages/auth/Settings";
 import "./App.css";
 
 function App() {
@@ -22,6 +23,14 @@ function App() {
           <Route path="/auth/otp" element={<OtpVerification />} />
           <Route
             path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
@@ -57,6 +66,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddStudent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />

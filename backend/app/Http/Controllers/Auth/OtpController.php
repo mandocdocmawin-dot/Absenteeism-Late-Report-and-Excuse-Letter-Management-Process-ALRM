@@ -18,16 +18,7 @@ class OtpController extends Controller
      */
     public static function issue(User $user): void
     {
-        $existing = OtpCode::where('user_id', $user->id)
-            ->whereNull('verified_at')
-            ->where('expires_at', '>', now())
-            ->latest()
-            ->first();
-
-        if ($existing) {
-            return;
-        }
-
+        // Invalidate any previous unverified codes for this user.
         OtpCode::where('user_id', $user->id)
             ->whereNull('verified_at')
             ->delete();
@@ -41,55 +32,6 @@ class OtpController extends Controller
         ]);
 
         $user->notify(new SendOtpCode($code));
-    }
-
-    public function resend(Request $request): JsonResponse
-    {
-        $request->validate([
-            'user_id' => 'required|string|exists:users,id',
-        ]);
-
-        $user = User::findOrFail($request->string('user_id'));
-
-        $recent = OtpCode::where('user_id', $user->id)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($recent) {
-            $secondsSinceLastSend = $recent->created_at->diffInSeconds(now());
-
-            if ($secondsSinceLastSend < 30) {
-                $waitTime = 30 - $secondsSinceLastSend;
-
-                return response()->json([
-                    'success' => false,
-                    'message' => "Please wait {$waitTime} seconds before requesting another code.",
-                    'data'    => ['retry_after' => $waitTime],
-                ], 429);
-            }
-        }
-
-        // Invalidate old codes and force-send a new one.
-        OtpCode::where('user_id', $user->id)
-            ->whereNull('verified_at')
-            ->delete();
-
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        OtpCode::create([
-            'user_id'    => $user->id,
-            'code'       => $code,
-            'expires_at' => now()->addMinutes(5),
-        ]);
-
-        $user->notify(new SendOtpCode($code));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'A new code has been sent.',
-            'data'    => null,
-        ]);
     }
 
     /**
@@ -100,7 +42,7 @@ class OtpController extends Controller
     public function verify(Request $request): JsonResponse
     {
         $request->validate([
-            'user_id' => 'required|string|exists:users,id',
+            'user_id' => 'required|string',
             'code'    => 'required|string',
         ]);
 
@@ -111,7 +53,7 @@ class OtpController extends Controller
 
         if (! $otp) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'No pending verification found. Please log in again.',
                 'data'    => null,
             ], 404);
