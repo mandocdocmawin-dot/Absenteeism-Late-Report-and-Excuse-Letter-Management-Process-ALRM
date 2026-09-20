@@ -7,10 +7,13 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { normalizeRole } from "@/lib/roles";
 import AdminPageLayout from "./auth/admin/AdminPageLayout";
+import StudentDashboard from "./auth/student/StudentDashboard";
 
 const summaryCards = [
   {
@@ -64,7 +67,7 @@ function roleLabel(role) {
   return role || "User";
 }
 
-export function Dashboard() {
+function AdminDashboard() {
   const { user } = useAuth();
 
   return (
@@ -213,4 +216,31 @@ export function Dashboard() {
       </div>
     </AdminPageLayout>
   );
+}
+
+function UnsupportedDashboard() {
+  const { user } = useAuth();
+
+  return (
+    <AdminPageLayout>
+      <Alert className="max-w-2xl rounded-[5px] border-amber-200 bg-amber-50 text-amber-950">
+        <AlertTriangle className="size-4" />
+        <AlertTitle>Dashboard unavailable</AlertTitle>
+        <AlertDescription>
+          Your account role ({user?.role || "unknown"}) does not have a
+          dashboard configured yet.
+        </AlertDescription>
+      </Alert>
+    </AdminPageLayout>
+  );
+}
+
+export function Dashboard() {
+  const { user } = useAuth();
+  const role = normalizeRole(user?.role);
+
+  if (role === "student") return <StudentDashboard />;
+  if (role === "admin") return <AdminDashboard />;
+
+  return <UnsupportedDashboard />;
 }

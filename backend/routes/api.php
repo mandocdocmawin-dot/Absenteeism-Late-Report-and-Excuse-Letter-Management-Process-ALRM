@@ -45,9 +45,11 @@ Route::prefix('auth')->group(function () {
     Route::post('/exchange', [AuthController::class, 'exchange']);
     Route::post('/otp/verify', [OtpController::class, 'verify'])
         ->middleware('throttle:10,1');
+    Route::post('/otp/resend', [OtpController::class, 'resend'])
+        ->middleware('throttle:10,1');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'inactive'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
@@ -108,4 +110,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/export', [ReportController::class, 'export']);
         Route::get('/reports/preview', [ReportController::class, 'preview']);
     });
-});
+}); 

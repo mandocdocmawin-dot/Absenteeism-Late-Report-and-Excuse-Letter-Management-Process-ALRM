@@ -5,11 +5,15 @@ import Login from "./pages/login";
 import { AuthCallback } from "./pages/AuthCallback";
 import { Dashboard } from "./pages/Dashboard";
 import OtpVerification from "./pages/OtpVerification";
+import ProfileSetup from "./pages/ProfileSetup";
 import AddInstructor from "./pages/auth/admin/AddInstructor";
 import AddStudent from "./pages/auth/admin/AddStudent";
 import Instructors from "./pages/auth/admin/Instructors";
+import StudentProfile from "./pages/auth/admin/StudentProfile";
 import Students from "./pages/auth/admin/Students";
 import Settings from "./pages/auth/Settings";
+import StudentPlaceholderPage from "./pages/auth/student/StudentPlaceholderPage";
+import StudentRequestForm from "./pages/auth/student/StudentRequestForm";
 import "./App.css";
 
 function App() {
@@ -21,6 +25,14 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/verify-otp" element={<OtpVerification />} />
           <Route path="/auth/otp" element={<OtpVerification />} />
+          <Route
+            path="/complete-profile"
+            element={
+              <ProtectedRoute allowedIncompleteProfile>
+                <ProfileSetup />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/"
             element={
@@ -40,7 +52,7 @@ function App() {
           <Route
             path="/instructors"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <Instructors />
               </ProtectedRoute>
             }
@@ -48,7 +60,7 @@ function App() {
           <Route
             path="/instructors/add"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AddInstructor />
               </ProtectedRoute>
             }
@@ -56,7 +68,7 @@ function App() {
           <Route
             path="/students"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <Students />
               </ProtectedRoute>
             }
@@ -64,8 +76,35 @@ function App() {
           <Route
             path="/students/add"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AddStudent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/students/:studentId"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <StudentProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/records"
+            element={
+              <ProtectedRoute allowedRoles={["student"]}>
+                <StudentPlaceholderPage
+                  title="My Records"
+                  description="Review your attendance and late records."
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/request"
+            element={
+              <ProtectedRoute allowedRoles={["student"]}>
+                <StudentRequestForm />
               </ProtectedRoute>
             }
           />

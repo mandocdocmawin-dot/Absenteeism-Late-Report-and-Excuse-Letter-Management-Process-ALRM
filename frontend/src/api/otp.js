@@ -127,6 +127,7 @@ export function getOtpWaitSeconds(payload, fallbackSeconds = 0) {
 export async function exchangeOtpCode(exchangeCode) {
   const res = await fetch(`${API_URL}${EXCHANGE_ENDPOINT}`, {
     method: "POST",
+    credentials: "include",
     headers: otpHeaders(),
     body: JSON.stringify({
       code: exchangeCode,
@@ -140,6 +141,7 @@ export async function exchangeOtpCode(exchangeCode) {
 export async function sendOtp({ token, userId, email }) {
   const res = await fetch(`${API_URL}${RESEND_ENDPOINT}`, {
     method: "POST",
+    credentials: "include",
     headers: otpHeaders(token),
     body: JSON.stringify({
       token,
@@ -154,6 +156,7 @@ export async function sendOtp({ token, userId, email }) {
 export async function verifyOtp({ token, userId, email, code }) {
   const res = await fetch(`${API_URL}${VERIFY_ENDPOINT}`, {
     method: "POST",
+    credentials: "include",
     headers: otpHeaders(token),
     body: JSON.stringify({
       token,

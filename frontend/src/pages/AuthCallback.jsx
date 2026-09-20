@@ -5,6 +5,7 @@ import { isAccountVerified, isTrustedOtpDevice } from '../api/authSecurity';
 import { API_URL, apiFetch, setToken } from '../api/client';
 import { setPendingOtpSession } from '../api/otp';
 import { useAuth } from '../context/AuthContext';
+import { needsProfileSetup } from '../lib/profileSetup';
 
 export function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -38,8 +39,11 @@ export function AuthCallback() {
         };
 
         if (isAccountVerified(user) || isTrustedOtpDevice(identity)) {
-          await loginWithToken(nextToken);
-          navigate('/', { replace: true });
+          const verifiedUser = await loginWithToken(nextToken);
+          navigate(
+            needsProfileSetup(verifiedUser) ? '/complete-profile' : '/',
+            { replace: true },
+          );
           return;
         }
 
@@ -107,6 +111,7 @@ export function AuthCallback() {
 async function loadUserFromToken(token) {
   try {
     const res = await fetch(`${API_URL}/api/me`, {
+      credentials: 'include',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,

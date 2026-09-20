@@ -24,6 +24,7 @@ export async function apiFetch(path, options = {}) {
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: options.credentials || 'include',
     headers,
   });
 

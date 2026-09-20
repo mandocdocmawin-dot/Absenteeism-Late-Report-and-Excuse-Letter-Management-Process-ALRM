@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Auth\OtpController;
+use App\Support\TrustedDeviceManager;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -110,6 +111,18 @@ class AuthController extends Controller
             $user->password = null;
         }
         $user->save();
+
+        // NEW: check kung trusted na itong browser/device
+        if (TrustedDeviceManager::isTrusted(request(), $user)) {
+            // Skip OTP — derecho na sa exchange code
+            $token = $user->createToken('alrm-spa')->plainTextToken;
+            $code = Str::random(40);
+            Cache::put("auth_exchange:{$code}", $token, now()->addSeconds(60));
+
+            return redirect()->away(
+                $frontendUrl . '/auth/callback?code=' . urlencode($code)
+            );
+        }
 
         OtpController::issue($user);
 

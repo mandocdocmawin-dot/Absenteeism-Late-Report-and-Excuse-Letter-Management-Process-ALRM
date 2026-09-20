@@ -555,3 +555,20 @@ Keeping a record here since this contradicts what's written in the original `ALR
 
 **Authorization update, continued (later session):**
 > The remaining 5 Policy classes (`Program`, `ClassModel`, `FollowupFlag`, `AttendanceTracker`, `User`) were created and registered in `AppServiceProvider` but sat unused. Wired `$this->authorize()` calls into `Admin\ProgramController`, `Admin\ClassManagementController`, `Admin\UserApprovalController`, `Student\AttendanceController`, and a newly-built `ProgramHead\FollowupFlagController` (which didn't exist before — `FollowupFlagPolicy` had no controller to call it). See §2.1 and §6.1 for current coverage.
+
+## ⚠️ TODO Before Production Deploy
+
+- [ ] **Reverse proxy setup for trusted-device cookie**: Frontend and backend 
+  are on different domains (Render backend + [TBD frontend host]). The 
+  `alrm_device` cookie will be blocked as third-party by Brave/Safari/Firefox 
+  unless we set up a reverse proxy (rewrite rule) so both share the same 
+  apparent domain from the browser's perspective.
+  - Currently using `httpOnly` cookie (`TrustedDeviceManager.php`) — works 
+    fine on `localhost` testing (same-site), but will silently fail on 
+    Brave/Safari/Firefox once deployed cross-domain.
+  - Once we know the frontend hosting platform (Vercel/Netlify/Render static), 
+    add `vercel.json` / `netlify.toml` rewrite config to proxy `/api/*` 
+    requests to the Render backend.
+  - Also confirm `APP_ENV=production` is set in Render env vars — this 
+    flips `secure`/`sameSite` cookie flags automatically 
+    (see `TrustedDeviceManager::remember()`).

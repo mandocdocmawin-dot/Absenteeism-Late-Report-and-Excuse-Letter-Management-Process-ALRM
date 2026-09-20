@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
+import { needsProfileSetup } from "@/lib/profileSetup";
 import {
   clearPendingOtp,
   exchangeOtpCode,
@@ -233,7 +234,9 @@ function OtpVerification() {
         email: verifiedUser?.email || pendingEmail,
       });
       clearPendingOtp();
-      navigate("/", { replace: true });
+      navigate(needsProfileSetup(verifiedUser) ? "/complete-profile" : "/", {
+        replace: true,
+      });
     } catch (verifyError) {
       setError(
         verifyError?.message ||

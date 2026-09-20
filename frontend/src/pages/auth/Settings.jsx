@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/context/AuthContext";
 import AdminPageLayout from "./admin/AdminPageLayout";
+import StudentPageLayout from "./student/StudentPageLayout";
 
 const ROLE_CONFIG = {
   administrator: {
@@ -430,9 +431,17 @@ function SecurityCard({ user, onUnsupported }) {
   );
 }
 
+function SettingsLayout({ children, role }) {
+  if (normalizeRole(role) === "student") {
+    return <StudentPageLayout>{children}</StudentPageLayout>;
+  }
+
+  return <AdminPageLayout>{children}</AdminPageLayout>;
+}
+
 function UnknownRoleState({ role }) {
   return (
-    <AdminPageLayout>
+    <SettingsLayout role={role}>
       <div className="max-w-3xl">
         <h1 className="text-2xl font-black tracking-normal text-slate-950">
           Settings
@@ -446,7 +455,7 @@ function UnknownRoleState({ role }) {
           </AlertDescription>
         </Alert>
       </div>
-    </AdminPageLayout>
+    </SettingsLayout>
   );
 }
 
@@ -463,11 +472,11 @@ function Settings() {
 
   if (loading) {
     return (
-      <AdminPageLayout>
+      <SettingsLayout role={user?.role}>
         <p className="text-sm font-medium text-slate-600">
           Loading settings...
         </p>
-      </AdminPageLayout>
+      </SettingsLayout>
     );
   }
 
@@ -476,7 +485,7 @@ function Settings() {
   }
 
   return (
-    <AdminPageLayout>
+    <SettingsLayout role={user?.role}>
       <div className="mx-auto grid max-w-6xl gap-5">
         <div>
           <h1 className="text-2xl font-black tracking-normal text-slate-950">
@@ -507,7 +516,7 @@ function Settings() {
           <SecurityCard user={user} onUnsupported={showUnsupported} />
         </div>
       </div>
-    </AdminPageLayout>
+    </SettingsLayout>
   );
 }
 
