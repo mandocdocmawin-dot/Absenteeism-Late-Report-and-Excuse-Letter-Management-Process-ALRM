@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { normalizeRole } from "@/lib/roles";
 import AdminPageLayout from "./auth/admin/AdminPageLayout";
+import InstructorDashboard from "./auth/instructor/InstructorDashboard";
 import StudentDashboard from "./auth/student/StudentDashboard";
 
 const summaryCards = [
@@ -75,13 +76,13 @@ function AdminDashboard() {
       <div className="grid gap-6">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="mb-4 inline-flex bg-slate-50 px-1 text-sm font-black uppercase text-[#0b367f]">
+            <p className="mb-4 inline-flex bg-slate-50 px-1 text-sm font-black uppercase text-[#0b367f] dark:bg-slate-900 dark:text-blue-300">
               Dashboard
             </p>
-            <h1 className="text-2xl font-black tracking-normal text-slate-950">
+            <h1 className="text-2xl font-black tracking-normal text-slate-950 dark:text-slate-50">
               Welcome back, {user?.name || roleLabel(user?.role)}!
             </h1>
-            <p className="mt-1 text-lg font-medium text-slate-900">
+            <p className="mt-1 text-lg font-medium text-slate-900 dark:text-slate-300">
               Here's your class overview
             </p>
           </div>
@@ -90,7 +91,7 @@ function AdminDashboard() {
             <Button
               type="button"
               variant="outline"
-              className="h-9 justify-start rounded-[5px] border-slate-300 px-3 text-xs font-semibold text-[#0b367f]"
+              className="h-9 justify-start rounded-[5px] border-slate-300 px-3 text-xs font-semibold text-[#0b367f] dark:border-slate-700 dark:text-blue-300"
             >
               <CalendarDays className="size-4" />
               July 12 - July 18, 2026
@@ -115,8 +116,8 @@ function AdminDashboard() {
                 className={[
                   "rounded-[5px] border py-0 shadow-none ring-0",
                   card.highlighted
-                    ? "border-[#6aa8ff] bg-[#dcecff]"
-                    : "border-slate-300 bg-slate-50",
+                    ? "border-[#6aa8ff] bg-[#dcecff] dark:border-blue-500/50 dark:bg-blue-950/40"
+                    : "border-slate-300 bg-slate-50 dark:border-slate-800 dark:bg-slate-900",
                 ].join(" ")}
               >
                 <CardContent className="p-4">
@@ -125,7 +126,7 @@ function AdminDashboard() {
                       <p
                         className={[
                           "text-xs font-black uppercase",
-                          card.danger ? "text-red-600" : "text-slate-800",
+                          card.danger ? "text-red-600 dark:text-red-400" : "text-slate-800 dark:text-slate-300",
                           card.highlighted ? "text-[#0b4bd3]" : "",
                         ].join(" ")}
                       >
@@ -134,13 +135,13 @@ function AdminDashboard() {
                       <p
                         className={[
                           "mt-3 text-3xl font-black leading-none",
-                          card.danger ? "text-red-600" : "text-slate-950",
+                          card.danger ? "text-red-600 dark:text-red-400" : "text-slate-950 dark:text-slate-50",
                           card.highlighted ? "text-[#203b82]" : "",
                         ].join(" ")}
                       >
                         {card.value}
                       </p>
-                      <p className="mt-1 text-xs font-medium text-slate-700">
+                      <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-400">
                         {card.note}
                       </p>
                     </div>
@@ -160,10 +161,10 @@ function AdminDashboard() {
         <section className="grid gap-3">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 className="text-lg font-black text-slate-950">
+              <h2 className="text-lg font-black text-slate-950 dark:text-slate-50">
                 Absenteeism by Program
               </h2>
-              <p className="text-xs font-medium text-slate-600">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Overview of absenteeism rate and pending requests per program
               </p>
             </div>
@@ -177,9 +178,9 @@ function AdminDashboard() {
             </Button>
           </div>
 
-          <div className="overflow-x-auto rounded-[5px] border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-[5px] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
             <div className="min-w-[620px]">
-              <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] border-b border-[#9aa9cf] px-4 py-4 text-sm font-black text-[#203b82]">
+              <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] border-b border-[#9aa9cf] px-4 py-4 text-sm font-black text-[#203b82] dark:border-slate-700 dark:text-blue-300">
                 <span>Program</span>
                 <span>Absentee %</span>
                 <span>Pending Requests</span>
@@ -188,15 +189,15 @@ function AdminDashboard() {
               {absenteeismRows.map((row) => (
                 <div
                   key={row.program}
-                  className="grid grid-cols-[1.2fr_1fr_1fr_auto] items-center border-b border-slate-200 px-4 py-4 text-sm last:border-b-0"
+                  className="grid grid-cols-[1.2fr_1fr_1fr_auto] items-center border-b border-slate-200 px-4 py-4 text-sm last:border-b-0 dark:border-slate-800"
                 >
-                  <span className="font-semibold text-slate-950">
+                  <span className="font-semibold text-slate-950 dark:text-slate-100">
                     {row.program}
                   </span>
-                  <span className="font-medium text-slate-950">
+                  <span className="font-medium text-slate-950 dark:text-slate-100">
                     {row.absentee}
                   </span>
-                  <span className="font-medium text-slate-950">
+                  <span className="font-medium text-slate-950 dark:text-slate-100">
                     {row.requests}
                   </span>
                   <Button
@@ -240,6 +241,7 @@ export function Dashboard() {
   const role = normalizeRole(user?.role);
 
   if (role === "student") return <StudentDashboard />;
+  if (role === "instructor") return <InstructorDashboard />;
   if (role === "admin") return <AdminDashboard />;
 
   return <UnsupportedDashboard />;

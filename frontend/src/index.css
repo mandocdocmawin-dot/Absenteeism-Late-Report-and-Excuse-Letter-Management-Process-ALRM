@@ -128,3 +128,32 @@
     @apply font-sans;
     }
 }
+
+@layer utilities {
+  .dark .alrm-dashboard-scope .bg-white {
+    background-color: rgb(15 23 42) !important;
+  }
+
+  .dark .alrm-dashboard-scope .bg-slate-50,
+  .dark .alrm-dashboard-scope .bg-slate-100 {
+    background-color: rgb(30 41 59) !important;
+  }
+
+  .dark .alrm-dashboard-scope .text-slate-950,
+  .dark .alrm-dashboard-scope .text-slate-900,
+  .dark .alrm-dashboard-scope .text-slate-800 {
+    color: rgb(248 250 252) !important;
+  }
+
+  .dark .alrm-dashboard-scope .text-slate-700,
+  .dark .alrm-dashboard-scope .text-slate-600,
+  .dark .alrm-dashboard-scope .text-slate-500 {
+    color: rgb(203 213 225) !important;
+  }
+
+  .dark .alrm-dashboard-scope .border-slate-100,
+  .dark .alrm-dashboard-scope .border-slate-200,
+  .dark .alrm-dashboard-scope .border-slate-300 {
+    border-color: rgb(30 41 59) !important;
+  }
+}

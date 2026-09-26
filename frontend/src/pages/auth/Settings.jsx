@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/context/AuthContext";
 import AdminPageLayout from "./admin/AdminPageLayout";
+import InstructorPageLayout from "./instructor/InstructorPageLayout";
 import StudentPageLayout from "./student/StudentPageLayout";
 
 const ROLE_CONFIG = {
@@ -432,6 +433,10 @@ function SecurityCard({ user, onUnsupported }) {
 }
 
 function SettingsLayout({ children, role }) {
+  if (normalizeRole(role) === "instructor") {
+    return <InstructorPageLayout>{children}</InstructorPageLayout>;
+  }
+
   if (normalizeRole(role) === "student") {
     return <StudentPageLayout>{children}</StudentPageLayout>;
   }

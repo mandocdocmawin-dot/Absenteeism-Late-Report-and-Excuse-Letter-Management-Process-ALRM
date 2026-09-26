@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import Login from "./pages/login";
 import { AuthCallback } from "./pages/AuthCallback";
@@ -12,6 +13,7 @@ import Instructors from "./pages/auth/admin/Instructors";
 import StudentProfile from "./pages/auth/admin/StudentProfile";
 import Students from "./pages/auth/admin/Students";
 import Settings from "./pages/auth/Settings";
+import InstructorPlaceholderPage from "./pages/auth/instructor/InstructorPlaceholderPage";
 import StudentPlaceholderPage from "./pages/auth/student/StudentPlaceholderPage";
 import StudentRequestForm from "./pages/auth/student/StudentRequestForm";
 import "./App.css";
@@ -19,8 +21,9 @@ import "./App.css";
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/verify-otp" element={<OtpVerification />} />
@@ -90,6 +93,28 @@ function App() {
             }
           />
           <Route
+            path="/instructor/class-records"
+            element={
+              <ProtectedRoute allowedRoles={["instructor"]}>
+                <InstructorPlaceholderPage
+                  title="Class Records"
+                  description="Review attendance records for your assigned classes."
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/class-requests"
+            element={
+              <ProtectedRoute allowedRoles={["instructor"]}>
+                <InstructorPlaceholderPage
+                  title="Class Requests"
+                  description="Review student absence and late requests."
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/records"
             element={
               <ProtectedRoute allowedRoles={["student"]}>
@@ -116,8 +141,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
