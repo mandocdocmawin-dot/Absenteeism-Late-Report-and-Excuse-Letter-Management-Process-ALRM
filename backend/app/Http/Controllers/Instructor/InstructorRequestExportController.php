@@ -16,14 +16,13 @@ class InstructorRequestExportController extends Controller
     public function export(Request $request)
     {
         $filters = $request->validate([
-            'class_id' => ['nullable', 'uuid', Rule::exists('classes', 'id')->where('instructor_id', $request->user()->id)],
+            'class_id' => ['nullable', 'uuid', Rule::exists('teaching_assignments', 'class_id')->where('instructor_id', $request->user()->id)],
             'type' => ['nullable', Rule::in(['absence', 'late'])],
             'status' => ['nullable', Rule::in(['pending', 'approved', 'noted', 'invalid', 'cancelled'])],
             'search' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $query = ExcuseRequest::whereHas('enrollment.class', function ($query) use ($request, $filters) {
-            $query->where('instructor_id', $request->user()->id);
+        $query = ExcuseRequest::forInstructor($request->user()->id)->whereHas('enrollment.class', function ($query) use ($filters) {
             if (! empty($filters['class_id'])) {
                 $query->whereKey($filters['class_id']);
             }
@@ -48,7 +47,7 @@ class InstructorRequestExportController extends Controller
 
         // Keep the fetch bounded as well in case requests are inserted after the size check.
         $requests = $query->select([
-            'id', 'enrollment_id', 'type', 'status', 'start_date_of_absence', 'date_submitted', 'created_at',
+            'id', 'enrollment_id', 'teaching_assignment_id', 'class_snapshot', 'type', 'status', 'start_date_of_absence', 'date_submitted', 'created_at',
         ])->with([
             'enrollment:id,student_id,class_id',
             'enrollment.student:id,name',

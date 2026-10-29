@@ -33,7 +33,7 @@ class ExcuseRequestPolicy
             return $excuseRequest->enrollment->student_id === $user->id;
         }
 
-        if ($excuseRequest->enrollment->class->instructor_id === $user->id) {
+        if ($user->role === 'instructor' && $excuseRequest->teachingAssignment?->instructor_id === $user->id) {
             return true;
         }
 
@@ -49,7 +49,8 @@ class ExcuseRequestPolicy
     public function decide(User $user, ExcuseRequest $excuseRequest): bool
     {
         return $user->role === 'instructor'
-            && $excuseRequest->enrollment->class->instructor_id === $user->id;
+            && $excuseRequest->teachingAssignment?->instructor_id === $user->id
+            && $excuseRequest->teachingAssignment->ended_at === null;
     }
 
     /**

@@ -23,7 +23,9 @@ class SaveClassRequest extends FormRequest
         $rules = [
             'subject_name' => [$required, 'string', 'max:255'],
             'section' => [$required, 'string', 'max:50'],
-            'instructor_id' => ['sometimes', 'nullable', 'uuid', Rule::exists('users', 'id')->where('role', 'instructor')],
+            'instructor_id' => $this->isMethod('post')
+                ? ['sometimes', 'nullable', 'uuid', Rule::exists('users', 'id')->where('role', 'instructor')->where('status', 'approved')]
+                : ['missing'],
             'program_id' => [$required, 'uuid', 'exists:programs,id'],
             'year_level' => [$required, Rule::in(['1st', '2nd', '3rd', '4th'])],
             'semester' => [$required, Rule::in(['1st', '2nd'])],

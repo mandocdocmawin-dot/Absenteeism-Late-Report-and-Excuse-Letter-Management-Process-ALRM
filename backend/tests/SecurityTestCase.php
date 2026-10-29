@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\RequestSnapshot;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -67,24 +68,31 @@ abstract class SecurityTestCase extends TestCase
         return User::factory()->create(['role' => $role, 'status' => 'approved', ...$attributes]);
     }
 
-    protected function requestFor(User $student, ?User $instructor = null): ExcuseRequest
+    protected function requestFor(User $student, ?User $instructor = null, array $classAttributes = []): ExcuseRequest
     {
         $class = ClassModel::create([
             'subject_name' => 'Security', 'program_id' => Program::factory()->create()->id,
             'instructor_id' => ($instructor ?? $this->user('instructor'))->id,
             'year_level' => '1st', 'semester' => '1st', 'school_year' => '2026-2027',
             'schedule' => [],
+            ...$classAttributes,
         ]);
         $enrollment = Enrollment::create([
             'student_id' => $student->id, 'class_id' => $class->id, 'year_level' => '1st',
         ]);
 
-        return ExcuseRequest::withoutEvents(fn () => ExcuseRequest::create([
-            'enrollment_id' => $enrollment->id, 'type' => 'absence',
-            'subjects_missed' => 'Security', 'reason' => 'Illness',
-            'start_date_of_absence' => '2026-10-21', 'status' => 'pending',
-            'date_submitted' => now(),
-        ]));
+        return ExcuseRequest::withoutEvents(function () use ($enrollment, $class) {
+            $request = new ExcuseRequest([
+                'enrollment_id' => $enrollment->id, 'type' => 'absence',
+                'subjects_missed' => 'Security', 'reason' => 'Illness',
+                'start_date_of_absence' => '2026-10-21', 'status' => 'pending',
+                'date_submitted' => now(),
+            ]);
+            $request->forceFill(RequestSnapshot::capture($class->refresh(), $class->activeTeachingAssignment()->firstOrFail()));
+            $request->save();
+
+            return $request;
+        });
     }
 
     protected function bearer(User $user): static

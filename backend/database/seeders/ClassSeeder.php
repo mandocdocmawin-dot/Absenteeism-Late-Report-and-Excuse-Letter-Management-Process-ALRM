@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\ClassModel;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\TeachingAssignmentService;
 use App\Support\ExternalApiClient;
 use Google\Client as GoogleClient;
 use Google\Service\Sheets as GoogleSheets;
@@ -198,7 +199,15 @@ class ClassSeeder extends Seeder
                 ->first();
 
             if ($class !== null) {
-                $class->update($values);
+                if ($class->instructor_id !== $instructorId) {
+                    app(TeachingAssignmentService::class)->change($class->id, [
+                        'action' => $instructorId ? ($class->instructor_id ? 'change_instructor' : 'assign') : 'remove',
+                        'instructor_id' => $instructorId,
+                        'expected_revision' => $class->assignment_revision,
+                        'reason' => 'ClassSeeder timetable import',
+                    ]);
+                }
+                $class->refresh()->update(['schedule' => $values['schedule']]);
             } else {
                 $class = ClassModel::create([...$attributes, ...$values]);
             }

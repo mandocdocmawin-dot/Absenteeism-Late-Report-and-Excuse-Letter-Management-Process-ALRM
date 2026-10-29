@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ClassManagementController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\TeachingAssignmentController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AuthController;
@@ -140,6 +141,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         Route::apiResource('programs', ProgramController::class);
         Route::apiResource('classes', ClassManagementController::class);
+        Route::get('/classes/{class}/assignments', [TeachingAssignmentController::class, 'history']);
+        Route::post('/classes/{class}/assignment', [TeachingAssignmentController::class, 'change']);
+        Route::get('/classes/{class}/pending-requests', [TeachingAssignmentController::class, 'pendingRequests']);
         Route::apiResource('curricula', CurriculumController::class)->only(['index', 'store', 'show']);
 
         Route::get('/reports/export', [ReportController::class, 'export'])->middleware('throttle:exports');

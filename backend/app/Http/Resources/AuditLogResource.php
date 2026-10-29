@@ -38,7 +38,9 @@ class AuditLogResource extends JsonResource
                 'type' => $excuseRequest->type,
                 'current_status' => $excuseRequest->status,
                 'student' => $enrollment?->student?->only(['id', 'name']),
-                'class' => $enrollment?->class?->only(['id', 'subject_name', 'program_id', 'instructor_id']),
+                'class' => $excuseRequest->class_snapshot !== null
+                    ? array_intersect_key($excuseRequest->class_snapshot, array_flip(['id', 'subject_name', 'program_id', 'instructor_id']))
+                    : $enrollment?->class?->only(['id', 'subject_name', 'program_id', 'instructor_id']),
             ] : null,
         ];
     }

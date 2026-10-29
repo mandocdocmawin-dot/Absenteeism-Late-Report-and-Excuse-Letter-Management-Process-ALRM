@@ -32,9 +32,9 @@ class ReportExport extends StringValueBinder implements FromCollection, WithCust
         return [
             $r->id,
             $r->enrollment->student->name ?? '',
-            $r->enrollment->class->program->program_name ?? '',
-            $r->enrollment->class->subject_name ?? '',
-            $r->enrollment->class->instructor->name ?? '',
+            $r->class_snapshot['program']['program_name'] ?? $r->enrollment->class->program->program_name ?? '',
+            $r->class_snapshot['subject_name'] ?? $r->enrollment->class->subject_name ?? '',
+            $r->class_snapshot !== null ? ($r->class_snapshot['instructor']['name'] ?? '') : ($r->enrollment->class->instructor->name ?? ''),
             $r->type,
             optional($r->start_date_of_absence)->toDateString(),
             optional($r->end_date_of_absence)->toDateString(),

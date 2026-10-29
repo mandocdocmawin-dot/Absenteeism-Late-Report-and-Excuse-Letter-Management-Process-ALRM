@@ -8,6 +8,7 @@ use App\Models\ClassModel;
 use App\Models\Enrollment;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\TeachingAssignmentService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -89,6 +90,13 @@ class DevInstructorClassSeeder extends Seeder
                     $source = $originals->firstWhere('subject_name', $subject);
                     $existingClasses = $group->where('instructor_id', $dev->id);
                     $existing = $existingClasses->firstWhere('subject_name', $subject) ?? $existingClasses->first();
+                    if ($existing && $existing->subject_name !== $subject && $existing->requests()->exists()) {
+                        app(TeachingAssignmentService::class)->change($existing->id, [
+                            'action' => 'remove', 'expected_revision' => $existing->assignment_revision,
+                            'reason' => 'Dev timetable subject replacement; preserve existing request history',
+                        ]);
+                        $existing = null;
+                    }
                     $copy = $existing ?? new ClassModel([...$context, 'instructor_id' => $dev->id]);
                     $schedule = $source?->schedule;
                     if (! is_array($schedule) || $schedule === []) {

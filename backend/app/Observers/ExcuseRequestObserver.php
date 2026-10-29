@@ -4,19 +4,39 @@ namespace App\Observers;
 
 use App\Mail\InstructorExcuseRequestMail;
 use App\Mail\StudentRequestUpdatedMail;
+use App\Models\ClassModel;
+use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
 use App\Models\UserNotification;
 use App\Services\MailDeliveryService;
+use App\Services\RequestSnapshot;
 
 class ExcuseRequestObserver
 {
+    public function creating(ExcuseRequest $excuseRequest): void
+    {
+        $enrollment = Enrollment::findOrFail($excuseRequest->enrollment_id);
+        $class = ClassModel::whereKey($enrollment->class_id)->lockForUpdate()->firstOrFail();
+        $assignment = $class->activeTeachingAssignment()->first();
+        abort_unless($assignment && $assignment->instructor_id === $class->instructor_id,
+            422, 'This class has no active teaching assignment.');
+        $excuseRequest->forceFill(RequestSnapshot::capture($class, $assignment));
+    }
+
+    public function updating(ExcuseRequest $excuseRequest): void
+    {
+        if ($excuseRequest->isDirty(['teaching_assignment_id', 'class_snapshot', 'snapshot_source', 'enrollment_id'])) {
+            throw new \LogicException('A submitted request assignment and snapshot are immutable.');
+        }
+    }
+
     public function created(ExcuseRequest $excuseRequest): void
     {
         $excuseRequest->loadMissing('enrollment.student', 'enrollment.class.instructor');
         $enrollment = $excuseRequest->enrollment;
         $student = $enrollment?->student;
         $class = $enrollment?->class;
-        $instructor = $class?->instructor;
+        $instructor = $excuseRequest->teachingAssignment?->instructor;
         if (! $student || ! $class || ! $instructor || ! $instructor->canLogin()) {
             return;
         }

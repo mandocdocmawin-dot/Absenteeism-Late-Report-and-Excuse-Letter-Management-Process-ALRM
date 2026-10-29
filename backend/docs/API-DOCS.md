@@ -191,7 +191,10 @@ Role access is not hierarchical: administrators do not automatically pass instru
 | POST | `/admin/classes` | Create class and enroll matching students; `201` |
 | GET | `/admin/classes/{class}` | Class, instructor, program, and enrolled students |
 | PUT/PATCH | `/admin/classes/{class}` | Update class and enroll matching students |
-| DELETE | `/admin/classes/{class}` | Delete class with no enrollments |
+| DELETE | `/admin/classes/{class}` | Delete class with no enrollments or assignment history |
+| GET | `/admin/classes/{class}/assignments` | Teaching assignment versions and recent change events |
+| POST | `/admin/classes/{class}/assignment` | Assign, replace, move, swap, or remove teaching assignment |
+| GET | `/admin/classes/{class}/pending-requests` | Pending requests blocking an assignment change; **Paged** |
 | GET | `/admin/curricula` | List curriculum revisions; optional program/version filters; **Paged** |
 | POST | `/admin/curricula` | Add a curriculum revision; `201`, or `200` for an identical existing payload |
 | GET | `/admin/curricula/{curriculum}` | Curriculum subjects, offerings, program, and sources |
@@ -294,7 +297,7 @@ Allowed `proof_types` values, with exact spelling:
 - `Letter from Parent/Guardian`
 - `Others`
 
-The backend derives enrollment and instructor from the caller and class. It sets status `pending` and submission time; it also updates the user's guardian/contact details. An equivalent submission within five minutes returns `409`; equivalence compares enrollment, type, reason, subjects, minutes late, start date, and end date.
+The backend derives enrollment and active teaching assignment from the caller and class. It saves an immutable `class_snapshot` containing subject, instructor, program, section, academic term, and timetable details, and records `teaching_assignment_id` and `snapshot_source: submission`. It sets status `pending` and submission time; it also updates the user's guardian/contact details. An equivalent submission within five minutes returns `409`; equivalence compares enrollment, type, reason, subjects, minutes late, start date, and end date. Clients should send the optional `teaching_assignment_id` returned by `GET /classes`; an ended/replaced ID returns `409`. Older clients that omit it resolve the current active assignment under a class lock. Snapshot input supplied by the client is ignored.
 
 ### Read, edit, cancel, follow up
 
@@ -314,7 +317,7 @@ Only the owner of a pending request may edit or cancel it. The policy generally 
 
 ## Instructor decisions and follow-ups
 
-`GET /instructor/requests` lists only requests for the caller's taught classes with `enrollment.student` and `enrollment.class`. It supports pagination; export-only filters are not applied to this list.
+`GET /instructor/requests` lists requests linked to the caller's own teaching assignment versions with `enrollment.student`, `enrollment.class`, and `teachingAssignment`. Historical assignments remain readable by the original instructor; only active assignments permit request decisions. The replacement instructor does not inherit prior requests. Request JSON overlays `enrollment.class` with the stored `class_snapshot`, keeping the existing response shape historical. It supports pagination; export-only filters are not applied to this list.
 
 `PATCH /instructor/requests/{request}/decision` requires `{"status":"approved"}`, `noted`, or `invalid`. Only the actual instructor may decide; administrators/program heads cannot decide through their own monitoring access. Request and enrollment locking protects against duplicate processing. The pending-state policy may return `403` before the controller's `409` conflict check.
 
@@ -369,7 +372,7 @@ Required on create: subject name, section, program, year level, semester, and sc
 |---|---|
 | `subject_name` | String ≤255 |
 | `section` | String ≤50 |
-| `instructor_id` | Optional nullable user UUID with primary role `instructor` |
+| `instructor_id` | Create only: optional nullable UUID of an approved instructor. Must be omitted on update; use the assignment endpoint |
 | `schedule` | Optional structured meeting array; legacy string ≤4096 accepted. Omitted times require confirmed hours/count on creation |
 | `program_id` | Existing program UUID |
 | `year_level` | `1st`, `2nd`, `3rd`, `4th` |
@@ -380,7 +383,7 @@ Required on create: subject name, section, program, year level, semester, and sc
 | `weekly_hours` | Positive numeric ≤168, including fractions; derived when structured meeting times are supplied |
 | `meetings_per_week` | Integer 1–42; derived when structured meeting times are supplied |
 
-Create/update auto-enroll matching students only when the class belongs to the current semester and school year. It creates missing enrollments; it does not detach existing ones. Writes and audit logging run transactionally; class updates also recompute existing tracker statuses. Lists load instructor/program and enrollment count. Delete with any enrollments returns `409`; success returns `data: null`. See [Curriculum catalog and class schedules](#curriculum-catalog-and-class-schedules) for payload examples and attendance-hour behavior.
+Create/update auto-enroll matching students only when the class belongs to the current semester and school year. It creates missing enrollments; it does not detach existing ones. Writes and audit logging run transactionally; class updates also recompute existing tracker statuses. Lists load instructor/program, `active_teaching_assignment`, `assignment_revision`, enrollment count, and `pending_requests_count`. Class identity changes (subject, curriculum subject, program, section, year, semester, school year) return `409` once any enrollment or assignment history exists. Create/select another class and change its teaching assignment instead. Delete with any enrollments or assignment history returns `409`; success returns `data: null`. See [Teaching assignments](TEACHING-ASSIGNMENTS.md) for the action payloads and frontend integration contract, and [Curriculum catalog and class schedules](#curriculum-catalog-and-class-schedules) for schedule payloads and attendance-hour behavior.
 
 ## Reports and downloads
 

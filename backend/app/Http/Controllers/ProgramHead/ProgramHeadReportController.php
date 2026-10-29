@@ -55,14 +55,14 @@ class ProgramHeadReportController extends Controller
         $prefix = $risk ? 'request.' : '';
         $query->select($risk
             ? ['id', 'request_id', 'flagged_date', 'status']
-            : ['id', 'enrollment_id', 'type', 'date_submitted', 'created_at']);
+            : ['id', 'enrollment_id', 'class_snapshot', 'type', 'date_submitted', 'created_at']);
         $relations = [
             $prefix.'enrollment:id,student_id,class_id',
             $prefix.'enrollment.student:id,name',
             $prefix.'enrollment.class:id,subject_name,schedule,weekly_hours,meetings_per_week',
         ];
         if ($risk) {
-            $relations[] = 'request:id,enrollment_id';
+            $relations[] = 'request:id,enrollment_id,class_snapshot';
             $relations[] = 'request.enrollment.attendanceTracker';
         }
         $rows = $query->with($relations)->orderByRaw($dateColumn.' DESC')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
@@ -89,7 +89,7 @@ class ProgramHeadReportController extends Controller
                 }
                 $values = [
                     $record?->enrollment?->student?->name ?? '',
-                    $record?->enrollment?->class?->subject_name ?? '',
+                    $record?->class_snapshot['subject_name'] ?? $record?->enrollment?->class?->subject_name ?? '',
                     $date?->toDateString() ?? '',
                 ];
                 $this->writeRow($output, [...$values, ...$details]);
