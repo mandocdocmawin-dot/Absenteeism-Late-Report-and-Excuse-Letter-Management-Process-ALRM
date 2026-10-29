@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\ClassModel;
 use App\Models\ExcuseRequest;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -20,7 +21,7 @@ class InstructorFollowUpMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $instructor,
         public User $student,
-        public $class,
+        public ClassModel $class,
         public ExcuseRequest $excuseRequest,
         public string $reviewUrl,
         public int $followupCount,
