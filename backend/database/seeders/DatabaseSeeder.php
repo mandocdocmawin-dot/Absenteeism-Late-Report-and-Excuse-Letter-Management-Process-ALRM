@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             AcademicCatalogSeeder::class,
             AdminUserSeeder::class,
-            ClassSeeder::class,
+            DevInstructorClassSeeder::class,
         ]);
     }
 }

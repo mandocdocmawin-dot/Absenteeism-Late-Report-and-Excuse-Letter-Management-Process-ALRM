@@ -158,7 +158,7 @@ class ClassModel extends Model
         return round($this->weekly_hours * config('alrm.critical_absence_weeks'), 2);
     }
 
-    /** 20% of semester hours; round up the limit for 3-hour weekly subjects. */
+    /** 20% of semester hours, rounded up to the next whole hour for every subject. */
     public function allowedAbsenceUnits(): float
     {
         $limit = round(
@@ -166,6 +166,6 @@ class ClassModel extends Model
             2
         );
 
-        return (float) $this->weekly_hours === 3.0 ? ceil($limit) : $limit;
+        return ceil($limit);
     }
 }

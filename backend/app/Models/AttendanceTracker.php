@@ -85,13 +85,15 @@ class AttendanceTracker extends Model
     {
         $total = $this->enrollment->class->totalSemesterHours();
 
-        return $total > 0 ? round(max(0, $this->allowedUnits() - $this->unitsUsed()) / $total * 100, 2) : 0;
+        $remainingHours = max(0, round($this->allowedUnits() - $this->unitsUsed(), 2));
+
+        return $total > 0 ? round($remainingHours / $total * 100, 2) : 0;
     }
 
     /**
      * Policy: 3 lates = 1 absent hour.
      * warning → one week's class hours; critical → two weeks, with consultation.
-     * IR → allowable absence limit reached (20%, rounded up for 3-hour subjects).
+     * IR → allowable absence limit reached (20%, rounded up to a whole hour).
      * Tawagin tuwing nagbabago ang total_lates o total_absences.
      */
     public function recompute(): void

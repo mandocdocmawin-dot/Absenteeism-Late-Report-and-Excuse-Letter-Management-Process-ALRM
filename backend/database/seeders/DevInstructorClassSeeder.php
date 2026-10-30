@@ -131,7 +131,7 @@ class DevInstructorClassSeeder extends Seeder
         );
 
         if ($programsWithoutClasses->isNotEmpty()) {
-            $this->command?->warn('Some programs have no class data yet. Run ClassSeeder to import their sections before syncing dev classes.');
+            $this->command?->warn('Some programs have no class data yet. Create their classes through the administrator interface before seeding dev classes.');
         }
 
         Log::info('DevInstructorClassSeeder: dev classes synced', [
