@@ -1,9 +1,6 @@
 import { cn } from "cn"
 
-function Label({
-  className,
-  ...props
-}) {
+function Label({ className, ...props }) {
   return (
     <label
       data-slot="label"

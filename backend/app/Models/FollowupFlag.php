@@ -39,4 +39,26 @@ class FollowupFlag extends Model
     {
         return $this->belongsTo(User::class, 'escalated_to');
     }
+
+    /** Current attendance stage and percentage of total semester class hours. */
+    public function attendanceRisk(): array
+    {
+        $enrollment = $this->request?->enrollment;
+        $tracker = $enrollment?->attendanceTracker;
+
+        if (! $tracker || ! $enrollment->class) {
+            return ['threshold' => null, 'percentage' => null];
+        }
+
+        // Reuse the loaded enrollment without adding a circular serialized relation.
+        $tracker = clone $tracker;
+        $tracker->setRelation('enrollment', $enrollment);
+
+        return [
+            'threshold' => $tracker->status,
+            'percentage' => $enrollment->class->totalSemesterHours() > 0
+                ? $tracker->absencePercentage()
+                : null,
+        ];
+    }
 }

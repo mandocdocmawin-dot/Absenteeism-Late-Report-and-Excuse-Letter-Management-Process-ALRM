@@ -1,85 +1,46 @@
-import { CalendarDays, ClipboardList, FileText, Settings } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
+import { RecentNotificationsPlaceholder } from "@/components/loading/DashboardSkeleton/StudentDashboardPlaceholder";
+import StudentDashboardMetrics, { StudentDashboardResourceError } from "./StudentDashboardMetrics";
 import StudentPageLayout from "./StudentPageLayout";
+import StudentDashboardHeading from "./dashboard/StudentDashboardHeading";
+import RecentNotifications from "./dashboard/RecentNotifications";
+import useStudentPreferences from "./useStudentPreferences";
+import useStudentDashboardResources from "./useStudentDashboardResources";
 
-const dashboardCards = [
-  {
-    label: "My Records",
-    value: "0",
-    note: "Attendance entries available for review",
-    icon: ClipboardList,
-  },
-  {
-    label: "Pending Requests",
-    value: "0",
-    note: "Excuse or late requests awaiting review",
-    icon: FileText,
-  },
-  {
-    label: "This Week",
-    value: "0",
-    note: "Recorded absence or late items",
-    icon: CalendarDays,
-  },
-  {
-    label: "Settings",
-    value: "Ready",
-    note: "Manage account preferences",
-    icon: Settings,
-  },
-];
+function StudentDashboardContent({ user }) {
+  const { preferences } = useStudentPreferences(user.id);
+  const resources = useStudentDashboardResources(user.id);
+  const { requests, threshold, classes } = resources;
+  const { hash } = useLocation();
+  const loading = requests.loading || threshold.loading || classes.loading;
+
+  useEffect(() => {
+    if (!requests.loading && hash === "#recent-notifications") {
+      document.getElementById("recent-notifications")?.focus();
+    }
+  }, [hash, requests.loading]);
+
+  return <div data-slot={loading ? "dashboard-skeleton" : undefined} data-variant="student" className="min-w-0">
+    {loading && <span role="status" aria-label="Loading student dashboard..." aria-busy="true" className="sr-only">Loading student dashboard...</span>}
+    <StudentDashboardHeading user={user} classes={classes} />
+    <StudentDashboardMetrics {...resources} alertsEnabled={preferences.thresholdAlerts} />
+    {requests.loading ? <RecentNotificationsPlaceholder /> : requests.error ? <section id="recent-notifications" tabIndex={-1} className="mt-[34px] scroll-mt-6 outline-none sm:mx-1.5">
+      <h2 className="mb-5 text-[18px] font-semibold leading-[22px]">Recent Notifications</h2>
+      <StudentDashboardResourceError title="Request updates unavailable" error={requests.error} onRetry={requests.reload} />
+    </section> : <RecentNotifications userId={user.id} requests={requests.data} />}
+  </div>;
+}
 
 function StudentDashboard() {
   const { user } = useAuth();
-
-  return (
-    <StudentPageLayout>
-      <div className="grid gap-6">
-        <section>
-          <p className="mb-4 inline-flex bg-slate-50 px-1 text-sm font-black uppercase text-[#0b367f] dark:bg-slate-900 dark:text-blue-300">
-            Dashboard
-          </p>
-          <h1 className="text-2xl font-black tracking-normal text-slate-950 dark:text-slate-50">
-            Welcome back, {user?.name || "Student"}!
-          </h1>
-          <p className="mt-1 text-lg font-medium text-slate-900 dark:text-slate-300">
-            Here's your student overview
-          </p>
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {dashboardCards.map((card) => {
-            const Icon = card.icon;
-
-            return (
-              <Card
-                key={card.label}
-                className="rounded-[5px] border border-slate-300 bg-slate-50 py-0 shadow-none ring-0 dark:border-slate-800 dark:bg-slate-900"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase text-slate-800 dark:text-slate-300">
-                        {card.label}
-                      </p>
-                      <p className="mt-3 text-3xl font-black leading-none text-slate-950 dark:text-slate-50">
-                        {card.value}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-400">
-                        {card.note}
-                      </p>
-                    </div>
-                    <Icon className="size-5 text-[#203b82] dark:text-blue-300" />
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </section>
-      </div>
-    </StudentPageLayout>
-  );
+  return <StudentPageLayout contentPadding="px-[50px]">
+    <div className="@container grid w-full gap-0 font-[Arial,sans-serif] text-black dark:text-slate-100">
+      {user ? <StudentDashboardContent key={user.id} user={user} /> : <DashboardSkeleton variant="student" label="Loading student dashboard..." />}
+    </div>
+  </StudentPageLayout>;
 }
 
 export default StudentDashboard;

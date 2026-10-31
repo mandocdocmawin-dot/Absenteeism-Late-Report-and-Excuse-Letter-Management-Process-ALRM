@@ -17,7 +17,7 @@ class UserNotificationPolicy
      */
     public function view(User $user, UserNotification $notification): bool
     {
-        return $notification->user_id === $user->id;
+        return $notification->user_id === $user->id && $notification->channel === 'in_app';
     }
 
     /**
@@ -27,6 +27,6 @@ class UserNotificationPolicy
      */
     public function update(User $user, UserNotification $notification): bool
     {
-        return $notification->user_id === $user->id;
+        return $notification->user_id === $user->id && $notification->channel === 'in_app';
     }
 }

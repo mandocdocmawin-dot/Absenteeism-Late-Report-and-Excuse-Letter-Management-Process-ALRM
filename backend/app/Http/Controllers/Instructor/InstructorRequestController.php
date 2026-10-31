@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceTracker;
+use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
-use App\Models\FollowupFlag;
 use App\Models\UserNotification;
+use App\Services\AttendanceThresholdNotifier;
 use App\Services\AuditLoggerService;
+use App\Support\BoundedCollection;
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -17,22 +20,16 @@ class InstructorRequestController extends Controller
     public function __construct(
         protected AuditLoggerService $auditLogger,
     ) {}
+
     /**
      * List requests for classes taught by the authenticated instructor.
      */
     public function index()
     {
-        $requests = ExcuseRequest::whereHas('enrollment.class', function ($q) {
-            $q->where('instructor_id', Auth::id());
-        })->with('enrollment.student', 'enrollment.class')
-            ->latest()
-            ->get();
+        $requests = ExcuseRequest::forInstructor(Auth::id())->with('enrollment.student', 'enrollment.class', 'teachingAssignment')
+            ->latest();
 
-        return response()->json([
-            'success' => true,
-            'message' => null,
-            'data'    => $requests,
-        ]);
+        return BoundedCollection::respond($requests);
     }
 
     /**
@@ -42,63 +39,72 @@ class InstructorRequestController extends Controller
      */
     public function decide(HttpRequest $httpRequest, ExcuseRequest $request)
     {
-        $this->authorize('decide', $request);
-
-        if ($request->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'This request has already been decided.',
-                'data'    => null,
-            ], 409);
-        }
-
         $validated = $httpRequest->validate([
             'status' => ['required', 'in:approved,noted,invalid'],
         ]);
 
-        $request->update([
-            'status'        => $validated['status'],
-            'reviewed_by'   => Auth::id(),
-            'date_reviewed' => now(),
-        ]);
+        return DB::transaction(function () use ($request, $validated) {
+            $request = ExcuseRequest::whereKey($request->id)->lockForUpdate()->firstOrFail();
+            $this->authorize('decide', $request);
+            abort_if($request->status !== 'pending', 409, 'This request has already been decided.');
+            Enrollment::whereKey($request->enrollment_id)->lockForUpdate()->firstOrFail();
 
-        $this->auditLogger->log(
-            'decided_request_' . $validated['status'],
-            'requests',
-            $request->id
-        );
+            $request->update([
+                'status' => $validated['status'],
+                'reviewed_by' => Auth::id(),
+                'date_reviewed' => now(),
+            ]);
 
-        if ($validated['status'] === 'invalid') {
-            $this->applyToTracker($request);
-        }
+            $this->auditLogger->log(
+                'decided_request_'.$validated['status'],
+                'requests',
+                $request->id
+            );
 
-        UserNotification::create([
-            'user_id'    => $request->enrollment->student_id,
-            'request_id' => $request->id,
-            'type'       => 'request_decision',
-            'message'    => "Your {$request->type} request has been {$validated['status']}.",
-            'channel'    => 'in_app',
-            'date_sent'  => now(),
-            'is_read'    => false,
-        ]);
+            if ($validated['status'] === 'invalid') {
+                $this->applyToTracker($request);
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Decision recorded.',
-            'data'    => $request->fresh(),
-        ]);
+            $request->loadMissing('enrollment.class.instructor');
+
+            $instructorName = $request->class_snapshot['instructor']['name'] ?? 'your instructor';
+            $typeLabel = $request->type === 'late' ? 'late' : 'absence';
+
+            $dateLabel = $request->start_date_of_absence
+                ? ' for '.Carbon::parse($request->start_date_of_absence)->format('M j')
+                : '';
+
+            $statusLabel = match ($validated['status']) {
+                'approved' => 'approved',
+                'noted' => 'noted',
+                'invalid' => 'marked invalid',
+            };
+
+            UserNotification::create([
+                'user_id' => $request->enrollment->student_id,
+                'request_id' => $request->id,
+                'type' => 'request_decision',
+                'message' => "Your {$typeLabel} request{$dateLabel} was {$statusLabel} by {$instructorName}.",
+                'channel' => 'in_app',
+                'date_sent' => now(),
+                'is_read' => false,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Decision recorded.',
+                'data' => $request->fresh(),
+            ]);
+        });
     }
 
     /**
      * Increment the enrollment's attendance tracker and recompute status.
-     * Per stakeholder interviews: alerts fire at BOTH the warning stage (2)
-     * and IR stage (3), and go to both the Instructor and Program Head —
-     * not just on IR, not just to the Program Head. FollowupFlag (escalation
-     * record) is created only on the IR crossing.
+     * Warning, critical and IR alerts are delivered to the program heads through the
+     * shared notifier, including a consultation flag at the critical threshold.
      */
     private function applyToTracker(ExcuseRequest $request): void
     {
-        
         [$tracker, $previousStatus] = DB::transaction(function () use ($request) {
             $tracker = AttendanceTracker::where('enrollment_id', $request->enrollment_id)
                 ->lockForUpdate()
@@ -106,11 +112,11 @@ class InstructorRequestController extends Controller
 
             if (! $tracker) {
                 $tracker = AttendanceTracker::create([
-                    'enrollment_id'       => $request->enrollment_id,
-                    'total_lates'         => 0,
-                    'total_absences'      => 0,
-                    'converted_absences'  => 0,
-                    'status'              => 'safe',
+                    'enrollment_id' => $request->enrollment_id,
+                    'total_lates' => 0,
+                    'total_absences' => 0,
+                    'converted_absences' => 0,
+                    'status' => 'safe',
                 ]);
                 $tracker = AttendanceTracker::where('enrollment_id', $request->enrollment_id)
                     ->lockForUpdate()
@@ -122,6 +128,9 @@ class InstructorRequestController extends Controller
             if ($request->type === 'late') {
                 $tracker->total_lates++;
             } else {
+                $class = $request->historicalClass();
+                $tracker->absence_hours = ($tracker->absence_hours ?? $tracker->total_absences * $class->unitsPerMeeting())
+                    + $class->absenceHoursForPeriod($request->start_date_of_absence, $request->end_date_of_absence);
                 $tracker->total_absences++;
             }
 
@@ -132,56 +141,9 @@ class InstructorRequestController extends Controller
         });
 
         if ($tracker->status === $previousStatus) {
-            return; // no new threshold crossed
+            return;
         }
 
-        $student     = $request->enrollment->student;
-        $instructor  = $request->enrollment->class->instructor;
-        $programHead = $student->program?->programHead;
-
-        $recipients = array_filter([$instructor, $programHead]);
-
-        if ($tracker->status === 'warning') {
-            $this->notifyAll(
-                $recipients,
-                $request,
-                'threshold_warning',
-                "{$student->name} has reached 2 converted absences (warning)."
-            );
-        }
-
-        if ($tracker->status === 'IR') {
-            FollowupFlag::create([
-                'request_id'   => $request->id,
-                'flagged_date'   => now(),
-                'escalated_to' => $programHead?->id,
-                'status'       => 'open',
-            ]);
-
-            $this->notifyAll(
-                $recipients,
-                $request,
-                'ir_escalation',
-                "{$student->name} has reached IR status (3 converted absences) and needs follow-up."
-            );
-        }
-    }
-
-    /**
-     * Fan out the same notification to a set of recipients (instructor, program head).
-     */
-    private function notifyAll(array $recipients, ExcuseRequest $request, string $type, string $message): void
-    {
-        foreach ($recipients as $recipient) {
-            UserNotification::create([
-                'user_id'    => $recipient->id,
-                'request_id' => $request->id,
-                'type'       => $type,
-                'message'    => $message,
-                'channel'    => 'in_app',
-                'date_sent'  => now(),
-                'is_read'    => false,
-            ]);
-        }
+        app(AttendanceThresholdNotifier::class)->notify($tracker, $request);
     }
 }

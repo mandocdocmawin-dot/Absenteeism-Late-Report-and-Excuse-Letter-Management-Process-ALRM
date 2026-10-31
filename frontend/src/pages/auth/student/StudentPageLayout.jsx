@@ -1,10 +1,11 @@
-import { Bell, ChevronDown, UserCircle } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { UserCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import StudentSidebar from "./StudentSidebar";
+import StudentNotifications from "./notifications/StudentNotifications";
 
-function StudentPageLayout({ children }) {
+function StudentPageLayout({ children, contentPadding = "px-5 sm:px-8 lg:px-10" }) {
   const { user } = useAuth();
 
   return (
@@ -16,28 +17,20 @@ function StudentPageLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3 text-slate-950 dark:text-slate-100">
-            <ThemeToggle />
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="rounded-full p-2 text-slate-900 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800"
-            >
-              <Bell className="size-5" strokeWidth={2} />
-            </button>
-            <div className="flex items-center gap-2">
+            <StudentNotifications key={user?.id} userId={user?.id} />
+            <Link to="/settings" aria-label="Open profile settings" className="flex items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-blue-500">
               <UserCircle className="size-7 text-slate-400 dark:text-slate-500" strokeWidth={1.75} />
-              <div className="hidden leading-tight sm:block">
-                <p className="text-sm font-bold">{user?.name || "Student"}</p>
+              <div className="hidden max-w-44 leading-tight sm:block">
+                <p title={user?.name} className="truncate text-sm font-bold">{user?.name || "Student"}</p>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Student
                 </p>
               </div>
-              <ChevronDown className="size-4" />
-            </div>
+            </Link>
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-70px)] w-full bg-white px-5 py-7 transition-colors dark:bg-slate-950 sm:px-8 lg:px-10">
+        <main className={`min-h-[calc(100vh-70px)] w-full bg-white py-7 transition-colors dark:bg-slate-950 ${contentPadding}`}>
           {children}
         </main>
       </SidebarInset>

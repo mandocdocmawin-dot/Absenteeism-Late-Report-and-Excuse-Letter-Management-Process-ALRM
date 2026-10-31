@@ -1,5 +1,5 @@
-import { Bell, ChevronDown, UserCircle } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { UserCircle } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAuth } from "@/context/AuthContext";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Sidebar from "./Sidebar";
@@ -16,23 +16,15 @@ function AdminPageLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3 text-slate-950 dark:text-slate-100">
-            <ThemeToggle />
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="rounded-full p-2 text-slate-900 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800"
-            >
-              <Bell className="size-5" strokeWidth={2} />
-            </button>
+            <NotificationBell user={user} audience="admin" />
             <div className="flex items-center gap-2">
               <UserCircle className="size-7 text-slate-400 dark:text-slate-500" strokeWidth={1.75} />
               <div className="hidden leading-tight sm:block">
                 <p className="text-sm font-bold">{user?.name || "Admin"}</p>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] font-medium capitalize text-slate-500 dark:text-slate-400">
                   {user?.role || "Administrator"}
                 </p>
               </div>
-              <ChevronDown className="size-4" />
             </div>
           </div>
         </header>

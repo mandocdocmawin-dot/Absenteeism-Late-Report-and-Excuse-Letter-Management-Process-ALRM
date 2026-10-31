@@ -99,20 +99,16 @@ If Google login does not load, check that:
 
 ## Authentication Flow
 
-This React frontend now includes a Google OAuth login flow for ALRM using `@react-oauth/google` and `react-router-dom`.
+Google sign-in uses the existing backend OAuth redirect. The backend validates
+the school email and issues an OTP challenge when required. After successful
+verification, the frontend exchanges the one-time code for a backend session
+token and validates it with `GET /api/me`.
 
-Implemented changes:
-
-- Added global authentication state through `AuthContext`.
-- Added Google Sign-In on the `/login` page.
-- Decoded the Google credential response to read the signed-in user's email.
-- Restricted access to emails under the `laverdad.edu.ph` domain, including subdomains such as `student.laverdad.edu.ph`.
-- Displays an explicit access restriction alert when a user signs in with a non-La Verdad account.
-- Added `/login` and `/dashboard` routes.
-- Added `ProtectedRoute` route guarding:
-  - Unauthenticated users are redirected from `/dashboard` to `/login`.
-  - Authenticated users are redirected from `/login` to `/dashboard`.
-- Added a placeholder dashboard that shows the authenticated user's email and a logout button.
+- `AuthContext` restores the authenticated user from the saved token.
+- `ProtectedRoute` applies authentication, profile-completion, and role checks.
+- Login and OTP pages resume an existing server-validated session.
+- Role and verification permissions come from the backend, not local trust flags.
+- Logout revokes the current backend token and clears the browser session.
 
 ## Available Scripts
 
@@ -122,8 +118,44 @@ npm run dev
 npm run build
 npm run preview
 npm run lint
+npm run test:session
 ```
+
+## Session Persistence Across Deployments
+
+The frontend reuses the existing backend-issued Sanctum token in `localStorage`
+under `auth_token`. A new frontend build does not create a new login or OTP
+challenge. On startup, `GET /api/me` validates the saved token before protected
+pages are displayed. Local verification flags do not grant access.
+
+The current URL stays intact on reload. The last authorized page is also saved
+per account, so opening `/` or `/login` with a valid session returns to that page.
+Existing profile-completion and role guards still apply. This restores the page,
+not unsaved form contents.
+
+If the API is temporarily offline or restarting, the frontend keeps the token
+and current URL and shows a retry action. A `401` response for the current token
+ends that session. Explicit logout clears the token in all open tabs and calls
+the existing backend logout endpoint.
+
+Deployment requirements:
+
+- Use the same production origin. Browser storage is separate for localhost,
+  production domains, and Vercel preview URLs.
+- Keep `VITE_API_URL` pointed at the same backend and persistent token database.
+- Keep the existing Vercel SPA rewrite so direct page reloads load `index.html`.
+- Do not reset the token database during deployment. The frontend cannot restore
+  tokens that the backend has revoked or deleted, or browser storage the user cleared.
+- The inspected backend requires OTP for a fresh Google login and revokes older
+  tokens after successful OTP verification. Those backend policies are unchanged.
+
+Run `npm run test:session` for dependency-free session and page-restoration
+regression tests. Browser verification should also cover reloading a protected
+page, opening a new tab, a temporary API outage, OTP completion, and logout.
 
 ## Important Scope Notes
 
-This implementation does not include role-based access control or role validation. It only handles Google OAuth sign-in, La Verdad email-domain validation, global auth state, route protection, and login/dashboard redirection.
+Session recovery does not create a separate authentication system or change
+backend OTP, token-expiration, or role-assignment policies. API authorization
+continues to be enforced by the existing backend. A lost or revoked backend
+token requires a new login; a frontend-generated flag cannot replace it.

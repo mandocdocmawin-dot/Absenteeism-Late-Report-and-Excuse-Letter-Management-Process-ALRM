@@ -17,6 +17,7 @@ class ExcuseRequestFactory extends Factory
             'reason'                => $this->faker->sentence(),
             'evidence_file_url'     => null,
             'evidence_type'         => null,
+            'proof_types'           => null,
             'status'                => 'pending',
             'date_submitted'        => now(),
             'date_reviewed'         => null,

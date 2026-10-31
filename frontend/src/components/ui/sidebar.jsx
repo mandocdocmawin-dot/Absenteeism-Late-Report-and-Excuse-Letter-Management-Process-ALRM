@@ -27,7 +27,7 @@ import { PanelLeftIcon } from "lucide-react"
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH_MOBILE = "280px"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -43,7 +43,7 @@ function useSidebar() {
 }
 
 function SidebarProvider({
-  defaultOpen = true,
+  defaultOpen = false,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -52,11 +52,19 @@ function SidebarProvider({
   ...props
 }) {
   const isMobile = useIsMobile()
+  const hoverEnabled = !isMobile && typeof window !== "undefined" &&
+    window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches === true
   const [openMobile, setOpenMobile] = React.useState(false)
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen)
+  const [_open, _setOpen] = React.useState(() => {
+    // During navigation, the outgoing sidebar still exists in the render phase.
+    // Inherit its actual hover before the replacement is painted at full width.
+    const hoveredSidebar = hoverEnabled && typeof document !== "undefined" &&
+      document.querySelector('[data-slot="sidebar"]:hover')
+    return hoveredSidebar ? true : defaultOpen
+  })
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value) => {
@@ -103,10 +111,11 @@ function SidebarProvider({
     open,
     setOpen,
     isMobile,
+    hoverEnabled,
     openMobile,
     setOpenMobile,
     toggleSidebar,
-  }), [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar])
+  }), [state, open, setOpen, isMobile, hoverEnabled, openMobile, setOpenMobile, toggleSidebar])
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -140,7 +149,12 @@ function Sidebar({
   dir,
   ...props
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, hoverEnabled, state, openMobile, setOpenMobile, setOpen } = useSidebar()
+  const pointerInside = React.useRef(false)
+  const restoreHover = React.useCallback((node) => {
+    if (!node || !hoverEnabled) return
+    pointerInside.current = node.matches(":hover")
+  }, [hoverEnabled])
 
   if (collapsible === "none") {
     return (
@@ -165,7 +179,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="w-(--sidebar-width)! max-w-full bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE
@@ -185,12 +199,29 @@ function Sidebar({
 
   return (
     <div
+      ref={restoreHover}
       className="group peer hidden text-sidebar-foreground md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      onPointerEnter={hoverEnabled ? (event) => {
+        if (event.pointerType === "touch") return
+        pointerInside.current = true
+        setOpen(true)
+      } : undefined}
+      onPointerLeave={hoverEnabled ? (event) => {
+        if (event.pointerType === "touch") return
+        pointerInside.current = false
+        if (!event.currentTarget.querySelector(":focus-visible")) setOpen(false)
+      } : undefined}
+      onFocusCapture={hoverEnabled ? (event) => {
+        if (event.target.matches(":focus-visible")) setOpen(true)
+      } : undefined}
+      onBlurCapture={hoverEnabled ? (event) => {
+        if (!event.currentTarget.contains(event.relatedTarget) && !pointerInside.current) setOpen(false)
+      } : undefined}
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div

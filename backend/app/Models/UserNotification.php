@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\UserNotificationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,10 +21,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class UserNotification extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserNotificationFactory> */
+    public function scopeInApp(Builder $query): Builder
+    {
+        return $query->where('channel', 'in_app');
+    }
+
+    /** @use HasFactory<UserNotificationFactory> */
     use HasFactory, HasUuids;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     // Actual table name is 'notifications'
@@ -41,7 +49,7 @@ class UserNotification extends Model
     {
         return [
             'date_sent' => 'datetime',
-            'is_read'   => 'boolean',
+            'is_read' => 'boolean',
         ];
     }
 

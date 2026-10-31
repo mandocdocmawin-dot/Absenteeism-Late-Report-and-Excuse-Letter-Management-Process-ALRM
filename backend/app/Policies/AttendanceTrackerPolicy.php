@@ -28,6 +28,6 @@ class AttendanceTrackerPolicy
             return true;
         }
 
-        return $enrollment->student->program?->program_head_id === $user->id;
+        return $user->headsProgram($enrollment->class->program_id);
     }
 }

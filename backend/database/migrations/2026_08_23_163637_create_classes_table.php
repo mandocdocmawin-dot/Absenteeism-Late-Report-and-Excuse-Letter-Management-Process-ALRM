@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create('classes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('subject_name');
-            $table->foreignUuid('instructor_id')->constrained('users')->cascadeOnDelete();
-            $table->string('schedule');
+            $table->string('section')->nullable();
+            $table->enum('semester', ['1st', '2nd']);
+            $table->string('school_year'); // format: '2025-2026'
+            $table->foreignUuid('instructor_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->json('schedule');
             $table->foreignUuid('program_id')->constrained('programs')->cascadeOnDelete();
+            $table->string('year_level');
             $table->timestamps();
         });
     }

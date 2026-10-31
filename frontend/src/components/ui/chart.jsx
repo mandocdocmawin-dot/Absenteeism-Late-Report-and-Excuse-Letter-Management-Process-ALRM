@@ -58,22 +58,32 @@ function ChartContainer({
   )
 }
 
+const isCssIdentifier = (value) =>
+  typeof value === "string" && value.length > 0 && !/[^a-zA-Z0-9_-]/.test(value)
+
+function isCssColor(value) {
+  // Bound CSS tokens as well as HTML: React text alone cannot stop CSS breakout.
+  return typeof value === "string" &&
+    /^(?:#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})|[a-z]+|(?:var|rgba?|hsla?|hwb|lab|lch|oklab|oklch)\([\w\s.,%#()+/-]+\))$/i.test(value) &&
+    (value.match(/[a-z_-][\w-]*\s*\(/gi) ?? []).every((name) =>
+      /^(?:var|rgba?|hsla?|hwb|lab|lch|oklab|oklch)\($/i.test(name))
+}
+
 const ChartStyle = ({
   id,
   config
 }) => {
   const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme ?? config.color
+    ([key, config]) => isCssIdentifier(key) && (config.theme ?? config.color)
   )
 
-  if (!colorConfig.length) {
+  if (!isCssIdentifier(id) || !colorConfig.length) {
     return null
   }
 
   return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
+    <style>
+      {Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
@@ -82,15 +92,14 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme] ??
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    return isCssColor(color) ? `  --color-${key}: ${color};` : null
   })
   .join("\n")}
 }
 `
           )
-          .join("\n"),
-      }}
-    />
+          .join("\n")}
+    </style>
   );
 }
 

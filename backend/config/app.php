@@ -67,6 +67,7 @@ return [
     */
  
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+    'frontend_url_prod' => env('FRONTEND_URL_PROD', 'https://absenteeism-late-report-and-excuse.vercel.app'),
 
     /*
     |--------------------------------------------------------------------------

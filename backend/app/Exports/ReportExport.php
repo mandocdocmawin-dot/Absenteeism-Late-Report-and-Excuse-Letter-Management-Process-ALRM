@@ -2,17 +2,16 @@
 
 namespace App\Exports;
 
-use App\Models\ExcuseRequest;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 
-class ReportExport implements FromCollection, WithHeadings, WithMapping
+class ReportExport extends StringValueBinder implements FromCollection, WithCustomValueBinder, WithHeadings, WithMapping
 {
-    public function __construct(protected Collection $requests)
-    {
-    }
+    public function __construct(protected Collection $requests) {}
 
     public function collection(): Collection
     {
@@ -33,9 +32,9 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping
         return [
             $r->id,
             $r->enrollment->student->name ?? '',
-            $r->enrollment->class->program->program_name ?? '',
-            $r->enrollment->class->subject_name ?? '',
-            $r->enrollment->class->instructor->name ?? '',
+            $r->class_snapshot['program']['program_name'] ?? $r->enrollment->class->program->program_name ?? '',
+            $r->class_snapshot['subject_name'] ?? $r->enrollment->class->subject_name ?? '',
+            $r->class_snapshot !== null ? ($r->class_snapshot['instructor']['name'] ?? '') : ($r->enrollment->class->instructor->name ?? ''),
             $r->type,
             optional($r->start_date_of_absence)->toDateString(),
             optional($r->end_date_of_absence)->toDateString(),

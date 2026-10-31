@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle2, KeyRound, Mail } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { markTrustedOtpDevice } from "@/api/authSecurity";
-import { googleLoginUrl } from "@/api/client";
+import { getPostLoginPath } from "@/api/authSecurity";
+import SessionStatus from "@/components/SessionStatus";
+import { clearCallbackCredentials, googleLoginUrl } from "@/api/client";
 import {
   Card,
   CardContent,
@@ -16,22 +17,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import AuthLoading from "@/components/loading/AuthLoading";
 import { useAuth } from "@/context/AuthContext";
-import { needsProfileSetup } from "@/lib/profileSetup";
 import {
+  checkTrustedDevice,
   clearPendingOtp,
   exchangeOtpCode,
   getExchangeCodeFromResponse,
-  getOtpTokenFromResponse,
   getOtpWaitSeconds,
+  getPendingLogin,
   getPendingOtpEmail,
-  getPendingOtpToken,
   getPendingOtpUserId,
   sendOtp,
+  setPendingLogin,
   setPendingOtpSession,
   verifyOtp,
 } from "@/api/otp";
-import lvLogo from "@/assets/LV_Logo.png";
+import lvLogo from "@/assets/lv-logo-auth.webp";
 
 const INITIAL_RESEND_WAIT_SECONDS = 5 * 60;
 
@@ -43,9 +45,18 @@ function formatCountdown(seconds) {
 }
 
 function OtpVerification() {
+  const { user, loading, sessionError } = useAuth();
+
+  if (!user && (loading || sessionError)) return <SessionStatus />;
+  if (user) return <Navigate to={getPostLoginPath(user)} replace />;
+
+  return <OtpVerificationForm />;
+}
+
+function OtpVerificationForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { loginWithToken } = useAuth();
+  const { completeCookieLogin, logout } = useAuth();
   const [code, setCode] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -53,33 +64,47 @@ function OtpVerification() {
   const [verifying, setVerifying] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
 
+  // "pending" token mula sa Google callback. Sine-save sa sessionStorage
+  // para hindi mawala kapag nag-refresh o nagbago ang URL.
+  const pendingLogin = useMemo(() => {
+    const fromUrl = searchParams.get("pending");
+
+    if (fromUrl) {
+      setPendingLogin(fromUrl);
+      return fromUrl;
+    }
+
+    return getPendingLogin();
+  }, [searchParams]);
+
+  const exchangeFromUrl = searchParams.get("exchange_code");
+  const alreadyChecked = searchParams.get("checked") === "1";
+  const needsTrustedCheck =
+    Boolean(exchangeFromUrl) || (Boolean(pendingLogin) && !alreadyChecked);
+
+  const [checking, setChecking] = useState(needsTrustedCheck);
+  const checkedRef = useRef(false);
+
   const pendingSession = useMemo(() => {
-    const urlToken =
-      searchParams.get("token") ||
-      searchParams.get("otp_token") ||
-      searchParams.get("verification_token");
     const urlEmail = searchParams.get("email");
     const urlUserId = searchParams.get("user_id");
 
-    if (urlToken || urlUserId) {
+    if (urlUserId) {
       setPendingOtpSession({
-        token: urlToken,
         email: urlEmail,
         userId: urlUserId,
       });
-      return { token: urlToken, email: urlEmail, userId: urlUserId };
+      return { email: urlEmail, userId: urlUserId };
     }
 
     return {
-      token: getPendingOtpToken(),
       email: getPendingOtpEmail(),
       userId: getPendingOtpUserId(),
     };
   }, [searchParams]);
-  const pendingToken = pendingSession.token;
   const pendingEmail = pendingSession.email;
   const pendingUserId = pendingSession.userId;
-  const hasPendingOtp = Boolean(pendingToken || pendingUserId || pendingEmail);
+  const hasPendingOtp = Boolean(pendingLogin && (pendingUserId || pendingEmail));
   const canSubmit = code.length === 6 && !verifying;
   const initialResendWaitSeconds = useMemo(
     () =>
@@ -96,10 +121,10 @@ function OtpVerification() {
     [searchParams],
   );
   const resendStorageKey = useMemo(() => {
-    const keySource = pendingUserId || pendingEmail || pendingToken || "otp";
+    const keySource = pendingUserId || pendingEmail || "otp";
 
     return `otp_resend_ready_at:${keySource}`;
-  }, [pendingEmail, pendingToken, pendingUserId]);
+  }, [pendingEmail, pendingUserId]);
 
   function startResendCountdown(seconds) {
     const nextSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
@@ -117,12 +142,48 @@ function OtpVerification() {
     setResendSeconds(nextSeconds);
   }
 
+  useEffect(() => { clearCallbackCredentials(); }, []);
+
+  useEffect(() => {
+    if (!needsTrustedCheck || checkedRef.current) return;
+    checkedRef.current = true;
+
+    (async () => {
+      try {
+        let exchangeCode = exchangeFromUrl;
+
+        if (!exchangeCode) {
+          const res = await checkTrustedDevice({ pending: pendingLogin });
+
+          if (res?.data?.trusted) {
+            exchangeCode = res?.data?.exchange_code;
+          }
+        }
+
+        if (exchangeCode) {
+          const exchangeRes = await exchangeOtpCode(exchangeCode);
+          const verifiedUser = await completeCookieLogin(exchangeRes);
+          clearPendingOtp();
+          navigate(getPostLoginPath(verifiedUser), { replace: true });
+          return;
+        }
+      } catch (checkError) {
+        setError(checkError?.message || "Unable to verify this device.");
+      }
+
+      setChecking(false); // hindi trusted: ipakita ang OTP form
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsTrustedCheck]);
+
   useEffect(() => {
     if (!hasPendingOtp) return;
 
     const savedReadyAt = Number(sessionStorage.getItem(resendStorageKey));
 
     if (Number.isFinite(savedReadyAt) && savedReadyAt > Date.now()) {
+      // Restore the countdown saved before this page was mounted.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResendSeconds(Math.ceil((savedReadyAt - Date.now()) / 1000));
       return;
     }
@@ -163,9 +224,9 @@ function OtpVerification() {
 
     try {
       const response = await sendOtp({
-        token: pendingToken,
         userId: pendingUserId,
         email: pendingEmail,
+        pending: pendingLogin,
       });
       startResendCountdown(
         getOtpWaitSeconds(response, initialResendWaitSeconds),
@@ -206,35 +267,17 @@ function OtpVerification() {
 
     try {
       const response = await verifyOtp({
-        token: pendingToken,
         userId: pendingUserId,
         email: pendingEmail,
         code,
+        pending: pendingLogin,
       });
-      let verifiedToken = getOtpTokenFromResponse(response, pendingToken);
-
-      if (!verifiedToken) {
-        const exchangeCode = getExchangeCodeFromResponse(response);
-
-        if (exchangeCode) {
-          const exchangeResponse = await exchangeOtpCode(exchangeCode);
-          verifiedToken = getOtpTokenFromResponse(exchangeResponse);
-        }
-      }
-
-      if (!verifiedToken) {
-        throw new Error(
-          "Verification succeeded, but the login token exchange failed.",
-        );
-      }
-
-      const verifiedUser = await loginWithToken(verifiedToken);
-      markTrustedOtpDevice({
-        userId: verifiedUser?.id || pendingUserId,
-        email: verifiedUser?.email || pendingEmail,
-      });
+      const exchangeCode = getExchangeCodeFromResponse(response);
+      if (!exchangeCode) throw new Error("Verification succeeded, but the one-time sign-in code is missing.");
+      const exchangeResponse = await exchangeOtpCode(exchangeCode);
+      const verifiedUser = await completeCookieLogin(exchangeResponse);
       clearPendingOtp();
-      navigate(needsProfileSetup(verifiedUser) ? "/complete-profile" : "/", {
+      navigate(getPostLoginPath(verifiedUser), {
         replace: true,
       });
     } catch (verifyError) {
@@ -247,9 +290,14 @@ function OtpVerification() {
     }
   }
 
-  function handleBackToLogin() {
+  async function handleBackToLogin() {
     clearPendingOtp();
+    await logout();
     window.location.href = googleLoginUrl({ prompt: "select_account" });
+  }
+
+  if (checking) {
+    return <AuthLoading />;
   }
 
   if (!hasPendingOtp) {
@@ -259,6 +307,8 @@ function OtpVerification() {
           <CardHeader className="items-center text-center">
             <img
               src={lvLogo}
+              width="384"
+              height="384"
               alt="ALRM System logo"
               className="mx-auto mb-2 size-20 object-contain"
             />
@@ -289,6 +339,8 @@ function OtpVerification() {
         <CardHeader className="items-center gap-3 text-center">
           <img
             src={lvLogo}
+            width="384"
+            height="384"
             alt="ALRM System logo"
             className="mx-auto size-20 object-contain"
           />

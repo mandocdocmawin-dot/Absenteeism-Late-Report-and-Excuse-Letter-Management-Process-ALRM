@@ -33,10 +33,11 @@ class AdminDashboardController extends Controller
             'total_students'          => User::where('role', 'student')->count(),
             'total_instructors'       => User::where('role', 'instructor')->count(),
             'total_program_heads'     => User::where('role', 'program_head')->count(),
-            'pending_staff_approvals' => User::where('status', 'pending')->whereNull('role')->count(),
+            'pending_staff_approvals' => User::where('status', 'pending')->count(),
             'pending_requests'        => ExcuseRequest::where('status', 'pending')->count(),
             'warning_count'           => AttendanceTracker::where('status', 'warning')->count(),
             'ir_count'                => AttendanceTracker::where('status', 'IR')->count(),
+            'critical_count'          => AttendanceTracker::where('status', 'critical')->count(),
             'open_followup_flags'     => FollowupFlag::where('status', 'open')->count(),
             'programs_summary' => Program::withCount([
                     'classes',

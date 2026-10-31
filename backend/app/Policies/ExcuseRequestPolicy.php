@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\ExcuseRequest;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ExcuseRequestPolicy
 {
@@ -34,16 +33,15 @@ class ExcuseRequestPolicy
             return $excuseRequest->enrollment->student_id === $user->id;
         }
 
-        if ($excuseRequest->enrollment->class->instructor_id === $user->id) {
+        if ($user->role === 'instructor' && $excuseRequest->teachingAssignment?->instructor_id === $user->id) {
             return true;
         }
 
         // Program Head — primary role OR an instructor who also heads this
         // program (same override as RoleMiddleware §9.1a).
-        $headedProgram = $user->headedProgram;
-
-        return $headedProgram && $excuseRequest->enrollment->class->program_id === $headedProgram->id;
+        return $user->headsProgram($excuseRequest->enrollment->class->program_id);
     }
+
     /**
      * Determine whether the user can approve/note/invalidate the request.
      * Only the instructor of the class this request was filed under.
@@ -51,7 +49,8 @@ class ExcuseRequestPolicy
     public function decide(User $user, ExcuseRequest $excuseRequest): bool
     {
         return $user->role === 'instructor'
-            && $excuseRequest->enrollment->class->instructor_id === $user->id;
+            && $excuseRequest->teachingAssignment?->instructor_id === $user->id
+            && $excuseRequest->teachingAssignment->ended_at === null;
     }
 
     /**
@@ -67,15 +66,9 @@ class ExcuseRequestPolicy
      */
     public function update(User $user, ExcuseRequest $excuseRequest): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, ExcuseRequest $excuseRequest): bool
-    {
-        return false;
+        return $user->role === 'student'
+            && $excuseRequest->enrollment->student_id === $user->id
+            && $excuseRequest->status === 'pending';
     }
 
     /**

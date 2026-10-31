@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://absenteeism-late-report-and-excuse.vercel.app/sitemap.xml

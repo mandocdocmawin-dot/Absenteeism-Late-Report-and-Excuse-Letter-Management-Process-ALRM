@@ -16,7 +16,10 @@ class OtpCode extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    protected $hidden = ['code'];
+
     protected $casts = [
+        'code' => 'hashed',
         'expires_at'  => 'datetime',
         'verified_at' => 'datetime',
     ];

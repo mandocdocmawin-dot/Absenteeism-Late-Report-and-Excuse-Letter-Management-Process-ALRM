@@ -1,110 +1,44 @@
-const ACTIVE_SESSION_KEY = "alrm_active_session_id";
-const TAB_SESSION_KEY = "alrm_tab_session_id";
-const TRUSTED_DEVICE_PREFIX = "alrm_trusted_otp:";
+import { needsProfileSetup } from '../lib/profileSetup.js';
 
-function randomId() {
-  if (crypto?.randomUUID) return crypto.randomUUID();
+const LAST_PAGE_PREFIX = 'alrm_last_page:';
+const AUTH_PATHS = ['/login', '/signed-out', '/auth/callback', '/auth/otp', '/verify-otp', '/complete-profile'];
 
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
+function safePage(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) return null;
 
-function normalizeIdentityValue(value) {
-  return String(value || "").trim().toLowerCase();
-}
+  try {
+    const url = new URL(path, 'https://alrm.invalid');
+    if (url.origin !== 'https://alrm.invalid' || url.pathname === '/' ||
+        AUTH_PATHS.includes(url.pathname.replace(/\/+$/, '').toLowerCase())) return null;
 
-function trustedDeviceKeys(identity = {}) {
-  const identifiers = [
-    normalizeIdentityValue(identity.userId),
-    normalizeIdentityValue(identity.email),
-  ].filter(Boolean);
-
-  return [...new Set(identifiers)].map(
-    (identifier) => `${TRUSTED_DEVICE_PREFIX}${identifier}`,
-  );
-}
-
-export function getTabSessionId() {
-  let sessionId = sessionStorage.getItem(TAB_SESSION_KEY);
-
-  if (!sessionId) {
-    sessionId = randomId();
-    sessionStorage.setItem(TAB_SESSION_KEY, sessionId);
-  }
-
-  return sessionId;
-}
-
-export function activateBrowserSession() {
-  const sessionId = getTabSessionId();
-  localStorage.setItem(ACTIVE_SESSION_KEY, sessionId);
-
-  return sessionId;
-}
-
-export function clearActiveBrowserSession() {
-  const sessionId = sessionStorage.getItem(TAB_SESSION_KEY);
-
-  if (sessionId && localStorage.getItem(ACTIVE_SESSION_KEY) === sessionId) {
-    localStorage.removeItem(ACTIVE_SESSION_KEY);
-  }
-}
-
-export function isCurrentBrowserSessionActive() {
-  const activeSessionId = localStorage.getItem(ACTIVE_SESSION_KEY);
-
-  return !activeSessionId || activeSessionId === getTabSessionId();
-}
-
-export function subscribeToActiveSessionChanges(onInactive) {
-  function handleStorage(event) {
-    if (event.key !== ACTIVE_SESSION_KEY || !event.newValue) return;
-    if (event.newValue === getTabSessionId()) return;
-
-    onInactive?.();
-  }
-
-  window.addEventListener("storage", handleStorage);
-
-  return () => window.removeEventListener("storage", handleStorage);
-}
-
-export function markTrustedOtpDevice(identity) {
-  const keys = trustedDeviceKeys(identity);
-
-  keys.forEach((key) => {
-    localStorage.setItem(
-      key,
-      JSON.stringify({
-        trustedAt: new Date().toISOString(),
-      }),
-    );
-  });
-}
-
-export function isTrustedOtpDevice(identity) {
-  const keys = trustedDeviceKeys(identity);
-
-  return keys.some((key) => localStorage.getItem(key));
-}
-
-export function isAccountVerified(user = {}) {
-  return Boolean(
-    user.email_verified_at ||
-      user.emailVerifiedAt ||
-      user.email_verified ||
-      user.emailVerified ||
-      user.is_verified ||
-      user.isVerified ||
-      user.account_verified ||
-      user.accountVerified ||
-      user.verified,
-  );
-}
-
-export function clearTrustedOtpDevices() {
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith(TRUSTED_DEVICE_PREFIX)) {
-      localStorage.removeItem(key);
+    // Authentication credentials must never be included in a saved location.
+    for (const key of [...url.searchParams.keys()]) {
+      if (/token|code|password|secret/i.test(key)) url.searchParams.delete(key);
     }
-  });
+    if (/token|code|password|secret/i.test(url.hash)) url.hash = '';
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberAuthenticatedPage(user, path) {
+  const page = safePage(path);
+  if (!user?.id || !page) return;
+  try {
+    localStorage.setItem(`${LAST_PAGE_PREFIX}${user.id}`, page);
+  } catch {
+    // Page restoration is optional when browser storage is unavailable.
+  }
+}
+
+export function getPostLoginPath(user) {
+  if (!user?.id) return '/login';
+  if (needsProfileSetup(user)) return '/complete-profile';
+
+  try {
+    return safePage(localStorage.getItem(`${LAST_PAGE_PREFIX}${user.id}`)) || '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
 }

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowLeft,
   ChevronDown,
   Search,
   UserCircle,
 } from "lucide-react";
 import { getAdminStudent } from "@/api/adminStudents";
+import LoadingSkeleton from "@/components/loading/LoadingSkeleton";
+import PageBreadcrumbs from "@/components/navigation/PageBreadcrumbs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Spinner } from "@/components/ui/spinner";
+import { historicalRequestClass } from "@/lib/requestHistory";
 import {
   Table,
   TableBody,
@@ -41,7 +42,9 @@ const statusOptions = [
 
 function valueFrom(item, keys, fallback = "") {
   for (const key of keys) {
-    const value = key.split(".").reduce((current, part) => current?.[part], item);
+    const value = key
+      .split(".")
+      .reduce((current, part) => current?.[part], item);
     if (value !== undefined && value !== null && value !== "") return value;
   }
 
@@ -62,11 +65,15 @@ function formatDate(value) {
 }
 
 function displayId(student) {
-  return valueFrom(
-    student,
-    ["student_id", "studentId", "display_id", "displayId", "profile.student_id", "id"],
-    "Unassigned",
-  );
+  return valueFrom(student, [
+    "school_id_number",
+    "student_id",
+    "studentId",
+    "display_id",
+    "displayId",
+    "profile.student_id",
+    "id",
+  ]);
 }
 
 function programName(student) {
@@ -102,17 +109,31 @@ function yearLevel(student) {
 }
 
 function studentName(student) {
-  return valueFrom(student, ["name", "full_name", "fullName", "user.name"], "Unnamed Student");
+  return valueFrom(
+    student,
+    ["name", "full_name", "fullName", "user.name"],
+    "Unnamed Student",
+  );
 }
 
 function studentEmail(student) {
-  return valueFrom(student, ["email", "user.email", "profile.email"], "Not recorded");
+  return valueFrom(
+    student,
+    ["email", "user.email", "profile.email"],
+    "Not recorded",
+  );
 }
 
 function studentContact(student) {
   return valueFrom(
     student,
-    ["contact_number", "contactNumber", "phone", "mobile_number", "profile.contact_number"],
+    [
+      "contact_number",
+      "contactNumber",
+      "phone",
+      "mobile_number",
+      "profile.contact_number",
+    ],
     "Not recorded",
   );
 }
@@ -152,20 +173,33 @@ function studentRequests(student) {
 function attendanceSummary(student) {
   const directAttendance = valueFrom(
     student,
-    ["attendance", "attendance_tracker", "attendanceTracker", "absence_summary"],
+    [
+      "attendance",
+      "attendance_tracker",
+      "attendanceTracker",
+      "absence_summary",
+    ],
     null,
   );
 
   if (directAttendance) return directAttendance;
 
   const enrollment = listFrom(student?.enrollments).find(
-    (item) => item?.attendance_tracker || item?.attendanceTracker || item?.attendance,
+    (item) =>
+      item?.attendance_tracker || item?.attendanceTracker || item?.attendance,
   );
 
-  return enrollment?.attendance_tracker || enrollment?.attendanceTracker || enrollment?.attendance || null;
+  return (
+    enrollment?.attendance_tracker ||
+    enrollment?.attendanceTracker ||
+    enrollment?.attendance ||
+    null
+  );
 }
 
 function requestClass(request) {
+  const course = historicalRequestClass(request);
+  if (course) return course.subject_name || course.name || "Unassigned";
   return valueFrom(
     request,
     [
@@ -220,7 +254,13 @@ function requestReason(request) {
 function requestStatus(request) {
   return valueFrom(
     request,
-    ["status", "approval_status", "approvalStatus", "request_status", "requestStatus"],
+    [
+      "status",
+      "approval_status",
+      "approvalStatus",
+      "request_status",
+      "requestStatus",
+    ],
     "",
   );
 }
@@ -291,7 +331,9 @@ function StudentIdentityCard({ student }) {
 }
 
 function AbsenceCountCard({ attendance }) {
-  const threshold = Number(attendance?.threshold || attendance?.absence_threshold || 6);
+  const threshold = Number(
+    attendance?.threshold || attendance?.absence_threshold || 6,
+  );
   const count = Number(
     attendance?.converted_absences ??
       attendance?.convertedAbsences ??
@@ -301,7 +343,8 @@ function AbsenceCountCard({ attendance }) {
       attendance?.totalAbsences ??
       0,
   );
-  const percent = threshold > 0 ? Math.min(100, Math.round((count / threshold) * 100)) : 0;
+  const percent =
+    threshold > 0 ? Math.min(100, Math.round((count / threshold) * 100)) : 0;
 
   return (
     <div className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-4">
@@ -363,7 +406,6 @@ function RequestFilters({ search, status, onSearchChange, onStatusChange }) {
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#203b82]" />
       </div>
     </div>
   );
@@ -435,7 +477,6 @@ function RequestsTable({ requests }) {
 }
 
 function StudentProfile() {
-  const navigate = useNavigate();
   const { studentId } = useParams();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -456,7 +497,9 @@ function StudentProfile() {
       } catch (loadError) {
         if (alive) {
           setStudent(null);
-          setError(loadError?.message || "Unable to load this student profile.");
+          setError(
+            loadError?.message || "Unable to load this student profile.",
+          );
         }
       } finally {
         if (alive) setLoading(false);
@@ -497,15 +540,7 @@ function StudentProfile() {
   return (
     <AdminPageLayout>
       <div className="mx-auto grid w-full max-w-[1040px] gap-6">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => navigate("/students")}
-          className="h-auto w-fit rounded-[5px] px-0 py-0 text-sm font-black text-[#203b82] hover:bg-transparent hover:text-[#14285f]"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Students
-        </Button>
+        <PageBreadcrumbs items={[{ label: "Students", to: "/students" }, { label: "Student Profile" }]} />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-black tracking-normal text-slate-950">
@@ -522,12 +557,7 @@ function StudentProfile() {
         </div>
 
         {loading && (
-          <div className="flex min-h-[320px] items-center justify-center rounded-[5px] border border-slate-200">
-            <Spinner className="mr-2" />
-            <span className="text-sm font-medium text-slate-600">
-              Loading student profile...
-            </span>
-          </div>
+          <LoadingSkeleton variant="profile" label="Loading student profile" />
         )}
 
         {!loading && error && (

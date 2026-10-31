@@ -1,50 +1,57 @@
-import { normalizeRole } from "./roles";
+import { normalizeRole } from "./roles.js";
 
-const PROFILE_SETUP_PREFIX = "alrm_profile_setup:";
+const LEGACY_PREFIX = "alrm_profile_setup:";
 
-function setupKey(user) {
-  return `${PROFILE_SETUP_PREFIX}${user?.id || user?.email || "unknown"}`;
+export const YEAR_LEVELS = [
+  { value: "1st", label: "1st Year" },
+  { value: "2nd", label: "2nd Year" },
+  { value: "3rd", label: "3rd Year" },
+  { value: "4th", label: "4th Year" },
+];
+
+export const ASSOCIATE_YEAR_LEVELS = YEAR_LEVELS.slice(0, 2);
+
+export function getProfileSetupRoleOptions(email) {
+  const domain = String(email || "")
+    .trim()
+    .toLowerCase()
+    .match(/^[^\s@]+@([^\s@]+)$/)?.[1];
+
+  if (domain === "student.laverdad.edu.ph") {
+    return [{ label: "Student", value: "student" }];
+  }
+
+  if (domain === "laverdad.edu.ph") {
+    return [
+      { label: "Instructor", value: "instructor" },
+      { label: "Program Head", value: "program_head" },
+    ];
+  }
+
+  return [];
 }
 
-function readLocalSetup(user) {
+/** Burahin ang lumang localStorage na pinagmulan ng maling "complete" state. */
+export function clearLegacyProfileSetup() {
   try {
-    const raw = localStorage.getItem(setupKey(user));
-    return raw ? JSON.parse(raw) : null;
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(LEGACY_PREFIX))
+      .forEach((key) => localStorage.removeItem(key));
   } catch {
-    return null;
+    // ignore (private mode, atbp.)
   }
 }
 
-function hasValue(value) {
-  return value !== undefined && value !== null && String(value).trim() !== "";
-}
-
-function studentNumberFrom(user, localSetup) {
-  return (
-    user?.student_number ||
-    user?.studentNumber ||
-    user?.school_id ||
-    user?.schoolId ||
-    user?.student_id_number ||
-    user?.studentIdNumber ||
-    localSetup?.student_number ||
-    localSetup?.studentNumber ||
-    ""
-  );
-}
-
 export function getStoredProfileSetup(user) {
-  return readLocalSetup(user);
-}
+  if (!user) return null;
 
-export function storeProfileSetup(user, setup) {
-  localStorage.setItem(
-    setupKey(user),
-    JSON.stringify({
-      ...setup,
-      completed_at: new Date().toISOString(),
-    }),
-  );
+  return {
+    role: user.role ?? "",
+    program_id: user.program_id ?? null,
+    program_name: user.program?.program_name ?? "",
+    student_number: user.school_id_number ?? "",
+    year_level: user.year_level ?? "",
+  };
 }
 
 export function splitVerifiedName(name = "") {
@@ -57,23 +64,60 @@ export function splitVerifiedName(name = "") {
   };
 }
 
+function hasValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
+export function isProfileSetupReady({
+  role,
+  userId,
+  schoolIdNumber = "",
+  programId,
+  selectedProgramId,
+  yearLevel = "",
+  yearOptions = [],
+}) {
+  const normalizedRole = normalizeRole(role);
+  const hasSelectedProgram =
+    hasValue(programId) &&
+    hasValue(selectedProgramId) &&
+    String(programId) === String(selectedProgramId);
+
+  if (!hasSelectedProgram) return false;
+  if (normalizedRole === "student") {
+    return hasValue(schoolIdNumber) && yearOptions.some((year) => year.value === yearLevel);
+  }
+
+  if (normalizedRole === "instructor") return hasValue(schoolIdNumber);
+  return normalizedRole === "program" && hasValue(userId);
+}
+
+/**
+ * Server data lang ang pinagbabatayan (galing sa /api/auth/me).
+ * Student:  program_id + year_level + school_id_number
+ * Instructor: assigned program + school_id_number persisted by the server
+ * Program Head: assigned by an administrator, so no self-service setup is required
+ */
 export function isProfileSetupComplete(user) {
   if (!user) return false;
 
-  const localSetup = readLocalSetup(user);
-  const role = normalizeRole(user.role || localSetup?.role);
-  const programId = user.program_id || user.programId || localSetup?.program_id;
-  const yearLevel = user.year_level || user.yearLevel || localSetup?.year_level;
-  const studentNumber = studentNumberFrom(user, localSetup);
-
+  const role = normalizeRole(user.role);
   if (!hasValue(role)) return false;
-  if (role === "admin") return true;
-  if (role === "program" || role === "instructor") return hasValue(programId);
+  if (["admin", "program"].includes(role)) return true;
+
   if (role === "student") {
-    return hasValue(programId) && hasValue(yearLevel) && hasValue(studentNumber);
+    return (
+      hasValue(user.program_id) &&
+      hasValue(user.year_level) &&
+      hasValue(user.school_id_number)
+    );
   }
 
-  return false;
+  const hasAssignedProgram = (
+    hasValue(user.program_id) ||
+    (Array.isArray(user.programs) && user.programs.length > 0)
+  );
+  return hasAssignedProgram && hasValue(user.school_id_number);
 }
 
 export function needsProfileSetup(user) {

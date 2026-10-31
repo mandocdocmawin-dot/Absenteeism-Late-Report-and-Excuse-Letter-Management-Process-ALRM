@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, matchPath, useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   FileText,
@@ -8,16 +8,11 @@ import {
 } from "lucide-react";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import LogoutConfirmation from "@/components/navigation/RoleSidebar/LogoutConfirmation";
+import SidebarBrand from "@/components/navigation/RoleSidebar/SidebarBrand";
+import { logoutToSignedOut } from "@/lib/logout";
 import {
   Sidebar as AppSidebar,
   SidebarContent,
@@ -27,11 +22,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import lvLogo from "@/assets/LV_Logo.png";
 
 const menuItems = [
   {
@@ -56,41 +49,19 @@ const menuItems = [
   },
 ];
 
-function StudentSidebarBrand() {
-  const { toggleSidebar } = useSidebar();
-
-  return (
-    <button
-      type="button"
-      aria-label="Toggle sidebar"
-      onClick={toggleSidebar}
-      className="flex h-[70px] w-full items-center gap-2 px-4 text-white hover:bg-white/5 hover:text-white group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-    >
-      <img
-        src={lvLogo}
-        alt="ALRM System logo"
-        className="size-9 shrink-0 object-contain"
-      />
-      <span className="whitespace-nowrap text-xl font-black tracking-normal group-data-[collapsible=icon]:hidden">
-        ALRM SYSTEM
-      </span>
-    </button>
-  );
-}
-
 function StudentSidebar({ children }) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { logout } = useAuth();
 
-  async function handleLogout() {
-    await logout();
-    navigate("/login", { replace: true });
+  function handleLogout() {
+    return logoutToSignedOut(logout, navigate);
   }
 
   return (
     <SidebarProvider
       style={{
-        "--sidebar-width": "214px",
+        "--sidebar-width": "280px",
         "--sidebar-width-icon": "72px",
       }}
     >
@@ -99,37 +70,35 @@ function StudentSidebar({ children }) {
         className="border-0 bg-[#0d1526] text-white"
       >
         <SidebarHeader className="bg-[#0d1526] p-0">
-          <StudentSidebarBrand />
+          <SidebarBrand />
         </SidebarHeader>
 
         <SidebarContent className="bg-[#0d1526] px-3 py-8 group-data-[collapsible=icon]:px-3">
           <SidebarMenu className="gap-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = Boolean(matchPath({ path: item.path, end: item.path === "/dashboard" }, pathname));
 
               return (
                 <SidebarMenuItem key={item.path}>
-                  <NavLink to={item.path} end={item.path === "/dashboard"}>
-                    {({ isActive }) => (
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        tooltip={item.label}
-                        className={cn(
-                          "h-9 gap-3 rounded-[6px] px-4 text-[15px] font-bold text-slate-100 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
-                          isActive &&
-                            "bg-[#203b82] text-white hover:bg-[#203b82]",
-                        )}
-                      >
-                        <Icon
-                          className="size-5 shrink-0"
-                          strokeWidth={2.25}
-                        />
-                        <span className="group-data-[collapsible=icon]:hidden">
-                          {item.label}
-                        </span>
-                      </SidebarMenuButton>
+                  <SidebarMenuButton
+                    render={<NavLink to={item.path} aria-label={item.label} end={item.path === "/dashboard"} />}
+                    isActive={isActive}
+                    tooltip={item.label}
+                    className={cn(
+                      "h-9 gap-3 rounded-[6px] px-4 text-[15px] font-bold text-slate-100 hover:bg-white/10 hover:text-white group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
+                      isActive &&
+                        "bg-[#203b82] text-white hover:bg-[#203b82]",
                     )}
-                  </NavLink>
+                  >
+                    <Icon
+                      className="size-5 shrink-0"
+                      strokeWidth={2.25}
+                    />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {item.label}
+                    </span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               );
             })}
@@ -140,7 +109,7 @@ function StudentSidebar({ children }) {
           <SidebarMenu>
             <SidebarMenuItem>
               <AlertDialog>
-                <AlertDialogTrigger
+                <AlertDialogTrigger aria-label="Logout"
                   render={
                     <SidebarMenuButton
                       type="button"
@@ -155,31 +124,7 @@ function StudentSidebar({ children }) {
                   </span>
                 </AlertDialogTrigger>
 
-                <AlertDialogContent className="rounded-[8px]">
-                  <AlertDialogHeader>
-                    <AlertDialogMedia className="bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
-                      <LogOut className="size-5" strokeWidth={2.25} />
-                    </AlertDialogMedia>
-                    <AlertDialogTitle className="font-black text-slate-950 dark:text-slate-50">
-                      Logout of ALRM?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      You will need to sign in again with your LV email account
-                      before accessing your dashboard.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="h-9 rounded-[5px] border-slate-300 font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleLogout}
-                      className="h-9 rounded-[5px] bg-red-600 font-bold text-white hover:bg-red-700"
-                    >
-                      Logout
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
+                <LogoutConfirmation onLogout={handleLogout} />
               </AlertDialog>
             </SidebarMenuItem>
           </SidebarMenu>

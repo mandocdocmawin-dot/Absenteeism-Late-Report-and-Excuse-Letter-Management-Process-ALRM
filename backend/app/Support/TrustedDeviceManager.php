@@ -3,15 +3,12 @@
 namespace App\Support;
 
 /**
- * ⚠️ TODO before production deploy:
- * Frontend and backend will be on different domains (cross-site).
- * The httpOnly cookie approach here WILL be blocked as third-party
- * by Brave/Safari/Firefox in that setup — currently only reliable
- * on same-site localhost testing and Chrome.
+ * Trusted-device cookie (httpOnly, SameSite=Lax).
  *
- * Fix: set up a reverse proxy (vercel.json / netlify.toml rewrite)
- * once frontend hosting platform is decided, so browser sees both
- * as same-origin. See conversation notes / README for details.
+ * Works because the Vercel frontend proxies /api/* to the Render
+ * backend (vercel.json rewrite), so the browser treats the cookie
+ * as first-party. Always call the API via relative /api URLs;
+ * never hit the onrender.com domain directly from the frontend.
  */
 
 
@@ -85,9 +82,9 @@ class TrustedDeviceManager
             minutes: self::LIFETIME_DAYS * 24 * 60,
             path: '/',
             domain: null,
-            secure: $isProduction,                  // true sa production (HTTPS), false sa local (HTTP)
-            httpOnly: true,                           // JS can't read it — mitigates XSS token theft
-            sameSite: $isProduction ? 'none' : 'lax',  // 'lax' okay habang same-domain localhost testing
+            secure: $isProduction,   // true sa production (HTTPS), false sa local (HTTP)
+            httpOnly: true,          // JS can't read it, mitigates XSS token theft
+            sameSite: 'lax',         // first-party na via Vercel proxy
         );
     }
 }

@@ -19,7 +19,7 @@ class ClassModelPolicy
             return true;
         }
 
-        if ($class->program->program_head_id === $user->id) {
+        if ($user->headsProgram($class->program_id)) {
             return true;
         }
 

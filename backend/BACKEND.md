@@ -1,7 +1,27 @@
 # ALRM — Backend Implementation Guide
 ### Laravel API Documentation & TODO (v1.0 / MVP)
 
+### Current documentation
+
+- [API contracts, curriculum catalog, schedules, and operations](docs/API-DOCS.md)
+- [PHP runtime and application security](docs/SECURITY-PHP.md)
+
+The two guides above describe current behavior and supersede historical notes
+below where they differ. The catalog seeder reads the checked-in
+`database/seeders/data/academic_catalog.json`; no Python builder or source
+spreadsheets are required to run it. Curriculum changes create new revisions;
+class meeting times are entered separately and drive attendance contact hours.
+
+### Current Google sign-in policy (29 October 2026)
+
+Verified Google identities in either configured institutional domain are automatically approved, for both students and staff. New staff default to `instructor`; existing assigned roles are preserved. Verified external Google accounts default to `student` with `pending` status. Administrators can assign an external pending account's role before approval. `RoleMiddleware` blocks role routes until approval, and deactivated accounts are never automatically restored. OTP verification remains required on untrusted devices.
+
+Google's OAuth audience must allow external users for the pending external flow to reach this backend. Earlier sections describing rejected external domains, pending institutional staff, or role middleware without a status check are historical and are superseded by this policy.
+
+
 > This is the backend-only companion to `ALRM.md`. Purpose: a working guide while building the Laravel API — what already exists, what's missing, and in what order things should be done.
+
+> **Attendance policy update (October 29, 2026):** Preventive alerts start at one week's subject hours; critical consultation alerts start at two weeks' hours; IR identifies the 20% drop limit (rounded up to 10 hours for 3-hour weekly subjects). Three lates add one absent hour. Newly counted absences use the actual missed scheduled hours; legacy trackers retain their count-based fallback. The old 10%/15% policy, fixed 2/3-absence rules and historical follow-up TODOs below are superseded by [the current API documentation](docs/API-DOCS.md#attendance-thresholds).
 
 ---
 
@@ -555,20 +575,3 @@ Keeping a record here since this contradicts what's written in the original `ALR
 
 **Authorization update, continued (later session):**
 > The remaining 5 Policy classes (`Program`, `ClassModel`, `FollowupFlag`, `AttendanceTracker`, `User`) were created and registered in `AppServiceProvider` but sat unused. Wired `$this->authorize()` calls into `Admin\ProgramController`, `Admin\ClassManagementController`, `Admin\UserApprovalController`, `Student\AttendanceController`, and a newly-built `ProgramHead\FollowupFlagController` (which didn't exist before — `FollowupFlagPolicy` had no controller to call it). See §2.1 and §6.1 for current coverage.
-
-## ⚠️ TODO Before Production Deploy
-
-- [ ] **Reverse proxy setup for trusted-device cookie**: Frontend and backend 
-  are on different domains (Render backend + [TBD frontend host]). The 
-  `alrm_device` cookie will be blocked as third-party by Brave/Safari/Firefox 
-  unless we set up a reverse proxy (rewrite rule) so both share the same 
-  apparent domain from the browser's perspective.
-  - Currently using `httpOnly` cookie (`TrustedDeviceManager.php`) — works 
-    fine on `localhost` testing (same-site), but will silently fail on 
-    Brave/Safari/Firefox once deployed cross-domain.
-  - Once we know the frontend hosting platform (Vercel/Netlify/Render static), 
-    add `vercel.json` / `netlify.toml` rewrite config to proxy `/api/*` 
-    requests to the Render backend.
-  - Also confirm `APP_ENV=production` is set in Render env vars — this 
-    flips `secure`/`sameSite` cookie flags automatically 
-    (see `TrustedDeviceManager::remember()`).

@@ -45,4 +45,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'roster_sync' => [
+        'secret' => env('ROSTER_SYNC_SECRET'),
+    ],
+
 ];

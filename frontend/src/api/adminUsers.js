@@ -1,4 +1,5 @@
-import { apiFetch } from "./client";
+import { apiFetch } from "./client.js";
+import { prepareAccountInput } from "../lib/formInputs.js";
 
 async function readJson(res) {
   try {
@@ -29,6 +30,8 @@ async function expectJson(res) {
     const error = new Error(message);
     error.status = res.status;
     error.body = body;
+    error.fieldErrors = body?.errors || null;
+    error.errors = body?.errors || null;
     throw error;
   }
 
@@ -45,32 +48,16 @@ export async function getAdminPrograms() {
 export async function createAdminUser(payload) {
   const res = await apiFetch("/api/admin/users", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(prepareAccountInput(payload)),
   });
 
   return expectJson(res);
 }
 
 export function createInstructor(form) {
-  return createAdminUser({
-    name: form.fullName.trim(),
-    email: form.email.trim().toLowerCase(),
-    role: "instructor",
-    program_id: Number(form.programId),
-    status: form.status === "active" ? "approved" : "pending",
-    employee_id: form.employeeId.trim(),
-    subject_handled: form.subjectHandled.trim(),
-  });
+  return createAdminUser({ ...form, role: "instructor" });
 }
 
 export function createStudent(form) {
-  return createAdminUser({
-    name: form.fullName.trim(),
-    email: form.email.trim().toLowerCase(),
-    role: "student",
-    program_id: Number(form.programId),
-    status: form.status === "active" ? "approved" : "pending",
-    student_id: form.studentId.trim(),
-    year_level: form.yearLevel.trim(),
-  });
+  return createAdminUser({ ...form, role: "student" });
 }

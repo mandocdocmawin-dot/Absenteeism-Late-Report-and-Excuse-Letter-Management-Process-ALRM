@@ -167,7 +167,6 @@ class ReportController extends Controller
             'followupFlag',
         ]);
 
-        // Cheap count check before pulling the full result set into memory.
         $count = $query->count();
 
         if ($count > self::MAX_EXPORT_ROWS) {

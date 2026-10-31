@@ -1,4 +1,4 @@
-import { apiFetch } from "./client";
+import { apiFetch } from "./client.js";
 
 async function readJson(res) {
   try {
@@ -58,31 +58,81 @@ function listFrom(body) {
   return [];
 }
 
-function itemFrom(body) {
-  const payload = payloadFrom(body);
+function normalized(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
 
-  return payload?.student ?? payload?.data ?? payload ?? null;
+function matchesYear(studentYear, selectedYear) {
+  if (!selectedYear) return true;
+
+  const selected = normalized(selectedYear).replace(/\s+year$/, "");
+  const actual = normalized(studentYear).replace(/\s+year$/, "");
+  return actual === selected;
+}
+
+function filterStudents(students, filters) {
+  const search = normalized(filters.search);
+
+  return students.filter((student) => {
+    const searchable = [
+      student?.name,
+      student?.email,
+      student?.school_id_number,
+      student?.student_id,
+    ]
+      .map(normalized)
+      .join(" ");
+
+    const matchesSearch = !search || searchable.includes(search);
+    const matchesProgram =
+      !filters.programId ||
+      String(student?.program_id ?? "") === String(filters.programId);
+
+    return (
+      matchesSearch &&
+      matchesProgram &&
+      matchesYear(student?.year_level, filters.yearLevel)
+    );
+  });
 }
 
 export async function getAdminStudents(filters = {}) {
   const params = new URLSearchParams();
 
-  if (filters.search) params.set("search", filters.search);
-  if (filters.programId) params.set("program_id", filters.programId);
-  if (filters.yearLevel) params.set("year_level", filters.yearLevel);
+  params.set("role", "student");
+  if (filters.status) params.set("status", filters.status);
 
   const query = params.toString();
-  const path = `/api/admin/students${query ? `?${query}` : ""}`;
+  const path = `/api/admin/users?${query}`;
   const res = await apiFetch(path);
   const body = await expectJson(res, path);
 
-  return listFrom(body);
+  return filterStudents(listFrom(body), filters);
 }
 
 export async function getAdminStudent(studentId) {
-  const path = `/api/admin/students/${studentId}`;
-  const res = await apiFetch(path);
-  const body = await expectJson(res, path);
+  const students = await getAdminStudents();
+  const student = students.find(
+    (item) => String(item?.id ?? item?.user_id) === String(studentId),
+  );
 
-  return itemFrom(body);
+  if (!student) {
+    const error = new Error("The requested student could not be found.");
+    error.status = 404;
+    throw error;
+  }
+
+  if (student.program || !student.program_id) return student;
+
+  try {
+    const path = "/api/admin/programs";
+    const response = await apiFetch(path);
+    const programs = listFrom(await expectJson(response, path));
+    const program = programs.find((item) =>
+      String(item?.id ?? item?.program_id) === String(student.program_id)
+    );
+    return program ? { ...student, program } : student;
+  } catch {
+    return student;
+  }
 }

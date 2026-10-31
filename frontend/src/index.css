@@ -1,13 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Inter Variable', sans-serif;
+    --font-mono: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +50,7 @@
 }
 
 :root {
+    color-scheme: light;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -129,31 +131,50 @@
     }
 }
 
+/* Keep one Lucide arrow and enough text clearance on all native dropdowns. */
+select:not([multiple]):not([size]),
+select:not([multiple])[size="1"] {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("./assets/select-chevron.svg");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
+
+@media (forced-colors: active) {
+  select:not([multiple]):not([size]),
+  select:not([multiple])[size="1"] {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
 @layer utilities {
-  .dark .alrm-dashboard-scope .bg-white {
-    background-color: rgb(15 23 42) !important;
+  :where(.dark .alrm-dashboard-scope) .bg-white {
+    background-color: rgb(15 23 42);
   }
 
-  .dark .alrm-dashboard-scope .bg-slate-50,
-  .dark .alrm-dashboard-scope .bg-slate-100 {
-    background-color: rgb(30 41 59) !important;
+  :where(.dark .alrm-dashboard-scope) .bg-slate-50,
+  :where(.dark .alrm-dashboard-scope) .bg-slate-100 {
+    background-color: rgb(30 41 59);
   }
 
-  .dark .alrm-dashboard-scope .text-slate-950,
-  .dark .alrm-dashboard-scope .text-slate-900,
-  .dark .alrm-dashboard-scope .text-slate-800 {
-    color: rgb(248 250 252) !important;
+  :where(.dark .alrm-dashboard-scope) .text-slate-950,
+  :where(.dark .alrm-dashboard-scope) .text-slate-900,
+  :where(.dark .alrm-dashboard-scope) .text-slate-800 {
+    color: rgb(248 250 252);
   }
 
-  .dark .alrm-dashboard-scope .text-slate-700,
-  .dark .alrm-dashboard-scope .text-slate-600,
-  .dark .alrm-dashboard-scope .text-slate-500 {
-    color: rgb(203 213 225) !important;
+  :where(.dark .alrm-dashboard-scope) .text-slate-700,
+  :where(.dark .alrm-dashboard-scope) .text-slate-600,
+  :where(.dark .alrm-dashboard-scope) .text-slate-500 {
+    color: rgb(203 213 225);
   }
 
-  .dark .alrm-dashboard-scope .border-slate-100,
-  .dark .alrm-dashboard-scope .border-slate-200,
-  .dark .alrm-dashboard-scope .border-slate-300 {
-    border-color: rgb(30 41 59) !important;
+  :where(.dark .alrm-dashboard-scope) .border-slate-100,
+  :where(.dark .alrm-dashboard-scope) .border-slate-200,
+  :where(.dark .alrm-dashboard-scope) .border-slate-300 {
+    border-color: rgb(30 41 59);
   }
 }

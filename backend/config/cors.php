@@ -17,11 +17,14 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
     'allowed_origins' => array_filter([
         env('FRONTEND_URL'),
-        'http://localhost:5173',
+        env('APP_ENV', 'production') === 'local' ? 'http://localhost:5173' : null,
+        env('FRONTEND_URL_PROD',
+            'https://absenteeism-late-report-and-excuse.vercel.app'),
+
     ]),
 
     'allowed_origins_patterns' => [],
