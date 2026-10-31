@@ -31,7 +31,7 @@ export function cookieGatewayPlugin(env) {
   function mount(server, development) {
     const gateway = nodeGateway({
       secret: env.ALRM_COOKIE_SECRET || developmentSecret,
-      backendOrigin: env.ALRM_BACKEND_ORIGIN || 'https://absenteeism-late-report-and-excuse.onrender.com',
+      backendOrigin: env.ALRM_BACKEND_ORIGIN || 'https://absenteeism-late-report-and-excuse-49t4.onrender.com',
       production: false,
     });
     server.middlewares.use((request, response, next) => {

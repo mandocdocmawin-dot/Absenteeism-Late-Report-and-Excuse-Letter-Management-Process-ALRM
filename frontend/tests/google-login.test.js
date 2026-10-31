@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { readFile } from "node:fs/promises";
 import { afterEach, test } from "node:test";
 
-const backend = "https://absenteeism-late-report-and-excuse.onrender.com";
+const backend = "https://absenteeism-late-report-and-excuse-49t4.onrender.com";
 const source = await readFile(new URL("../src/api/client.js", import.meta.url), "utf8");
 const configuredSource = source.replaceAll("import.meta.env", JSON.stringify({ VITE_API_URL: backend }));
 const { API_URL, googleLoginUrl } = await import(`data:text/javascript;base64,${Buffer.from(configuredSource).toString("base64")}`);

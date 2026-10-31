@@ -188,7 +188,7 @@ export async function handleGateway(request, { secret, backendOrigin, production
     if (type) responseHeaders.set('Content-Type', type);
     return new Response(null, { status: response.status, headers: responseHeaders });
   }
-  if (type.includes('application/json')) {
+  if (type.includes('json')) {
     let payload;
     try { payload = await response.json(); } catch { return fail('The API returned an invalid response.', 502); }
     if (path === 'auth/exchange' && response.ok) {
@@ -207,7 +207,12 @@ export async function handleGateway(request, { secret, backendOrigin, production
     }
     return json(payload, response.status, responseHeaders);
   }
-  if (!['application/pdf', 'image/png', 'image/jpeg', 'application/octet-stream', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'].some(mime => type.split(';')[0].trim() === mime)) return fail('The API returned an unsupported response.', 502);
+  const mediaType = type.split(';')[0].trim().toLowerCase();
+  if (!['application/pdf', 'image/png', 'image/jpeg', 'application/octet-stream', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'].includes(mediaType)) {
+    return fail(response.status >= 400
+      ? `The API returned an unsupported response (${response.status}).`
+      : 'The API returned an unsupported response.', response.status >= 400 ? response.status : 502);
+  }
   responseHeaders.set('Content-Type', type);
   if (response.headers.has('content-disposition')) responseHeaders.set('Content-Disposition', response.headers.get('content-disposition'));
   return new Response(response.body, { status: response.status, headers: responseHeaders });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search, UserPlus } from "lucide-react";
-import { changeManagedUser, getUserManagementPrograms, getUserManagementUsers } from "@/api/adminUserManagement";
+import { changeManagedUser, getUserManagementPrograms, getUserManagementUsersPage } from "@/api/adminUserManagement";
 import { getResourceCacheEntry, requestCachedResource, updateResourceCache } from "@/api/resourceCache";
 import { useAuth } from "@/context/AuthContext";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import UserManagementFilters from "./UserManagementFilters";
 import ManagedAccountDialog from "./ManagedAccountDialog";
 import AddUserDialog from "./AddUserDialog";
-import { filterUsers, paginateUsers, studentYearSection, userDepartment, userDisplayId, userErrorMessage, userStatus } from "./userManagementData.js";
+import { studentYearSection, userDepartment, userDisplayId, userErrorMessage, userStatus } from "./userManagementData.js";
 
 const initialFilters = { tab: "approved", status: "approved", role: "", program: "", year: "", search: "" };
 const usersCacheKey = "admin:user-management:users";
@@ -25,7 +25,7 @@ function initialData() {
   const programs = getResourceCacheEntry(programsCacheKey);
   return {
     users: users?.data || [], programs: programs?.data || [],
-    loading: !users || !programs, error: "", programError: "",
+    meta: null, loading: !users || !programs, error: "", programError: "",
     updatedAt: Math.max(users?.updatedAt || 0, programs?.updatedAt || 0) || null,
   };
 }
@@ -53,15 +53,29 @@ export default function AdminUserManagement() {
   useEffect(() => {
     let active = true;
     const force = reload > 0;
+    const requestFilters = {
+      status: filters.tab === "waiting" ? "pending" : filters.status,
+      role: filters.role,
+      program: filters.program,
+      year: filters.year,
+      search: filters.search,
+    };
+    const usersKey = `${usersCacheKey}:${page}:${JSON.stringify(requestFilters)}`;
     Promise.allSettled([
-      requestCachedResource(usersCacheKey, (signal) => getUserManagementUsers({ signal }), { force }),
+      requestCachedResource(usersKey, (signal) => getUserManagementUsersPage({
+        signal,
+        page,
+        perPage: 25,
+        filters: requestFilters,
+      }), { force }),
       requestCachedResource(programsCacheKey, (signal) => getUserManagementPrograms({ signal }), { force }),
     ]).then(([users, programs]) => {
       if (!active) return;
       const updatedAt = Math.max(getResourceCacheEntry(usersCacheKey)?.updatedAt || 0, getResourceCacheEntry(programsCacheKey)?.updatedAt || 0) || null;
       setData({
-        users: users.status === "fulfilled" ? users.value : [],
+        users: users.status === "fulfilled" ? users.value.data : [],
         programs: programs.status === "fulfilled" ? programs.value : [],
+        meta: users.status === "fulfilled" ? users.value.meta : null,
         loading: false,
         error: users.status === "rejected" ? userErrorMessage(users.reason) : "",
         programError: programs.status === "rejected" ? userErrorMessage(programs.reason) : "",
@@ -69,10 +83,16 @@ export default function AdminUserManagement() {
       });
     });
     return () => { active = false; };
-  }, [reload]);
+  }, [filters, page, reload]);
 
-  const filtered = useMemo(() => filterUsers(data.users, filters, data.programs), [data.users, data.programs, filters]);
-  const pagination = paginateUsers(filtered, page);
+  const rows = useMemo(() => data.users, [data.users]);
+  const pagination = {
+    rows,
+    page: data.meta?.page || page,
+    pageCount: data.meta?.last_page || 1,
+    start: ((data.meta?.page || page) - 1) * (data.meta?.per_page || 25),
+    total: data.meta?.total || rows.length,
+  };
   const studentView = filters.role === "student";
   const columns = studentView
     ? [["Name", "w-[24%]"], ["ID", "w-[18%]"], ["Program", "w-[28%]"], ["Year/Section", "w-[18%]"], ["Action", "w-[12%]"]]
@@ -149,7 +169,7 @@ export default function AdminUserManagement() {
       {notice && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
       {data.error ? <div role="alert" className="space-y-3"><ErrorState title="Unable to load users" message={data.error} /><Button variant="outline" onClick={refresh}>Try again</Button></div> : data.loading ? (
         <LoadingSkeleton variant="table" rows={10} columns={columns.length} label="Loading users" />
-      ) : filtered.length === 0 ? (
+      ) : rows.length === 0 ? (
         <EmptyState title={filters.tab === "waiting" ? "No users waiting for approval" : "No users found"} message="No accounts match this view. Try changing the filters or search." />
       ) : (
         <>

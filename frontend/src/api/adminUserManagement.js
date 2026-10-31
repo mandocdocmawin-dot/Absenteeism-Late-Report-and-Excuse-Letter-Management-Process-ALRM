@@ -8,6 +8,17 @@ export function getUserManagementUsers(options) {
   return getCollection("/api/admin/users", options);
 }
 
+export function getUserManagementUsersPage({ signal, page = 1, perPage = 25, filters = {} } = {}) {
+  const query = new URLSearchParams();
+  if (filters.status) query.set("status", filters.status);
+  if (filters.role) query.set("role", filters.role);
+  if (filters.program) query.set("program_id", filters.program);
+  if (filters.year) query.set("year_level", filters.year);
+  if (filters.search?.trim()) query.set("search", filters.search.trim());
+  const path = `/api/admin/users${query.toString() ? `?${query}` : ""}`;
+  return getCollectionPage(path, { signal, page, perPage });
+}
+
 export async function getPendingUserPreview(options) {
   const page = await getCollectionPage("/api/admin/users?status=pending", { ...options, page: 1, perPage: 4 });
   return page.data;

@@ -6,7 +6,7 @@ export default {
   fetch(request) {
     return handleGateway(request, {
       secret: process.env.ALRM_COOKIE_SECRET,
-      backendOrigin: process.env.ALRM_BACKEND_ORIGIN || 'https://absenteeism-late-report-and-excuse.onrender.com',
+      backendOrigin: process.env.ALRM_BACKEND_ORIGIN || 'https://absenteeism-late-report-and-excuse-49t4.onrender.com',
       production: true,
       // Vercel supplies this metadata; never trust a caller's ordinary X-Forwarded-For.
       clientIp: request.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim(),

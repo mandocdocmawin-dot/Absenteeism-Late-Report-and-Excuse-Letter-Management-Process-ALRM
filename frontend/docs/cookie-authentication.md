@@ -7,11 +7,11 @@ The Vercel project's root directory must be `frontend`. Deploy the complete proj
 Set these **server-only** Vercel environment variables before deploying:
 
 - `ALRM_COOKIE_SECRET`: a persistent, cryptographically random secret of at least 32 characters. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Never prefix it with `VITE_`, commit it, or put it in browser code. Use the same secret for every instance of the same deployment environment.
-- `ALRM_BACKEND_ORIGIN`: `https://absenteeism-late-report-and-excuse.onrender.com` (the existing default). HTTPS is required.
+- `ALRM_BACKEND_ORIGIN`: `https://absenteeism-late-report-and-excuse-49t4.onrender.com`, used by both local Vite development and production deployment.
 
 No Laravel files or configuration need to change. The existing backend must continue to allow the deployed frontend origin for Google OAuth. No new OAuth callback URL is introduced. The existing `/api/auth/google/callback` path stays the same.
 
-The old `VITE_API_URL` is no longer used by browser API calls. All API requests use the frontend's own `/api` routes.
+The old `VITE_API_URL` is no longer used by browser API calls. All API requests use the frontend's own `/api` routes and are forwarded to the configured backend origin.
 
 For local development, `npm run dev` runs the same gateway through Vite. A secret in ignored `.env.local` keeps local cookies usable across restarts. Without one, development generates a process-local secret, so restarting the server requires signing in again. Development cookies are limited to localhost HTTP; production cookies always require HTTPS.
 
