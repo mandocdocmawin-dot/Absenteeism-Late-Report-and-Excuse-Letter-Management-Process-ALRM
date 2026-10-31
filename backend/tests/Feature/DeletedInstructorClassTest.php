@@ -54,6 +54,7 @@ class DeletedInstructorClassTest extends SecurityTestCase
             'subjects_missed' => 'Test Subject',
             'start_date_of_absence' => '2026-10-22',
             'reason' => 'Sick',
+            'evidence_file_url' => $this->unusedEvidence($student)->id,
             'guardian_name' => 'Parent Name',
             'contact_number' => '09123456789',
         ]);

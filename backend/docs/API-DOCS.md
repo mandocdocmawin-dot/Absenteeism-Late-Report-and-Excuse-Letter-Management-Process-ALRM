@@ -249,7 +249,7 @@ Both read endpoints take no body. Marking an already-read notification read succ
 
 ### Upload first, then submit
 
-`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads.
+`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads. PDF objects are parsed by qpdf 11+; actions, forms, embedded files, interactive media, encryption, malformed files and parser warnings are rejected. See [Evidence upload security](SECURITY-EVIDENCE.md) for runtime requirements and limits.
 
 Images must be no larger than 8192 pixels on either side and 8,000,000 total pixels. They are re-encoded as JPEG, resized to a maximum 1600-pixel longest edge, with a white background. PDFs are checked for a `%PDF-` header.
 
@@ -282,7 +282,7 @@ Despite its name, `data.path` is an attachment UUID. Submit it as `evidence_file
 | `start_date_of_absence` | Yes, for both types | Occurrence date, including late requests |
 | `end_date_of_absence` | No | Nullable date on/after start |
 | `reason` | Yes | String ≤600 on create |
-| `evidence_file_url` | No | Nullable owned, unlinked attachment UUID |
+| `evidence_file_url` | Yes | Required owned, unlinked attachment UUID |
 | `evidence_type` | No | Nullable string ≤100 |
 | `proof_types` | No | Nullable list, maximum 6 distinct allowed strings |
 | `guardian_name` | Yes | String 2–60 characters, no digits |
@@ -498,7 +498,7 @@ Content-Type: application/json
 }
 ```
 
-For a late request, set `type` to `late` and include `minutes_late`; retain the required occurrence date. Evidence is optional; if uploaded first, include its attachment UUID as `evidence_file_url`.
+For a late request, set `type` to `late` and include `minutes_late`; retain the required occurrence date. Evidence is required for both request types: upload it first and include its attachment UUID as `evidence_file_url`.
 
 ### Paginated authenticated request
 

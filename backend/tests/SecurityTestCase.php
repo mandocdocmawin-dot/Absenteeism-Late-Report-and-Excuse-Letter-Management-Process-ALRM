@@ -6,6 +6,7 @@ use App\Models\ClassModel;
 use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
 use App\Models\Program;
+use App\Models\RequestAttachment;
 use App\Models\User;
 use App\Services\RequestSnapshot;
 use Illuminate\Database\Schema\Blueprint;
@@ -100,5 +101,15 @@ abstract class SecurityTestCase extends TestCase
         $this->app['auth']->forgetGuards();
 
         return $this->withToken($user->createToken('test')->plainTextToken);
+    }
+
+    protected function unusedEvidence(User $user): RequestAttachment
+    {
+        $pdf = \Tests\Support\PdfFixture::make();
+
+        return RequestAttachment::create([
+            'user_id' => $user->id, 'original_name' => 'proof.pdf',
+            'mime_type' => 'application/pdf', 'size' => strlen($pdf), 'data' => $pdf,
+        ]);
     }
 }

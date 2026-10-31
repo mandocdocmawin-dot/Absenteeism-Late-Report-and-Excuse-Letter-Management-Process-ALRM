@@ -180,6 +180,7 @@ class TeachingAssignmentTest extends SecurityTestCase
             'start_date_of_absence' => '2026-10-29', 'reason' => 'Illness again',
             'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
             'class_snapshot' => ['subject_name' => 'Spoofed Subject'],
+            'evidence_file_url' => $this->unusedEvidence($student)->id,
         ];
         $this->bearer($student)->postJson('/api/requests', $payload)->assertUnprocessable();
         $newInstructor = $this->user('instructor', ['name' => 'Replacement']);
@@ -262,6 +263,7 @@ class TeachingAssignmentTest extends SecurityTestCase
         $this->change($class, ['action' => 'change_instructor', 'instructor_id' => $this->user('instructor')->id])->assertOk();
         $this->bearer($student)->postJson('/api/requests', [
             'class_id' => $class->id, 'teaching_assignment_id' => $fixture->teaching_assignment_id,
+            'evidence_file_url' => $this->unusedEvidence($student)->id,
             'type' => 'absence', 'subjects_missed' => 'Security', 'reason' => 'New reason',
             'start_date_of_absence' => '2026-10-30', 'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
         ])->assertConflict();

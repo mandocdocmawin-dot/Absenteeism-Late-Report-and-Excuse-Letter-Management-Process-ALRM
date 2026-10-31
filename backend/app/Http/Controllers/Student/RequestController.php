@@ -56,7 +56,7 @@ class RequestController extends Controller
             'end_date_of_absence' => ['nullable', 'date', 'after_or_equal:start_date_of_absence'],
             'reason' => ['required', 'string', 'max:600'],
             'evidence_file_url' => [
-                'nullable',
+                'required',
                 'uuid',
                 Rule::exists('request_attachments', 'id')
                     ->where('user_id', $httpRequest->user()->id)
