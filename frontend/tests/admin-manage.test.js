@@ -91,22 +91,26 @@ test("collection loading includes paginated classes, programs and approved role 
   mockApiFetch(async (url) => {
     const request = new URL(url, "http://fixture.local");
     const page = Number(request.searchParams.get("page"));
-    assert.equal(request.searchParams.get("per_page"), "100");
-    const meta = { page, per_page: 100, total: 1, last_page: 1 };
-    if (request.pathname === "/api/admin/programs") return Response.json({ data: [{ id: "p1", program_name: "BSIS" }], meta });
+    if (request.pathname === "/api/admin/programs") {
+      assert.equal(request.searchParams.get("per_page"), "100");
+      return Response.json({ data: [{ id: "p1", program_name: "BSIS" }], meta: { page, per_page: 100, total: 1, last_page: 1 } });
+    }
     if (request.pathname === "/api/admin/users") {
+      assert.equal(request.searchParams.get("per_page"), "100");
       assert.equal(request.searchParams.get("role"), "instructor");
       assert.equal(request.searchParams.get("status"), "approved");
-      return Response.json({ data: instructors, meta: { ...meta, total: instructors.length } });
+      return Response.json({ data: instructors, meta: { page, per_page: 100, total: instructors.length, last_page: 1 } });
     }
     assert.equal(request.pathname, "/api/admin/classes");
+    assert.equal(request.searchParams.get("per_page"), "25");
     // Use a full first page so pagination metadata and record counts agree.
-    const firstPage = Array.from({ length: 100 }, (_, index) => ({ ...classes[0], id: `page1-${index}` }));
-    return Response.json({ data: page === 1 ? firstPage : [classes[2]], meta: { ...meta, total: 101, last_page: 2 } });
+    const firstPage = Array.from({ length: 25 }, (_, index) => ({ ...classes[0], id: `page1-${index}` }));
+    return Response.json({ data: page === 1 ? firstPage : [classes[2]], meta: { page, per_page: 25, total: 26, last_page: 2 } });
   });
   const data = await getAdminAssignments();
-  assert.equal(data.classes.length, 101);
-  assert.equal(data.classes[100].id, "c3");
+  assert.equal(data.classes.length, 25);
+  assert.equal(data.classes[0].id, "page1-0");
+  assert.equal(data.classesMeta.last_page, 2);
   assert.deepEqual(data.programs.map(row => row.id), ["p1"]);
   assert.deepEqual(data.instructors.map(row => row.id), ["i1", "i2"]);
 });
@@ -157,7 +161,7 @@ test("collection requests forward cancellation", async () => {
     assert.equal(options.signal, controller.signal);
     return Response.json({ data: [] });
   });
-  assert.deepEqual(await getAdminAssignments({ signal: controller.signal }), { classes: [], programs: [], instructors: [] });
+  assert.deepEqual(await getAdminAssignments({ signal: controller.signal }), { classes: [], classesMeta: null, programs: [], instructors: [] });
 });
 
 test("collection failures reject loading without supplying fake assignments", async () => {

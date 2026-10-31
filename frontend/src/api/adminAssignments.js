@@ -1,14 +1,20 @@
 import { apiRequest } from "./client.js";
-import { getCollection } from "./collections.js";
+import { getCollection, getCollectionPage } from "./collections.js";
 
-export async function getAdminAssignments({ signal } = {}) {
+export async function getAdminAssignments({ signal, page = 1, perPage = 25, filters = {} } = {}) {
+  const classQuery = new URLSearchParams();
+  if (filters.search?.trim()) classQuery.set("search", filters.search.trim());
+  if (filters.programId) classQuery.set("program_id", filters.programId);
+  const classPath = `/api/admin/classes${classQuery.toString() ? `?${classQuery}` : ""}`;
   const [classes, programs, users] = await Promise.all([
-    getCollection("/api/admin/classes", { signal, perPage: 50 }),
+    getCollectionPage(classPath, { signal, page, perPage }),
     getCollection("/api/admin/programs", { signal }),
     getCollection("/api/admin/users?role=instructor&status=approved", { signal }),
   ]);
   return {
-    classes, programs,
+    classes: classes.data,
+    classesMeta: classes.meta,
+    programs,
     instructors: users.filter(user => user.role === "instructor" && user.status === "approved"),
   };
 }

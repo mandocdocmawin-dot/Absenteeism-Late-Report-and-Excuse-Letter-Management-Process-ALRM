@@ -14,19 +14,35 @@ import { usePageViewState } from "@/hooks/usePageViewState";
 const emptyFilters = { search: "", action: "", subject: "", date: "" };
 const actions = { Submitted: "border-orange-200 bg-orange-50 text-orange-700", Updated: "border-blue-200 bg-blue-50 text-blue-800", Cancelled: "border-slate-300 bg-slate-50 text-slate-700", "Followed up": "border-orange-200 bg-orange-50 text-orange-700", Flagged: "border-yellow-300 bg-yellow-50 text-yellow-900", Approved: "border-green-200 bg-green-50 text-green-700", Denied: "border-red-200 bg-red-50 text-red-700", Noted: "border-blue-200 bg-blue-50 text-blue-800", Resolved: "border-green-200 bg-green-50 text-green-700" };
 
-export default function ActivityTable({ rows = [], loading, error, onRetry, updatedAt, viewKey = "activity", flagged = false, programLog = false }) {
+export default function ActivityTable({ rows = [], loading, error, onRetry, updatedAt, viewKey = "activity", flagged = false, programLog = false, serverPagination = null, onPageChange, onFilterChange }) {
   const [view, setView] = usePageViewState(viewKey, { filters: emptyFilters, page: 1 });
   const { filters, page } = view;
-  const visible = filterActivity(rows, filters);
-  const pagination = paginateRecords(visible, page);
+  const serverMode = Boolean(serverPagination);
+  const visible = serverMode ? rows : filterActivity(rows, filters);
+  const pagination = serverMode
+    ? {
+      currentPage: serverPagination.page,
+      totalPages: serverPagination.last_page,
+      firstRecord: (serverPagination.page - 1) * serverPagination.per_page,
+      pageRecords: rows,
+      pageButtons: Array.from({ length: Math.min(5, serverPagination.last_page) }, (_, index) => Math.max(1, Math.min(serverPagination.page - 2, serverPagination.last_page - 4)) + index),
+    }
+    : paginateRecords(visible, page);
   const subjects = [...new Map(rows.filter(row => row.classId).map(row => [row.classId, row.subject])).entries()];
   const chips = [
     filters.action && { name: "action", label: `Action: ${filters.action}`, Icon: ClipboardList },
     filters.subject && { name: "subject", label: `Subject: ${subjects.find(([id]) => id === filters.subject)?.[1] || "Selected subject"}`, Icon: GraduationCap },
     filters.date && { name: "date", label: `Date: ${filters.date}`, Icon: CalendarDays },
   ].filter(Boolean);
-  function setPage(nextPage) { setView(current => ({ ...current, page: nextPage })); }
-  function change(key, value) { setView(current => ({ filters: { ...current.filters, [key]: value }, page: 1 })); }
+  function setPage(nextPage) {
+    if (serverMode) onPageChange?.(nextPage);
+    else setView(current => ({ ...current, page: nextPage }));
+  }
+  function change(key, value) {
+    const nextFilters = { ...filters, [key]: value };
+    if (serverMode) onFilterChange?.(nextFilters);
+    setView({ filters: nextFilters, page: 1 });
+  }
   if (loading) return <LoadingSkeleton variant="table" columns={5} rows={6} label="Loading activity">{!programLog && <div className="space-y-3"><div className="flex flex-wrap items-center gap-4"><Skeleton className="h-10 w-full max-w-[400px]" /><Skeleton className="h-6 w-24" /></div><Skeleton className="h-8 w-24" /></div>}</LoadingSkeleton>;
   if (error) return <div className="space-y-3"><ErrorState message={error} /><Button variant="outline" onClick={onRetry}>Retry</Button></div>;
   return <div className="space-y-5">
@@ -53,6 +69,6 @@ export default function ActivityTable({ rows = [], loading, error, onRetry, upda
       </tr>)}
       {!visible.length && <tr><td colSpan={5} className="py-14 text-center text-slate-500">No activity matches these filters.</td></tr>}
     </tbody></table></div>
-    <RequestPagination pagination={pagination} total={visible.length} onPage={setPage} />
+    <RequestPagination pagination={pagination} total={serverMode ? serverPagination.total : visible.length} onPage={setPage} />
   </div>;
 }
