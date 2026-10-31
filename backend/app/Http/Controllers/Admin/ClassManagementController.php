@@ -24,7 +24,9 @@ class ClassManagementController extends Controller
      */
     public function index()
     {
-        $classes = ClassModel::with('instructor', 'program')->withCount('enrollments');
+        $classes = ClassModel::with('instructor', 'program', 'activeTeachingAssignment.instructor')
+            ->withCount('enrollments')
+            ->withCount(['requests as pending_requests_count' => fn ($query) => $query->where('status', 'pending')]);
 
         return BoundedCollection::respond($classes);
     }
@@ -58,7 +60,7 @@ class ClassManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => null,
-            'data' => $class->load('instructor', 'program', 'enrollments.student'),
+            'data' => $class->load('instructor', 'program', 'enrollments.student', 'activeTeachingAssignment.instructor'),
         ]);
     }
 
@@ -69,7 +71,13 @@ class ClassManagementController extends Controller
     {
         $validated = $request->classAttributes();
         DB::transaction(function () use ($class, $validated) {
-            $class->update($validated);
+            $fresh = ClassModel::whereKey($class->id)->lockForUpdate()->firstOrFail();
+            $class->setRawAttributes($fresh->getAttributes(), true);
+            $identity = ['subject_name', 'curriculum_subject_id', 'program_id', 'section', 'year_level', 'semester', 'school_year'];
+            $class->fill($validated);
+            abort_if($class->isDirty($identity) && ($class->teachingAssignments()->exists() || $class->enrollments()->exists()),
+                409, 'This class has assignments or enrollments. Create/select another class and use change_subject instead.');
+            $class->save();
             $this->enrollMatchingStudents($class->fresh());
             // Trackers depend on the class's contact hours, not its credit units.
             $class->enrollments()->with('attendanceTracker')->each(function ($enrollment) {
@@ -90,23 +98,26 @@ class ClassManagementController extends Controller
      */
     public function destroy(ClassModel $class)
     {
-        if ($class->enrollments()->exists()) {
+        return DB::transaction(function () use ($class) {
+            $class = ClassModel::whereKey($class->id)->lockForUpdate()->firstOrFail();
+            if ($class->enrollments()->exists() || $class->teachingAssignments()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete a class with enrollments or assignment history. Use Remove assignment instead.',
+                    'data' => null,
+                ], 409);
+            }
+
+            $classId = $class->id;
+            $class->delete();
+            $this->auditLogger->log('deleted_class', 'classes', $classId);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete a class that still has enrollments.',
+                'success' => true,
+                'message' => 'Class deleted.',
                 'data' => null,
-            ], 409);
-        }
-
-        $classId = $class->id;
-        $class->delete();
-        $this->auditLogger->log('deleted_class', 'classes', $classId);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Class deleted.',
-            'data' => null,
-        ]);
+            ]);
+        });
     }
 
     /**

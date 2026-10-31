@@ -21,6 +21,7 @@ class AuditLogTest extends SecurityTestCase
             'class_id' => $fixture->enrollment->class_id,
             'type' => 'absence', 'subjects_missed' => 'Security',
             'reason' => 'Medical appointment', 'start_date_of_absence' => '2026-10-23',
+            'evidence_file_url' => $this->unusedEvidence($student)->id,
             'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
         ])->assertCreated();
         $id = $response->json('data.id');

@@ -32,7 +32,7 @@ class AuditLogController extends Controller
         $programIds = null;
         if ($user->role === 'program_head') {
             $programIds = $user->headedProgramIds();
-            abort_unless($programIds, 403, 'No program is assigned to this account.');
+            abort_unless($programIds !== [], 403, 'No program is assigned to this account.');
         }
 
         /** @var Builder<AuditLog> $query */

@@ -1,84 +1,84 @@
 <mxfile host="65bd71144e">
     <diagram id="academic" name="01 - Academic &amp; Enrollment">
-        <mxGraphModel dx="2158" dy="1368" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1423" math="0" shadow="0">
+        <mxGraphModel dx="1236" dy="789" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="2200" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="edge-0" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.26881720430107525;entryX=1;entryY=0.47289156626506024;" target="users" targetField="users.program_id" tooltip="programs.id -&gt; users.program_id" value="student program">
-                    <mxGeometry relative="1" x="0.5186522262334536" y="-12" as="geometry">
+                <mxCell id="edge-0" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.3655913978494624;entryX=1;entryY=0.4502868068833652;labelBorderColor=none;horizontal=1;" target="users" targetField="users.program_id" tooltip="programs.id -&gt; users.program_id" value="student program">
+                    <mxGeometry relative="1" x="0.5374149659863945" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="603.9130434782609" y="290"/>
-                            <mxPoint x="603.9130434782609" y="475.5"/>
+                            <mxPoint x="600" y="308"/>
+                            <mxPoint x="600" y="475.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-1" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.10040160642570281;entryX=0;entryY=0.6639784946236559;" target="programs" targetField="programs.program_head_id" tooltip="users.id -&gt; programs.program_head_id" value="program head">
-                    <mxGeometry relative="1" x="0.3410214168039538" y="-12" as="geometry">
+                <mxCell id="edge-1" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.13001912045889102;entryX=0;entryY=0.6639784946236559;labelBorderColor=none;horizontal=1;" target="programs" targetField="programs.program_head_id" tooltip="users.id -&gt; programs.program_head_id" value="program head">
+                    <mxGeometry relative="1" x="0.4129158512720157" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="290"/>
-                            <mxPoint x="456.0869565217391" y="363.5"/>
+                            <mxPoint x="480" y="308"/>
+                            <mxPoint x="480" y="363.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-2" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.12449799196787148;entryX=0;entryY=0.6165644171779141;" target="program_user" targetField="program_user.user_id" tooltip="users.id -&gt; program_user.user_id" value="program membership">
-                    <mxGeometry relative="1" x="-0.023019431988041905" y="-12" as="geometry">
+                <mxCell id="edge-2" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.09177820267686425;entryX=0;entryY=0.6165644171779141;labelBorderColor=none;horizontal=1;" target="program_user" targetField="program_user.user_id" tooltip="users.id -&gt; program_user.user_id" value="program membership">
+                    <mxGeometry relative="1" x="-0.05901505901505899" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="120" y="302"/>
-                            <mxPoint x="120" y="215"/>
-                            <mxPoint x="1083.913043478261" y="215"/>
-                            <mxPoint x="1083.913043478261" y="340.5"/>
+                            <mxPoint x="130" y="288"/>
+                            <mxPoint x="130" y="200"/>
+                            <mxPoint x="1070" y="200"/>
+                            <mxPoint x="1070" y="340.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-3" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.3333333333333333;entryX=0;entryY=0.46319018404907975;" target="program_user" targetField="program_user.program_id" tooltip="programs.id -&gt; program_user.program_id" value="program membership">
-                    <mxGeometry relative="1" x="0.17864476386036965" y="-12" as="geometry">
+                <mxCell id="edge-3" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.26881720430107525;entryX=0;entryY=0.46319018404907975;labelBorderColor=none;horizontal=1;" target="program_user" targetField="program_user.program_id" tooltip="programs.id -&gt; program_user.program_id" value="program membership">
+                    <mxGeometry relative="1" x="0.5565410199556542" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="936.0869565217391" y="302"/>
-                            <mxPoint x="936.0869565217391" y="315.5"/>
+                            <mxPoint x="1010" y="290"/>
+                            <mxPoint x="1010" y="315.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-4" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.14859437751004015;entryX=0;entryY=0.4834710743801653;" target="classes" targetField="classes.instructor_id" tooltip="users.id -&gt; classes.instructor_id" value="instructor">
-                    <mxGeometry relative="1" x="0.250080051232789" y="-12" as="geometry">
+                <mxCell id="edge-4" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.11089866156787763;entryX=0;entryY=0.42493946731234866;labelBorderColor=none;horizontal=1;" target="classes" targetField="classes.instructor_id" tooltip="users.id -&gt; classes.instructor_id" value="instructor">
+                    <mxGeometry relative="1" x="0.22250453720508157" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="120" y="314"/>
-                            <mxPoint x="120" y="910"/>
-                            <mxPoint x="603.9130434782609" y="910"/>
-                            <mxPoint x="603.9130434782609" y="1115.5"/>
+                            <mxPoint x="110" y="298"/>
+                            <mxPoint x="110" y="860"/>
+                            <mxPoint x="590" y="860"/>
+                            <mxPoint x="590" y="1115.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-5" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.3978494623655914;entryX=1;entryY=0.6212121212121212;" target="classes" targetField="classes.program_id" tooltip="programs.id -&gt; classes.program_id" value="program classes">
-                    <mxGeometry relative="1" y="-12" as="geometry">
+                <mxCell id="edge-5" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.3333333333333333;entryX=1;entryY=0.5460048426150121;labelBorderColor=none;horizontal=1;" target="classes" targetField="classes.program_id" tooltip="programs.id -&gt; classes.program_id" value="program classes">
+                    <mxGeometry relative="1" x="0.9389933909506862" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="953.4782608695652" y="314"/>
-                            <mxPoint x="953.4782608695652" y="1165.5"/>
+                            <mxPoint x="970" y="302"/>
+                            <mxPoint x="970" y="1165.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-6" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.17269076305220885;entryX=0;entryY=0.4015957446808511;" target="enrollments" targetField="enrollments.student_id" tooltip="users.id -&gt; enrollments.student_id" value="student enrollments">
-                    <mxGeometry relative="1" y="-12" as="geometry">
+                <mxCell id="edge-6" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.13001912045889102;entryX=0;entryY=0.4015957446808511;labelBorderColor=none;horizontal=1;" target="enrollments" targetField="enrollments.student_id" tooltip="users.id -&gt; enrollments.student_id" value="student enrollments">
+                    <mxGeometry relative="1" x="0.9274924471299093" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="100" y="326"/>
-                            <mxPoint x="100" y="1015.5"/>
+                            <mxPoint x="90" y="308"/>
+                            <mxPoint x="90" y="1015.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-7" edge="1" parent="1" source="classes" sourceField="classes.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.13911845730027547;entryX=1;entryY=0.5345744680851063;" target="enrollments" targetField="enrollments.class_id" tooltip="classes.id -&gt; enrollments.class_id" value="class enrollments">
-                    <mxGeometry relative="1" x="-0.2857142857142857" y="-12" as="geometry">
+                <mxCell id="edge-7" edge="1" parent="1" source="classes" sourceField="classes.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.12227602905569007;entryX=1;entryY=0.5345744680851063;labelBorderColor=none;horizontal=1;" target="enrollments" targetField="enrollments.class_id" tooltip="classes.id -&gt; enrollments.class_id" value="class enrollments">
+                    <mxGeometry relative="1" x="-0.48" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="990.5"/>
-                            <mxPoint x="456.0869565217391" y="1040.5"/>
+                            <mxPoint x="500" y="990.5"/>
+                            <mxPoint x="500" y="1040.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-8" edge="1" parent="1" source="enrollments" sourceField="enrollments.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.26861702127659576;entryX=0;entryY=0.2621527777777778;" target="attendance_tracker" targetField="attendance_tracker.enrollment_id" tooltip="enrollments.id -&gt; attendance_tracker.enrollment_id" value="attendance tracker">
-                    <mxGeometry relative="1" x="0.011961722488038173" y="-12" as="geometry">
+                <mxCell id="edge-8" edge="1" parent="1" source="enrollments" sourceField="enrollments.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.26861702127659576;entryX=0;entryY=0.22337278106508876;labelBorderColor=none;horizontal=1;" target="attendance_tracker" targetField="attendance_tracker.enrollment_id" tooltip="enrollments.id -&gt; attendance_tracker.enrollment_id" value="attendance tracker">
+                    <mxGeometry relative="1" x="0.00278706800445927" y="-10" as="geometry">
                         <Array as="points">
                             <mxPoint x="120" y="990.5"/>
-                            <mxPoint x="120" y="1318"/>
-                            <mxPoint x="1083.913043478261" y="1318"/>
-                            <mxPoint x="1083.913043478261" y="1015.5"/>
+                            <mxPoint x="120" y="1390"/>
+                            <mxPoint x="1060" y="1390"/>
+                            <mxPoint x="1060" y="1015.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -86,7 +86,7 @@
                     <mxGeometry height="50" width="1400" x="100" y="25" as="geometry"/>
                 </mxCell>
                 <mxCell id="users" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="USERS" vertex="1">
-                    <mxGeometry height="498" width="280" x="150" y="240" as="geometry"/>
+                    <mxGeometry height="523" width="280" x="150" y="240" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.id" parent="users" style="group;connectable=1;" tooltip="users.id: uuid; NOT NULL; " value="" vertex="1">
                     <mxGeometry height="60" width="280" y="38" as="geometry"/>
@@ -239,6 +239,15 @@
                     <mxGeometry height="25" width="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.updated_at.1" connectable="0" parent="users.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled" parent="users" style="group;connectable=1;" tooltip="users.email_notifications_enabled: boolean; NOT NULL; Default: false" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="498" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.0" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.1" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="email_notifications_enabled" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="programs" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="PROGRAMS" vertex="1">
@@ -395,7 +404,7 @@
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="classes" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="CLASSES" vertex="1">
-                    <mxGeometry height="363" width="280" x="630" y="940" as="geometry"/>
+                    <mxGeometry height="413" width="280" x="630" y="940" as="geometry"/>
                 </mxCell>
                 <mxCell id="classes.id" parent="classes" style="group;connectable=1;" tooltip="classes.id: uuid; NOT NULL; " value="" vertex="1">
                     <mxGeometry height="25" width="280" y="38" as="geometry"/>
@@ -478,7 +487,7 @@
                 <mxCell id="classes.year_level.1" connectable="0" parent="classes.year_level" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="year_level" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="classes.weekly_hours" parent="classes" style="group;connectable=1;" tooltip="classes.weekly_hours: tinyint unsigned; NOT NULL; Default: 3" value="" vertex="1">
+                <mxCell id="classes.weekly_hours" parent="classes" style="group;connectable=1;" tooltip="classes.weekly_hours: decimal(7,2); NOT NULL; Default: 3" value="" vertex="1">
                     <mxGeometry height="25" width="280" y="263" as="geometry"/>
                 </mxCell>
                 <mxCell id="classes.weekly_hours.0" connectable="0" parent="classes.weekly_hours" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
@@ -514,8 +523,26 @@
                 <mxCell id="classes.updated_at.1" connectable="0" parent="classes.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
+                <mxCell id="classes.curriculum_subject_id" parent="classes" style="group;connectable=1;" tooltip="classes.curriculum_subject_id: uuid; NULL allowed; References curriculum_subjects.id; ON DELETE RESTRICT" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="363" as="geometry"/>
+                </mxCell>
+                <mxCell id="classes.curriculum_subject_id.0" connectable="0" parent="classes.curriculum_subject_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="classes.curriculum_subject_id.1" connectable="0" parent="classes.curriculum_subject_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="curriculum_subject_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="classes.credit_units" parent="classes" style="group;connectable=1;" tooltip="classes.credit_units: decimal(6,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="388" as="geometry"/>
+                </mxCell>
+                <mxCell id="classes.credit_units.0" connectable="0" parent="classes.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="classes.credit_units.1" connectable="0" parent="classes.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="credit_units" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
                 <mxCell id="attendance_tracker" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="ATTENDANCE_TRACKER" vertex="1">
-                    <mxGeometry height="288" width="280" x="1110" y="940" as="geometry"/>
+                    <mxGeometry height="338" width="280" x="1110" y="940" as="geometry"/>
                 </mxCell>
                 <mxCell id="attendance_tracker.id" parent="attendance_tracker" style="group;connectable=1;" tooltip="attendance_tracker.id: uuid; NOT NULL; " value="" vertex="1">
                     <mxGeometry height="25" width="280" y="38" as="geometry"/>
@@ -562,7 +589,7 @@
                 <mxCell id="attendance_tracker.converted_absences.1" connectable="0" parent="attendance_tracker.converted_absences" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="converted_absences" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="attendance_tracker.status" parent="attendance_tracker" style="group;connectable=1;" tooltip="attendance_tracker.status: enum; NOT NULL; Values: safe, warning, IR; Default: &#39;safe&#39;" value="" vertex="1">
+                <mxCell id="attendance_tracker.status" parent="attendance_tracker" style="group;connectable=1;" tooltip="attendance_tracker.status: enum; NOT NULL; Values: safe, warning, critical, IR; Default: &#39;safe&#39;" value="" vertex="1">
                     <mxGeometry height="25" width="280" y="163" as="geometry"/>
                 </mxCell>
                 <mxCell id="attendance_tracker.status.0" connectable="0" parent="attendance_tracker.status" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
@@ -607,99 +634,503 @@
                 <mxCell id="attendance_tracker.updated_at.1" connectable="0" parent="attendance_tracker.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
+                <mxCell id="attendance_tracker.critical_notified_at" parent="attendance_tracker" style="group;connectable=1;" tooltip="attendance_tracker.critical_notified_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="288" as="geometry"/>
+                </mxCell>
+                <mxCell id="attendance_tracker.critical_notified_at.0" connectable="0" parent="attendance_tracker.critical_notified_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="attendance_tracker.critical_notified_at.1" connectable="0" parent="attendance_tracker.critical_notified_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="critical_notified_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="attendance_tracker.absence_hours" parent="attendance_tracker" style="group;connectable=1;" tooltip="attendance_tracker.absence_hours: decimal(10,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="313" as="geometry"/>
+                </mxCell>
+                <mxCell id="attendance_tracker.absence_hours.0" connectable="0" parent="attendance_tracker.absence_hours" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="attendance_tracker.absence_hours.1" connectable="0" parent="attendance_tracker.absence_hours" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="absence_hours" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="CURRICULA" vertex="1">
+                    <mxGeometry height="213" width="280" x="150" y="1480" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.id" parent="curricula" style="group;connectable=1;" tooltip="curricula.id: uuid; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.id.0" connectable="0" parent="curricula.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="PK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.id.1" connectable="0" parent="curricula.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.program_id" parent="curricula" style="group;connectable=1;" tooltip="curricula.program_id: uuid; NOT NULL; References programs.id; ON DELETE RESTRICT" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="63" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.program_id.0" connectable="0" parent="curricula.program_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.program_id.1" connectable="0" parent="curricula.program_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="program_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.version" parent="curricula" style="group;connectable=1;" tooltip="curricula.version: varchar(50); NOT NULL; Unique with program_id, revision" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.version.0" connectable="0" parent="curricula.version" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.version.1" connectable="0" parent="curricula.version" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="version" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.revision" parent="curricula" style="group;connectable=1;" tooltip="curricula.revision: varchar(64); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="113" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.revision.0" connectable="0" parent="curricula.revision" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.revision.1" connectable="0" parent="curricula.revision" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="revision" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.sources" parent="curricula" style="group;connectable=1;" tooltip="curricula.sources: json; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.sources.0" connectable="0" parent="curricula.sources" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.sources.1" connectable="0" parent="curricula.sources" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="sources" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.created_at" parent="curricula" style="group;connectable=1;" tooltip="curricula.created_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="163" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.created_at.0" connectable="0" parent="curricula.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.created_at.1" connectable="0" parent="curricula.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="created_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.updated_at" parent="curricula" style="group;connectable=1;" tooltip="curricula.updated_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="188" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.updated_at.0" connectable="0" parent="curricula.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curricula.updated_at.1" connectable="0" parent="curricula.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="CURRICULUM_SUBJECTS" vertex="1">
+                    <mxGeometry height="363" width="280" x="630" y="1480" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.id" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.id: uuid; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.id.0" connectable="0" parent="curriculum_subjects.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="PK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.id.1" connectable="0" parent="curriculum_subjects.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.curriculum_id" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.curriculum_id: uuid; NOT NULL; References curricula.id; ON DELETE RESTRICT" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="63" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.curriculum_id.0" connectable="0" parent="curriculum_subjects.curriculum_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.curriculum_id.1" connectable="0" parent="curriculum_subjects.curriculum_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="curriculum_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.year_level" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.year_level: varchar(3); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.year_level.0" connectable="0" parent="curriculum_subjects.year_level" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.year_level.1" connectable="0" parent="curriculum_subjects.year_level" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="year_level" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.semester" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.semester: varchar(10); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="113" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.semester.0" connectable="0" parent="curriculum_subjects.semester" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.semester.1" connectable="0" parent="curriculum_subjects.semester" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="semester" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.code" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.code: varchar(100); NOT NULL; Unique with curriculum_id, year_level, semester" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.code.0" connectable="0" parent="curriculum_subjects.code" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.code.1" connectable="0" parent="curriculum_subjects.code" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="code" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.subject_name" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.subject_name: varchar(255); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="163" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.subject_name.0" connectable="0" parent="curriculum_subjects.subject_name" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.subject_name.1" connectable="0" parent="curriculum_subjects.subject_name" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="subject_name" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.credit_units" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.credit_units: decimal(6,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="188" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.credit_units.0" connectable="0" parent="curriculum_subjects.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.credit_units.1" connectable="0" parent="curriculum_subjects.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="credit_units" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.lecture_units" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.lecture_units: decimal(6,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="213" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.lecture_units.0" connectable="0" parent="curriculum_subjects.lecture_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.lecture_units.1" connectable="0" parent="curriculum_subjects.lecture_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="lecture_units" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.laboratory_units" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.laboratory_units: decimal(6,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="238" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.laboratory_units.0" connectable="0" parent="curriculum_subjects.laboratory_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.laboratory_units.1" connectable="0" parent="curriculum_subjects.laboratory_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="laboratory_units" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.units_text" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.units_text: varchar(100); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="263" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.units_text.0" connectable="0" parent="curriculum_subjects.units_text" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.units_text.1" connectable="0" parent="curriculum_subjects.units_text" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="units_text" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.source" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.source: json; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="288" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.source.0" connectable="0" parent="curriculum_subjects.source" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.source.1" connectable="0" parent="curriculum_subjects.source" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="source" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.created_at" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.created_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="313" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.created_at.0" connectable="0" parent="curriculum_subjects.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.created_at.1" connectable="0" parent="curriculum_subjects.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="created_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.updated_at" parent="curriculum_subjects" style="group;connectable=1;" tooltip="curriculum_subjects.updated_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="338" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.updated_at.0" connectable="0" parent="curriculum_subjects.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="curriculum_subjects.updated_at.1" connectable="0" parent="curriculum_subjects.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="PROGRAM_OFFERINGS" vertex="1">
+                    <mxGeometry height="338" width="280" x="1110" y="1480" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.id" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.id: uuid; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.id.0" connectable="0" parent="program_offerings.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="PK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.id.1" connectable="0" parent="program_offerings.id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.curriculum_id" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.curriculum_id: uuid; NOT NULL; References curricula.id; ON DELETE RESTRICT" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="63" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.curriculum_id.0" connectable="0" parent="program_offerings.curriculum_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.curriculum_id.1" connectable="0" parent="program_offerings.curriculum_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="curriculum_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.school_year" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.school_year: varchar(9); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.school_year.0" connectable="0" parent="program_offerings.school_year" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.school_year.1" connectable="0" parent="program_offerings.school_year" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="school_year" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.year_level" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.year_level: varchar(3); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="113" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.year_level.0" connectable="0" parent="program_offerings.year_level" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.year_level.1" connectable="0" parent="program_offerings.year_level" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="year_level" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.semester" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.semester: varchar(10); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.semester.0" connectable="0" parent="program_offerings.semester" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.semester.1" connectable="0" parent="program_offerings.semester" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="semester" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.code" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.code: varchar(100); NOT NULL; Unique with curriculum_id, school_year, year_level, semester" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="163" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.code.0" connectable="0" parent="program_offerings.code" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.code.1" connectable="0" parent="program_offerings.code" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="code" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.subject_name" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.subject_name: varchar(255); NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="188" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.subject_name.0" connectable="0" parent="program_offerings.subject_name" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.subject_name.1" connectable="0" parent="program_offerings.subject_name" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="subject_name" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.credit_units" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.credit_units: decimal(6,2); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="213" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.credit_units.0" connectable="0" parent="program_offerings.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.credit_units.1" connectable="0" parent="program_offerings.credit_units" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="credit_units" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.units_text" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.units_text: varchar(100); NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="238" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.units_text.0" connectable="0" parent="program_offerings.units_text" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.units_text.1" connectable="0" parent="program_offerings.units_text" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="units_text" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.source" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.source: json; NOT NULL; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="263" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.source.0" connectable="0" parent="program_offerings.source" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.source.1" connectable="0" parent="program_offerings.source" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="source" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.created_at" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.created_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="288" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.created_at.0" connectable="0" parent="program_offerings.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.created_at.1" connectable="0" parent="program_offerings.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="created_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.updated_at" parent="program_offerings" style="group;connectable=1;" tooltip="program_offerings.updated_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="313" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.updated_at.0" connectable="0" parent="program_offerings.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_offerings.updated_at.1" connectable="0" parent="program_offerings.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="PROGRAM_HEAD_ASSIGNMENTS" vertex="1">
+                    <mxGeometry height="138" width="280" x="150" y="1950" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.program_id" parent="program_head_assignments" style="group;connectable=1;" tooltip="program_head_assignments.program_id: uuid; NOT NULL; Composite PK with user_id; References programs.id; ON DELETE CASCADE" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.program_id.0" connectable="0" parent="program_head_assignments.program_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="PK/FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.program_id.1" connectable="0" parent="program_head_assignments.program_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="program_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.user_id" parent="program_head_assignments" style="group;connectable=1;" tooltip="program_head_assignments.user_id: uuid; NOT NULL; Composite PK with program_id; References users.id; ON DELETE CASCADE" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="63" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.user_id.0" connectable="0" parent="program_head_assignments.user_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="PK/FK" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.user_id.1" connectable="0" parent="program_head_assignments.user_id" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="user_id" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.created_at" parent="program_head_assignments" style="group;connectable=1;" tooltip="program_head_assignments.created_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.created_at.0" connectable="0" parent="program_head_assignments.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.created_at.1" connectable="0" parent="program_head_assignments.created_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="created_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.updated_at" parent="program_head_assignments" style="group;connectable=1;" tooltip="program_head_assignments.updated_at: timestamp; NULL allowed; " value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="113" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.updated_at.0" connectable="0" parent="program_head_assignments.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="program_head_assignments.updated_at.1" connectable="0" parent="program_head_assignments.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-curricula-program" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.3010752688172043;entryX=1;entryY=0.3544600938967136;labelBorderColor=none;horizontal=1;" target="curricula" targetField="curricula.program_id" tooltip="programs.id -&gt; curricula.program_id" value="program curricula">
+                    <mxGeometry relative="1" x="0.9177800616649539" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="550" y="296"/>
+                            <mxPoint x="550" y="1555.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-curriculum-subjects" edge="1" parent="1" source="curricula" sourceField="curricula.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.23708920187793428;entryX=0;entryY=0.20798898071625344;labelBorderColor=none;horizontal=1;" target="curriculum_subjects" targetField="curriculum_subjects.curriculum_id" tooltip="curricula.id -&gt; curriculum_subjects.curriculum_id" value="curriculum subjects">
+                    <mxGeometry relative="1" x="0.4222222222222223" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="1530.5"/>
+                            <mxPoint x="500" y="1555.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-program-offerings" edge="1" parent="1" source="curricula" sourceField="curricula.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.23708920187793428;entryX=1;entryY=0.22337278106508876;labelBorderColor=none;horizontal=1;" target="program_offerings" targetField="program_offerings.curriculum_id" tooltip="curricula.id -&gt; program_offerings.curriculum_id" value="program offerings">
+                    <mxGeometry relative="1" x="-0.0024342745861732906" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="130" y="1530.5"/>
+                            <mxPoint x="130" y="1880"/>
+                            <mxPoint x="1440" y="1880"/>
+                            <mxPoint x="1440" y="1555.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-class-curriculum" edge="1" parent="1" source="curriculum_subjects" sourceField="curriculum_subjects.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.13911845730027547;entryX=1;entryY=0.9092009685230025;labelBorderColor=none;horizontal=1;" target="classes" targetField="classes.curriculum_subject_id" tooltip="curriculum_subjects.id -&gt; classes.curriculum_subject_id" value="curriculum subject">
+                    <mxGeometry relative="1" x="0.7721518987341771" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1000" y="1530.5"/>
+                            <mxPoint x="1000" y="1315.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-head-program" edge="1" parent="1" source="programs" sourceField="programs.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.3978494623655914;entryX=1;entryY=0.36594202898550726;labelBorderColor=none;horizontal=1;" target="program_head_assignments" targetField="program_head_assignments.program_id" tooltip="programs.id -&gt; program_head_assignments.program_id" value="program head assignments">
+                    <mxGeometry relative="1" x="0.7486091077683907" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1040" y="314"/>
+                            <mxPoint x="1040" y="2000.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-head-user" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.1682600382409178;entryX=0;entryY=0.5471014492753623;labelBorderColor=none;horizontal=1;" target="program_head_assignments" targetField="program_head_assignments.user_id" tooltip="users.id -&gt; program_head_assignments.user_id" value="co-head assignments">
+                    <mxGeometry relative="1" x="0.9472990777338604" y="-10" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="50" y="328"/>
+                            <mxPoint x="50" y="2025.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="requests" name="02 - Requests &amp; Review">
-        <mxGraphModel dx="2233" dy="1416" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1518" math="0" shadow="0">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="1518" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="edge-9" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.09578544061302682;entryX=0;entryY=0.4015957446808511;" target="enrollments" targetField="enrollments.student_id" tooltip="users.id -&gt; enrollments.student_id" value="student">
-                    <mxGeometry relative="1" x="0.21722113502935425" y="-12" as="geometry">
+                <mxCell id="edge-9" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.10054844606946983;entryX=0;entryY=0.4015957446808511;labelBorderColor=none;horizontal=1;" target="enrollments" targetField="enrollments.student_id" tooltip="users.id -&gt; enrollments.student_id" value="student">
+                    <mxGeometry relative="1" x="0.3197278911564625" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="290"/>
-                            <mxPoint x="456.0869565217391" y="315.5"/>
+                            <mxPoint x="480" y="295"/>
+                            <mxPoint x="480" y="315.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-10" edge="1" parent="1" source="enrollments" sourceField="enrollments.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.26861702127659576;entryX=1;entryY=0.20267489711934156;" target="requests" targetField="requests.enrollment_id" tooltip="enrollments.id -&gt; requests.enrollment_id" value="filed requests">
-                    <mxGeometry relative="1" y="-12" as="geometry">
+                <mxCell id="edge-10" edge="1" parent="1" source="enrollments" sourceField="enrollments.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.26861702127659576;entryX=1;entryY=0.20267489711934156;labelBorderColor=none;horizontal=1;" target="requests" targetField="requests.enrollment_id" tooltip="enrollments.id -&gt; requests.enrollment_id" value="filed requests">
+                    <mxGeometry relative="1" x="0.9363057324840764" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="936.0869565217391" y="290.5"/>
-                            <mxPoint x="936.0869565217391" y="838.5"/>
+                            <mxPoint x="950" y="290.5"/>
+                            <mxPoint x="950" y="838.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-11" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.11877394636015326;entryX=0;entryY=0.8199588477366255;" target="requests" targetField="requests.reviewed_by" tooltip="users.id -&gt; requests.reviewed_by" value="reviewer">
-                    <mxGeometry relative="1" x="0.37926714688380825" y="-12" as="geometry">
+                <mxCell id="edge-11" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.10968921389396709;entryX=0;entryY=0.8199588477366255;labelBorderColor=none;horizontal=1;" target="requests" targetField="requests.reviewed_by" tooltip="users.id -&gt; requests.reviewed_by" value="reviewer">
+                    <mxGeometry relative="1" x="0.38556401886108094" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="120" y="302"/>
-                            <mxPoint x="120" y="1023"/>
-                            <mxPoint x="603.9130434782609" y="1023"/>
-                            <mxPoint x="603.9130434782609" y="1138.5"/>
+                            <mxPoint x="120" y="300"/>
+                            <mxPoint x="120" y="990"/>
+                            <mxPoint x="590" y="990"/>
+                            <mxPoint x="590" y="1138.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-12" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.1417624521072797;entryX=0;entryY=0.2870722433460076;" target="request_attachments" targetField="request_attachments.user_id" tooltip="users.id -&gt; request_attachments.user_id" value="uploaded by">
-                    <mxGeometry relative="1" y="-12" as="geometry">
+                <mxCell id="edge-12" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.14625228519195613;entryX=0;entryY=0.2870722433460076;labelBorderColor=none;horizontal=1;" target="request_attachments" targetField="request_attachments.user_id" tooltip="users.id -&gt; request_attachments.user_id" value="uploaded by">
+                    <mxGeometry relative="1" x="0.9344620425996724" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="100" y="314"/>
-                            <mxPoint x="100" y="1115.5"/>
+                            <mxPoint x="90" y="320"/>
+                            <mxPoint x="90" y="1115.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-13" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#64748b;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;dashed=1;dashPattern=6 4;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.102880658436214;entryX=1;entryY=0.3821292775665399;" target="request_attachments" targetField="request_attachments.excuse_request_id" tooltip="requests.id -&gt; request_attachments.excuse_request_id" value="linked request (no FK)">
-                    <mxGeometry relative="1" x="-0.6554694229112834" y="-12" as="geometry">
+                <mxCell id="edge-13" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#64748b;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;dashed=1;dashPattern=6 4;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.11522633744855967;entryX=1;entryY=0.3821292775665399;labelBorderColor=none;horizontal=1;" target="request_attachments" targetField="request_attachments.excuse_request_id" tooltip="requests.id -&gt; request_attachments.excuse_request_id" value="linked request (no FK)">
+                    <mxGeometry relative="1" x="-0.761248852157943" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="790"/>
-                            <mxPoint x="456.0869565217391" y="1140.5"/>
+                            <mxPoint x="500" y="796"/>
+                            <mxPoint x="500" y="1140.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-14" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.12757201646090535;entryX=0;entryY=0.3544600938967136;" target="followup_flags" targetField="followup_flags.request_id" tooltip="requests.id -&gt; followup_flags.request_id" value="followup flag">
-                    <mxGeometry relative="1" x="-0.17864476386036965" y="-12" as="geometry">
+                <mxCell id="edge-14" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToOne;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.12757201646090535;entryX=0;entryY=0.3544600938967136;labelBorderColor=none;horizontal=1;" target="followup_flags" targetField="followup_flags.request_id" tooltip="requests.id -&gt; followup_flags.request_id" value="followup flag">
+                    <mxGeometry relative="1" x="-0.3911007025761124" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1083.913043478261" y="802"/>
-                            <mxPoint x="1083.913043478261" y="815.5"/>
+                            <mxPoint x="1040" y="802"/>
+                            <mxPoint x="1040" y="815.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-15" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.16475095785440613;entryX=1;entryY=0.5892018779342723;" target="followup_flags" targetField="followup_flags.escalated_to" tooltip="users.id -&gt; followup_flags.escalated_to" value="escalated to">
-                    <mxGeometry relative="1" x="0.11427856964241068" y="-12" as="geometry">
+                <mxCell id="edge-15" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.14625228519195613;entryX=1;entryY=0.5892018779342723;labelBorderColor=none;horizontal=1;" target="followup_flags" targetField="followup_flags.escalated_to" tooltip="users.id -&gt; followup_flags.escalated_to" value="escalated to">
+                    <mxGeometry relative="1" x="0.10868888196823412" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="326"/>
-                            <mxPoint x="456.0869565217391" y="710"/>
-                            <mxPoint x="1420" y="710"/>
-                            <mxPoint x="1420" y="865.5"/>
+                            <mxPoint x="520" y="320"/>
+                            <mxPoint x="520" y="660"/>
+                            <mxPoint x="1440" y="660"/>
+                            <mxPoint x="1440" y="865.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-16" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.1522633744855967;entryX=0;entryY=0.4222689075630252;" target="notifications" targetField="notifications.request_id" tooltip="requests.id -&gt; notifications.request_id" value="request notifications">
-                    <mxGeometry relative="1" x="0.7339246119733924" y="-12" as="geometry">
+                <mxCell id="edge-16" edge="1" parent="1" source="requests" sourceField="requests.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.13991769547325103;entryX=0;entryY=0.4222689075630252;labelBorderColor=none;horizontal=1;" target="notifications" targetField="notifications.request_id" tooltip="requests.id -&gt; notifications.request_id" value="request notifications">
+                    <mxGeometry relative="1" x="0.8160919540229885" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="953.4782608695652" y="814"/>
-                            <mxPoint x="953.4782608695652" y="1260.5"/>
+                            <mxPoint x="990" y="808"/>
+                            <mxPoint x="990" y="1260.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-17" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.18773946360153257;entryX=1;entryY=0.3172268907563025;" target="notifications" targetField="notifications.user_id" tooltip="users.id -&gt; notifications.user_id" value="recipient">
-                    <mxGeometry relative="1" x="-0.018143899895724735" y="-12" as="geometry">
+                <mxCell id="edge-17" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.19195612431444242;entryX=1;entryY=0.3172268907563025;labelBorderColor=none;horizontal=1;" target="notifications" targetField="notifications.user_id" tooltip="users.id -&gt; notifications.user_id" value="recipient">
+                    <mxGeometry relative="1" x="-0.15784289583846345" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="603.9130434782609" y="338"/>
-                            <mxPoint x="603.9130434782609" y="690"/>
-                            <mxPoint x="1440" y="690"/>
-                            <mxPoint x="1440" y="1235.5"/>
+                            <mxPoint x="560" y="345"/>
+                            <mxPoint x="560" y="610"/>
+                            <mxPoint x="1480" y="610"/>
+                            <mxPoint x="1480" y="1235.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-18" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.210727969348659;entryX=0;entryY=0.4015957446808511;" target="audit_log" targetField="audit_log.user_id" tooltip="users.id -&gt; audit_log.user_id" value="action performed by">
-                    <mxGeometry relative="1" x="0.041960011264432495" y="-12" as="geometry">
+                <mxCell id="edge-18" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.18281535648994515;entryX=0;entryY=0.4015957446808511;labelBorderColor=none;horizontal=1;" target="audit_log" targetField="audit_log.user_id" tooltip="users.id -&gt; audit_log.user_id" value="action performed by">
+                    <mxGeometry relative="1" x="0.045566937477923064" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="80" y="350"/>
-                            <mxPoint x="80" y="215"/>
-                            <mxPoint x="1083.913043478261" y="215"/>
-                            <mxPoint x="1083.913043478261" y="315.5"/>
+                            <mxPoint x="60" y="340"/>
+                            <mxPoint x="60" y="190"/>
+                            <mxPoint x="1060" y="190"/>
+                            <mxPoint x="1060" y="315.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -707,7 +1138,7 @@
                     <mxGeometry height="50" width="1400" x="100" y="25" as="geometry"/>
                 </mxCell>
                 <mxCell id="users" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#475569;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#475569;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="USERS" vertex="1">
-                    <mxGeometry height="522" width="280" x="150" y="240" as="geometry"/>
+                    <mxGeometry height="547" width="280" x="150" y="240" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.id" parent="users" style="group;connectable=1;" tooltip="users.id: uuid; NOT NULL; " value="" vertex="1">
                     <mxGeometry height="84" width="280" y="38" as="geometry"/>
@@ -860,6 +1291,15 @@
                     <mxGeometry height="25" width="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.updated_at.1" connectable="0" parent="users.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled" parent="users" style="group;connectable=1;" tooltip="users.email_notifications_enabled: boolean; NOT NULL; Default: false" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="522" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.0" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.1" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="email_notifications_enabled" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="enrollments" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#475569;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#475569;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="ENROLLMENTS" vertex="1">
@@ -1365,19 +1805,21 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="edge-19" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.10548523206751055;entryX=0;entryY=0.3172268907563025;" target="otp_codes" targetField="otp_codes.user_id" tooltip="users.id -&gt; otp_codes.user_id" value="verification codes">
-                    <mxGeometry relative="1" x="0.21722113502935425" y="-12" as="geometry">
+                <mxCell id="edge-19" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=1;exitY=0.10020040080160321;entryX=0;entryY=0.3172268907563025;labelBorderColor=none;horizontal=1;" target="otp_codes" targetField="otp_codes.user_id" tooltip="users.id -&gt; otp_codes.user_id" value="verification codes">
+                    <mxGeometry relative="1" x="0.4235033259423504" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="456.0869565217391" y="290"/>
-                            <mxPoint x="456.0869565217391" y="315.5"/>
+                            <mxPoint x="500" y="290"/>
+                            <mxPoint x="500" y="315.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="edge-20" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.1308016877637131;entryX=0;entryY=0.2870722433460076;" target="trusted_devices" targetField="trusted_devices.user_id" tooltip="users.id -&gt; trusted_devices.user_id" value="trusted devices">
-                    <mxGeometry relative="1" x="0.40818808269152806" y="-12" as="geometry">
+                <mxCell id="edge-20" edge="1" parent="1" source="users" sourceField="users.id" style="rounded=0;html=1;fontSize=11;labelBackgroundColor=#ffffff;strokeWidth=1.5;strokeColor=#475569;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;edgeStyle=none;orthogonal=1;exitPerimeter=0;entryPerimeter=0;jumpStyle=arc;jumpSize=9;exitX=0;exitY=0.12424849699398798;entryX=0;entryY=0.2870722433460076;labelBorderColor=none;horizontal=1;" target="trusted_devices" targetField="trusted_devices.user_id" tooltip="users.id -&gt; trusted_devices.user_id" value="trusted devices">
+                    <mxGeometry relative="1" x="0.4456470588235295" y="-10" as="geometry">
                         <Array as="points">
-                            <mxPoint x="120" y="302"/>
-                            <mxPoint x="120" y="775.5"/>
+                            <mxPoint x="110" y="302"/>
+                            <mxPoint x="110" y="790"/>
+                            <mxPoint x="590" y="790"/>
+                            <mxPoint x="590" y="775.5"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -1385,7 +1827,7 @@
                     <mxGeometry height="50" width="1400" x="100" y="25" as="geometry"/>
                 </mxCell>
                 <mxCell id="users" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#475569;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#475569;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="USERS" vertex="1">
-                    <mxGeometry height="474" width="280" x="150" y="240" as="geometry"/>
+                    <mxGeometry height="499" width="280" x="150" y="240" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.id" parent="users" style="group;connectable=1;" tooltip="users.id: uuid; NOT NULL; " value="" vertex="1">
                     <mxGeometry height="36" width="280" y="38" as="geometry"/>
@@ -1538,6 +1980,15 @@
                     <mxGeometry height="25" width="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="users.updated_at.1" connectable="0" parent="users.updated_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#f1f5f9;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="updated_at" vertex="1">
+                    <mxGeometry height="25" width="240" x="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled" parent="users" style="group;connectable=1;" tooltip="users.email_notifications_enabled: boolean; NOT NULL; Default: false" value="" vertex="1">
+                    <mxGeometry height="25" width="280" y="474" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.0" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;fontStyle=1;shape=partialRectangle;left=0;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=center;fontSize=12;" value="" vertex="1">
+                    <mxGeometry height="25" width="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users.email_notifications_enabled.1" connectable="0" parent="users.email_notifications_enabled" style="text;html=1;whiteSpace=wrap;overflow=hidden;verticalAlign=middle;spacingLeft=7;fontFamily=Helvetica;fillColor=#ffffff;fontColor=#1e293b;shape=partialRectangle;left=1;right=0;top=0;bottom=0;strokeColor=#6F0000;strokeWidth=1;align=left;fontSize=12;" value="email_notifications_enabled" vertex="1">
                     <mxGeometry height="25" width="240" x="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="otp_codes" parent="1" style="swimlane;html=1;startSize=38;horizontal=1;rounded=0;collapsible=0;container=1;fillColor=#a20025;swimlaneFillColor=#ffffff;fontColor=#ffffff;strokeColor=#a20025;fontStyle=1;align=center;spacingLeft=0;fontSize=14;strokeWidth=1.5;" value="OTP_CODES" vertex="1">

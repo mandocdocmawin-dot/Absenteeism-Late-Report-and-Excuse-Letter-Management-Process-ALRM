@@ -6,6 +6,7 @@ use App\Mail\InstructorExcuseRequestMail;
 use App\Models\ClassModel;
 use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use App\Models\UserNotification;
 use App\Notifications\SendOtpCode;
@@ -112,6 +113,7 @@ class InstructorMailRedirectTest extends TestCase
         $request = new ExcuseRequest(['type' => 'absence']);
         $request->id = 'request-id';
 
-        return $request->setRelation('enrollment', $enrollment);
+        return $request->setRelation('enrollment', $enrollment)
+            ->setRelation('teachingAssignment', (new TeachingAssignment)->setRelation('instructor', $instructor));
     }
 }

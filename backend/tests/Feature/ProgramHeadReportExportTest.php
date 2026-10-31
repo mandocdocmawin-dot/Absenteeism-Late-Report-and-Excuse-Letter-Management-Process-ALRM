@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\FollowupFlag;
 use App\Models\AttendanceTracker;
+use App\Models\FollowupFlag;
 use App\Models\Program;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -28,9 +28,8 @@ class ProgramHeadReportExportTest extends SecurityTestCase
     public function test_activity_csv_is_scoped_and_escapes_formulas_quotes_and_multiline_names(): void
     {
         $head = $this->user('program_head');
-        $own = $this->requestFor($this->user('student', ['name' => " \t=SUM(1,2)\n\"Test\""]));
+        $own = $this->requestFor($this->user('student', ['name' => " \t=SUM(1,2)\n\"Test\""]), null, ['subject_name' => '@SUM(1,2)']);
         $own->enrollment->class->program->update(['program_head_id' => $head->id]);
-        $own->enrollment->class->update(['subject_name' => '@SUM(1,2)']);
         $this->requestFor($this->user('student', ['name' => 'Private student']));
 
         $response = $this->bearer($head)->getJson(self::URL)->assertOk()

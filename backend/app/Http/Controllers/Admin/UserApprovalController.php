@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Program;
+use App\Models\TeachingAssignment;
 use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Services\AuditLoggerService;
@@ -176,6 +177,15 @@ class UserApprovalController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Only pending or deactivated accounts can be deleted. Deactivate this user first.',
+                'data' => null,
+            ], 409);
+        }
+
+        if ($user->classesTaught()->exists() || $user->enrollments()->exists()
+            || TeachingAssignment::where('instructor_id', $user->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This account has enrollment or teaching history. Keep it deactivated to preserve records.',
                 'data' => null,
             ], 409);
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassModel;
 use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
 use App\Models\RequestAttachment;
@@ -46,6 +47,7 @@ class RequestController extends Controller
     {
         $validated = $httpRequest->validate([
             'class_id' => ['required', 'string', 'uuid', 'exists:classes,id'],
+            'teaching_assignment_id' => ['sometimes', 'uuid'],
             'type' => ['required', 'in:absence,late'],
             'subjects_missed' => ['required', 'string', 'max:255'],
             'minutes_late' => ['required_if:type,late', 'nullable', 'integer', 'min:1', 'max:999'],
@@ -54,7 +56,7 @@ class RequestController extends Controller
             'end_date_of_absence' => ['nullable', 'date', 'after_or_equal:start_date_of_absence'],
             'reason' => ['required', 'string', 'max:600'],
             'evidence_file_url' => [
-                'nullable',
+                'required',
                 'uuid',
                 Rule::exists('request_attachments', 'id')
                     ->where('user_id', $httpRequest->user()->id)
@@ -88,6 +90,13 @@ class RequestController extends Controller
         }
 
         $excuseRequest = DB::transaction(function () use ($httpRequest, $validated, $enrollment) {
+            // The same lock serializes assignment changes and new submissions.
+            $class = ClassModel::whereKey($enrollment->class_id)->lockForUpdate()->firstOrFail();
+            $assignment = $class->activeTeachingAssignment()->first();
+            abort_unless($assignment && $assignment->instructor_id === $class->instructor_id,
+                422, 'This class has no active teaching assignment. Refresh the class list.');
+            abort_if(isset($validated['teaching_assignment_id']) && $validated['teaching_assignment_id'] !== $assignment->id,
+                409, 'The instructor assignment changed. Refresh the class list before submitting.');
             User::whereKey($httpRequest->user()->id)->lockForUpdate()->firstOrFail();
             $duplicate = ExcuseRequest::where('enrollment_id', $enrollment->id)
                 ->where('type', $validated['type'])

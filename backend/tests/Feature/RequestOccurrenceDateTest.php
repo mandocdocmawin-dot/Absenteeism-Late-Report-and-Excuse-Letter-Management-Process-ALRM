@@ -31,6 +31,7 @@ class RequestOccurrenceDateTest extends SecurityTestCase
         $payload = $this->payload('late') + [
             'class_id' => $fixture->enrollment->class_id,
             'start_date_of_absence' => '2026-10-18',
+            'evidence_file_url' => $this->unusedEvidence($student)->id,
         ];
 
         $created = $this->bearer($student)->postJson('/api/requests', $payload)->assertCreated();

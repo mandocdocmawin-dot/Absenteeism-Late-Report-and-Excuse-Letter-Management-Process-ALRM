@@ -32,7 +32,8 @@ class FollowUpController extends Controller
 
             $enrollment = $request->enrollment;
             $class = $enrollment->class;
-            $instructor = $class->instructor;
+            $instructor = $request->teachingAssignment?->ended_at === null
+                ? $request->teachingAssignment?->instructor : null;
 
             if ($enrollment->student_id !== Auth::id()) {
                 return $this->fail('Unauthorized.', 403);

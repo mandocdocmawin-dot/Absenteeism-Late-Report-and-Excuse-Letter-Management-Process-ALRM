@@ -25,7 +25,7 @@ class InstructorRequestExport extends StringValueBinder implements FromCollectio
 
     public function map($request): array
     {
-        $class = $request->enrollment?->class;
+        $class = $request->historicalClass();
         $submitted = $request->date_submitted ?? $request->created_at;
 
         // Explicit string cells prevent student/class names from becoming Excel formulas.

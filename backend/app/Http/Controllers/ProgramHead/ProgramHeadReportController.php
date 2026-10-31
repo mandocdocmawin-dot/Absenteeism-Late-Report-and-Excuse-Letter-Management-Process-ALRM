@@ -5,6 +5,8 @@ namespace App\Http\Controllers\ProgramHead;
 use App\Http\Controllers\Controller;
 use App\Models\ExcuseRequest;
 use App\Models\FollowupFlag;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -16,8 +18,10 @@ class ProgramHeadReportController extends Controller
 
     public function export(Request $request)
     {
-        $programIds = $request->user()->headedProgramIds();
-        abort_unless($programIds, 403, 'No program is assigned to this account.');
+        /** @var User $user */
+        $user = $request->user();
+        $programIds = $user->headedProgramIds();
+        abort_unless($programIds !== [], 403, 'No program is assigned to this account.');
 
         $filters = $request->validate([
             'report_type' => ['nullable', Rule::in(['activity', 'risk'])],
@@ -35,6 +39,7 @@ class ProgramHeadReportController extends Controller
         }
         $programIds = isset($filters['program_id']) ? [$filters['program_id']] : $programIds;
 
+        /** @var Builder<FollowupFlag>|Builder<ExcuseRequest> $query */
         $query = $risk ? FollowupFlag::query() : ExcuseRequest::query();
         // Never broaden risk reports just because a flag was escalated to this account.
         $query->whereHas($risk ? 'request.enrollment.class' : 'enrollment.class',
@@ -50,14 +55,14 @@ class ProgramHeadReportController extends Controller
         $prefix = $risk ? 'request.' : '';
         $query->select($risk
             ? ['id', 'request_id', 'flagged_date', 'status']
-            : ['id', 'enrollment_id', 'type', 'date_submitted', 'created_at']);
+            : ['id', 'enrollment_id', 'class_snapshot', 'type', 'date_submitted', 'created_at']);
         $relations = [
             $prefix.'enrollment:id,student_id,class_id',
             $prefix.'enrollment.student:id,name',
             $prefix.'enrollment.class:id,subject_name,schedule,weekly_hours,meetings_per_week',
         ];
         if ($risk) {
-            $relations[] = 'request:id,enrollment_id';
+            $relations[] = 'request:id,enrollment_id,class_snapshot';
             $relations[] = 'request.enrollment.attendanceTracker';
         }
         $rows = $query->with($relations)->orderByRaw($dateColumn.' DESC')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
@@ -70,16 +75,24 @@ class ProgramHeadReportController extends Controller
                 ? ['Student', 'Class', 'Flagged date', 'Threshold', 'Percentage']
                 : ['Student', 'Class', 'Submitted', 'Type']);
             foreach ($rows as $row) {
-                $record = $risk ? $row->request : $row;
-                $date = $risk ? $row->flagged_date : ($row->date_submitted ?? $row->created_at);
+                if ($risk) {
+                    /** @var FollowupFlag $flag */
+                    $flag = $row;
+                    $record = $flag->request;
+                    $date = $flag->flagged_date;
+                    $details = array_values($flag->attendanceRisk());
+                } else {
+                    /** @var ExcuseRequest $record */
+                    $record = $row;
+                    $date = $record->date_submitted ?? $record->created_at;
+                    $details = [$record->type];
+                }
                 $values = [
                     $record?->enrollment?->student?->name ?? '',
-                    $record?->enrollment?->class?->subject_name ?? '',
+                    $record?->class_snapshot['subject_name'] ?? $record?->enrollment?->class?->subject_name ?? '',
                     $date?->toDateString() ?? '',
                 ];
-                $this->writeRow($output, $risk
-                    ? [...$values, ...array_values($row->attendanceRisk())]
-                    : [...$values, $row->type]);
+                $this->writeRow($output, [...$values, ...$details]);
             }
             fclose($output);
         }, 'program-'.($risk ? 'risk' : 'activity').'-report-'.now()->format('Y-m-d_His').'.csv', [

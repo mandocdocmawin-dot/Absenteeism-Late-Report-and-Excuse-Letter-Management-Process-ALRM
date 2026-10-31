@@ -25,32 +25,30 @@ class InstructorDashboardController extends Controller
                     && in_array($enrollment->attendanceTracker->status, ['warning', 'critical', 'IR'], true);
             })->map(function ($enrollment) use ($class) {
                 return [
-                    'student'  => $enrollment->student->only(['id', 'name']),
-                    'class'    => $class->subject_name,
-                    'status'   => $enrollment->attendanceTracker->status,
+                    'student' => $enrollment->student->only(['id', 'name']),
+                    'class' => $class->subject_name,
+                    'status' => $enrollment->attendanceTracker->status,
                     'absences' => $enrollment->attendanceTracker->converted_absences,
                 ];
             });
         })->values();
 
-        $pendingRequests = ExcuseRequest::whereHas('enrollment.class', function ($q) {
-            $q->where('instructor_id', Auth::id());
-        })->where('status', 'pending')
-          ->with('enrollment.student', 'enrollment.class')
-          ->latest()
-          ->get();
+        $pendingRequests = ExcuseRequest::forInstructor(Auth::id(), true)->where('status', 'pending')
+            ->with('enrollment.student', 'enrollment.class')
+            ->latest()
+            ->get();
 
         $data = [
-            'total_classes'     => $classes->count(),
-            'total_students'    => $classes->sum(fn ($c) => $c->enrollments->count()),
-            'pending_requests'  => $pendingRequests,
-            'flagged_students'  => $flaggedStudents,
+            'total_classes' => $classes->count(),
+            'total_students' => $classes->sum(fn ($c) => $c->enrollments->count()),
+            'pending_requests' => $pendingRequests,
+            'flagged_students' => $flaggedStudents,
         ];
 
         return response()->json([
             'success' => true,
             'message' => null,
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 }

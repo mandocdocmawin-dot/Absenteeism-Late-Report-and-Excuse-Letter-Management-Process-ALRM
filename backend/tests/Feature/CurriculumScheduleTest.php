@@ -177,15 +177,14 @@ class CurriculumScheduleTest extends SecurityTestCase
     public function test_unequal_meetings_use_the_actual_occurrence_day_and_snapshot_missed_hours(): void
     {
         $instructor = $this->user('instructor');
-        $request = $this->requestFor($this->user(), $instructor);
-        $class = $request->enrollment->class;
-        $class->update([
+        $request = $this->requestFor($this->user(), $instructor, [
             'weekly_hours' => 3, 'meetings_per_week' => 2,
             'schedule' => [
                 ['day' => 'Mon', 'start' => '09:00', 'end' => '11:00'],
                 ['day' => 'Thu', 'start' => '13:00', 'end' => '14:00'],
             ],
         ]);
+        $class = $request->enrollment->class;
         $this->assertSame(2.0, $class->absenceHoursForPeriod(Carbon::parse('2026-10-19')));
         $this->assertSame(1.0, $class->absenceHoursForPeriod(Carbon::parse('2026-10-22')));
         $this->assertSame(0.0, $class->absenceHoursForPeriod(Carbon::parse('2026-10-20')));

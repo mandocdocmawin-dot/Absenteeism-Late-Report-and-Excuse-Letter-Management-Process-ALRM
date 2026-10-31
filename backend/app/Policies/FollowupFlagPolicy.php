@@ -18,7 +18,7 @@ class FollowupFlagPolicy
             return true;
         }
 
-        return $flag->request->enrollment->class->instructor_id === $user->id
+        return $flag->request->teachingAssignment?->instructor_id === $user->id
             || $user->headsProgram($flag->request->enrollment->class->program_id);
     }
 
@@ -27,7 +27,16 @@ class FollowupFlagPolicy
      */
     public function update(User $user, FollowupFlag $flag): bool
     {
-        return $user->role === 'administrator' || $flag->escalated_to === $user->id
-            || $user->headsProgram($flag->request->enrollment->class->program_id);
+        if ($user->role === 'administrator' || $user->headsProgram($flag->request->enrollment->class->program_id)) {
+            return true;
+        }
+
+        if ($flag->escalated_to !== $user->id) {
+            return false;
+        }
+
+        return $user->role !== 'instructor'
+            || ($flag->request->teachingAssignment?->instructor_id === $user->id
+                && $flag->request->teachingAssignment->ended_at === null);
     }
 }

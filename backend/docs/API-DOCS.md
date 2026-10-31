@@ -191,7 +191,10 @@ Role access is not hierarchical: administrators do not automatically pass instru
 | POST | `/admin/classes` | Create class and enroll matching students; `201` |
 | GET | `/admin/classes/{class}` | Class, instructor, program, and enrolled students |
 | PUT/PATCH | `/admin/classes/{class}` | Update class and enroll matching students |
-| DELETE | `/admin/classes/{class}` | Delete class with no enrollments |
+| DELETE | `/admin/classes/{class}` | Delete class with no enrollments or assignment history |
+| GET | `/admin/classes/{class}/assignments` | Teaching assignment versions and recent change events |
+| POST | `/admin/classes/{class}/assignment` | Assign, replace, move, swap, or remove teaching assignment |
+| GET | `/admin/classes/{class}/pending-requests` | Pending requests blocking an assignment change; **Paged** |
 | GET | `/admin/curricula` | List curriculum revisions; optional program/version filters; **Paged** |
 | POST | `/admin/curricula` | Add a curriculum revision; `201`, or `200` for an identical existing payload |
 | GET | `/admin/curricula/{curriculum}` | Curriculum subjects, offerings, program, and sources |
@@ -246,7 +249,7 @@ Both read endpoints take no body. Marking an already-read notification read succ
 
 ### Upload first, then submit
 
-`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads.
+`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads. PDF objects are parsed by qpdf 11+; actions, forms, embedded files, interactive media, encryption, malformed files and parser warnings are rejected. See [Evidence upload security](SECURITY-EVIDENCE.md) for runtime requirements and limits.
 
 Images must be no larger than 8192 pixels on either side and 8,000,000 total pixels. They are re-encoded as JPEG, resized to a maximum 1600-pixel longest edge, with a white background. PDFs are checked for a `%PDF-` header.
 
@@ -279,7 +282,7 @@ Despite its name, `data.path` is an attachment UUID. Submit it as `evidence_file
 | `start_date_of_absence` | Yes, for both types | Occurrence date, including late requests |
 | `end_date_of_absence` | No | Nullable date on/after start |
 | `reason` | Yes | String ≤600 on create |
-| `evidence_file_url` | No | Nullable owned, unlinked attachment UUID |
+| `evidence_file_url` | Yes | Required owned, unlinked attachment UUID |
 | `evidence_type` | No | Nullable string ≤100 |
 | `proof_types` | No | Nullable list, maximum 6 distinct allowed strings |
 | `guardian_name` | Yes | String 2–60 characters, no digits |
@@ -294,7 +297,7 @@ Allowed `proof_types` values, with exact spelling:
 - `Letter from Parent/Guardian`
 - `Others`
 
-The backend derives enrollment and instructor from the caller and class. It sets status `pending` and submission time; it also updates the user's guardian/contact details. An equivalent submission within five minutes returns `409`; equivalence compares enrollment, type, reason, subjects, minutes late, start date, and end date.
+The backend derives enrollment and active teaching assignment from the caller and class. It saves an immutable `class_snapshot` containing subject, instructor, program, section, academic term, and timetable details, and records `teaching_assignment_id` and `snapshot_source: submission`. It sets status `pending` and submission time; it also updates the user's guardian/contact details. An equivalent submission within five minutes returns `409`; equivalence compares enrollment, type, reason, subjects, minutes late, start date, and end date. Clients should send the optional `teaching_assignment_id` returned by `GET /classes`; an ended/replaced ID returns `409`. Older clients that omit it resolve the current active assignment under a class lock. Snapshot input supplied by the client is ignored.
 
 ### Read, edit, cancel, follow up
 
@@ -314,7 +317,7 @@ Only the owner of a pending request may edit or cancel it. The policy generally 
 
 ## Instructor decisions and follow-ups
 
-`GET /instructor/requests` lists only requests for the caller's taught classes with `enrollment.student` and `enrollment.class`. It supports pagination; export-only filters are not applied to this list.
+`GET /instructor/requests` lists requests linked to the caller's own teaching assignment versions with `enrollment.student`, `enrollment.class`, and `teachingAssignment`. Historical assignments remain readable by the original instructor; only active assignments permit request decisions. The replacement instructor does not inherit prior requests. Request JSON overlays `enrollment.class` with the stored `class_snapshot`, keeping the existing response shape historical. It supports pagination; export-only filters are not applied to this list.
 
 `PATCH /instructor/requests/{request}/decision` requires `{"status":"approved"}`, `noted`, or `invalid`. Only the actual instructor may decide; administrators/program heads cannot decide through their own monitoring access. Request and enrollment locking protects against duplicate processing. The pending-state policy may return `403` before the controller's `409` conflict check.
 
@@ -369,7 +372,7 @@ Required on create: subject name, section, program, year level, semester, and sc
 |---|---|
 | `subject_name` | String ≤255 |
 | `section` | String ≤50 |
-| `instructor_id` | Optional nullable user UUID with primary role `instructor` |
+| `instructor_id` | Create only: optional nullable UUID of an approved instructor. Must be omitted on update; use the assignment endpoint |
 | `schedule` | Optional structured meeting array; legacy string ≤4096 accepted. Omitted times require confirmed hours/count on creation |
 | `program_id` | Existing program UUID |
 | `year_level` | `1st`, `2nd`, `3rd`, `4th` |
@@ -380,7 +383,7 @@ Required on create: subject name, section, program, year level, semester, and sc
 | `weekly_hours` | Positive numeric ≤168, including fractions; derived when structured meeting times are supplied |
 | `meetings_per_week` | Integer 1–42; derived when structured meeting times are supplied |
 
-Create/update auto-enroll matching students only when the class belongs to the current semester and school year. It creates missing enrollments; it does not detach existing ones. Writes and audit logging run transactionally; class updates also recompute existing tracker statuses. Lists load instructor/program and enrollment count. Delete with any enrollments returns `409`; success returns `data: null`. See [Curriculum catalog and class schedules](#curriculum-catalog-and-class-schedules) for payload examples and attendance-hour behavior.
+Create/update auto-enroll matching students only when the class belongs to the current semester and school year. It creates missing enrollments; it does not detach existing ones. Writes and audit logging run transactionally; class updates also recompute existing tracker statuses. Lists load instructor/program, `active_teaching_assignment`, `assignment_revision`, enrollment count, and `pending_requests_count`. Class identity changes (subject, curriculum subject, program, section, year, semester, school year) return `409` once any enrollment or assignment history exists. Create/select another class and change its teaching assignment instead. Delete with any enrollments or assignment history returns `409`; success returns `data: null`. See [Teaching assignments](TEACHING-ASSIGNMENTS.md) for the action payloads and frontend integration contract, and [Curriculum catalog and class schedules](#curriculum-catalog-and-class-schedules) for schedule payloads and attendance-hour behavior.
 
 ## Reports and downloads
 
@@ -495,7 +498,7 @@ Content-Type: application/json
 }
 ```
 
-For a late request, set `type` to `late` and include `minutes_late`; retain the required occurrence date. Evidence is optional; if uploaded first, include its attachment UUID as `evidence_file_url`.
+For a late request, set `type` to `late` and include `minutes_late`; retain the required occurrence date. Evidence is required for both request types: upload it first and include its attachment UUID as `evidence_file_url`.
 
 ### Paginated authenticated request
 
