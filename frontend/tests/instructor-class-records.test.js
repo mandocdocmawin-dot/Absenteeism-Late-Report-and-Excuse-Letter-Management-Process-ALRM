@@ -165,6 +165,9 @@ test("attendance alert levels match preventive, critical and rounded drop-limit 
   assert.equal(attendanceAlert(fiveHour, studentAt(5)).level, "preventive");
   assert.equal(attendanceAlert(fiveHour, studentAt(10)).level, "critical");
   assert.equal(attendanceAlert(fiveHour, studentAt(16)).level, "drop-limit");
+  const twoHour = { weekly_hours: 2, meetings_per_week: 1 };
+  assert.equal(attendanceAlert(twoHour, studentAt(6.5)).level, "critical");
+  assert.equal(attendanceAlert(twoHour, studentAt(7)).level, "drop-limit");
   assert.equal(attendanceAlert({}, studentAt(4)), null);
 });
 

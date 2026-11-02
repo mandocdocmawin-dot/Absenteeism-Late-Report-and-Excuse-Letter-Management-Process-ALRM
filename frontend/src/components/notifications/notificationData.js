@@ -125,7 +125,10 @@ export function mergeRequestActivity(activity, requests, user, readIds = new Set
   for (const request of requests) {
     const student = request?.enrollment?.student;
     const course = historicalRequestClass(request);
+    const assignment = course?.active_teaching_assignment || course?.teaching_assignment;
+    const instructorId = assignment?.instructor_id || course?.instructor_id || course?.instructor?.id;
     if (!request?.id || seen.has(String(request.id)) || !["absence", "late"].includes(request.type)) continue;
+    if (!instructorId || String(instructorId) !== String(user.id)) continue;
     if (!student?.name || !course?.subject_name) continue;
     if (!Number.isFinite(Date.parse(request.date_submitted))) continue;
     seen.add(String(request.id));

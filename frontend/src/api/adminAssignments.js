@@ -32,34 +32,17 @@ export function getAdminClass(classId) {
   return apiRequest(`/api/admin/classes/${encodeURIComponent(classId)}`);
 }
 
-export async function setClassInstructor(classId, instructorId) {
+export async function changeTeachingAssignment(classId, payload) {
   const id = String(classId || "").trim();
-  const normalizedInstructorId =
-    instructorId === null ? null : String(instructorId || "").trim();
   if (!id) throw new Error("Select an existing class.");
-  if (normalizedInstructorId === "")
-    throw new Error("Select an approved instructor.");
 
-  const updated = await apiRequest(
-    `/api/admin/classes/${encodeURIComponent(id)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ instructor_id: normalizedInstructorId }),
-    },
+  const result = await apiRequest(
+    `/api/admin/classes/${encodeURIComponent(id)}/assignment`,
+    { method: "POST", body: JSON.stringify(payload) },
   );
-  const confirmedInstructorId = updated?.instructor_id ?? null;
-  if (
-    String(updated?.id) !== id ||
-    confirmedInstructorId !== normalizedInstructorId
-  ) {
-    throw new Error(
-      "The server did not confirm the instructor assignment. Reload the page before trying again.",
-    );
+  if (!Array.isArray(result?.classes)
+    || !result.classes.some((item) => String(item?.id) === id)) {
+    throw new Error("The server did not confirm the teaching assignment change. Reload the page before trying again.");
   }
-  return updated;
-}
-
-export function assignClassInstructor(classId, instructorId) {
-  if (instructorId === null) throw new Error("Select an approved instructor.");
-  return setClassInstructor(classId, instructorId);
+  return result;
 }

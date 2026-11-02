@@ -566,8 +566,6 @@ function StudentProfile() {
             <AlertTitle>Unable to load profile</AlertTitle>
             <AlertDescription>
               {error}
-              {error.includes("404") &&
-                " Confirm that GET /api/admin/students/{student} is available on the backend."}
             </AlertDescription>
           </Alert>
         )}

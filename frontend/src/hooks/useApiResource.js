@@ -4,7 +4,7 @@ import {
   requestCachedResource,
   resourceKey,
   subscribeResourceCache,
-} from "@/api/resourceCache";
+} from "../api/resourceCache.js";
 
 export function initialApiResourceState(enabled, initialData) {
   return { data: initialData ?? null, error: "", loading: enabled };

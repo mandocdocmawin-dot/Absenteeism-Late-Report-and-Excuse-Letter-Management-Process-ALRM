@@ -419,7 +419,6 @@ export default function AdminManage() {
           row={dialogRow}
           data={{ ...data, classes: assignableClasses }}
           onClose={() => setDialog(null)}
-          onConflict={refreshRows}
           onSaved={saved}
         />
       )}

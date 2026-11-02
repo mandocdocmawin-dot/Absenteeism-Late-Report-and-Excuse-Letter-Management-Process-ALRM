@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LoaderCircle, X } from "lucide-react";
-import { setClassInstructor } from "@/api/adminAssignments";
+import { changeTeachingAssignment } from "@/api/adminAssignments";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { getSelectablePrograms } from "@/lib/programs";
@@ -29,12 +29,13 @@ function instructorIdOf(row, instructors) {
   return matches.length === 1 ? String(matches[0].id) : "";
 }
 
-export default function AssignmentDialog({ row, data, onClose, onConflict, onSaved }) {
+export default function AssignmentDialog({ row, data, onClose, onSaved }) {
   const dialog = useRef(null);
   const lock = useRef(false);
   const [selection, setSelection] = useState(() => assignmentSelection(row));
   const [busy, setBusy] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 
   const assigning = !row || !activeTeachingAssignment(row);
@@ -61,8 +62,8 @@ export default function AssignmentDialog({ row, data, onClose, onConflict, onSav
   const semesters = useMemo(() => semesterOrder.filter(semester => candidates.some(item => (!selection.programId || String(item.program_id) === String(selection.programId)) && (!selection.yearLevel || item.year_level === selection.yearLevel) && item.semester === semester)), [candidates, selection.programId, selection.yearLevel]);
   const availableClasses = useMemo(() => candidates.filter(item => matchesFilters(item, selection)), [candidates, selection]);
   const validSelection = assigning
-    ? Boolean(sourceClass && selection.instructorId)
-    : Boolean(sourceClass && targetClass && sourceInstructorId);
+    ? Boolean(sourceClass && selection.instructorId && reason.trim())
+    : Boolean(sourceClass && targetClass && sourceInstructorId && reason.trim());
 
   useEffect(() => {
     const element = dialog.current;
@@ -89,23 +90,6 @@ export default function AssignmentDialog({ row, data, onClose, onConflict, onSav
     setError("");
   }
 
-  async function moveInstructor() {
-    let targetUpdated = false;
-    try {
-      await setClassInstructor(targetClass.id, sourceInstructorId);
-      targetUpdated = true;
-      await setClassInstructor(sourceClass.id, null);
-    } catch (failure) {
-      if (!targetUpdated) throw failure;
-      try {
-        await setClassInstructor(targetClass.id, null);
-      } catch (rollbackFailure) {
-        throw new Error("The subject change was only partially completed and automatic rollback failed. Refresh the page and review both classes before continuing.", { cause: rollbackFailure });
-      }
-      throw new Error(failure.message ? `${failure.message} The destination assignment was rolled back.` : "The subject change could not be completed. The destination assignment was rolled back.", { cause: failure });
-    }
-  }
-
   async function submit(event) {
     event.preventDefault();
     if (!validSelection || lock.current) return;
@@ -119,26 +103,23 @@ export default function AssignmentDialog({ row, data, onClose, onConflict, onSav
     setBusy(true);
     setError("");
     try {
-      const latest = await onConflict(affected);
-      const latestSource = latest.find(item => String(item.id) === String(sourceClass.id));
       if (assigning) {
-        if (activeTeachingAssignment(latestSource)) {
-          setReviewing(false);
-          setError("This class was assigned while you were reviewing it. Choose an available class again.");
-          return;
-        }
-        await setClassInstructor(sourceClass.id, selection.instructorId);
+        await changeTeachingAssignment(sourceClass.id, {
+          action: "assign",
+          expected_revision: Number(sourceClass.assignment_revision || 0),
+          instructor_id: selection.instructorId,
+          reason: reason.trim(),
+        });
         await onSaved(affected, "Instructor assigned.");
         return;
       }
-
-      const latestTarget = latest.find(item => String(item.id) === String(targetClass.id));
-      if (instructorIdOf(latestSource, data.instructors) !== sourceInstructorId || activeTeachingAssignment(latestTarget)) {
-        setReviewing(false);
-        setError("The assignment changed while you were reviewing it. Please review the updated classes and try again.");
-        return;
-      }
-      await moveInstructor();
+      await changeTeachingAssignment(sourceClass.id, {
+        action: "change_subject",
+        expected_revision: Number(sourceClass.assignment_revision || 0),
+        target_class_id: targetClass.id,
+        target_expected_revision: Number(targetClass.assignment_revision || 0),
+        reason: reason.trim(),
+      });
       await onSaved(affected, "Instructor subject updated.");
     } catch (failure) {
       const messages = Object.values(failure.errors || {}).flat().filter(value => typeof value === "string");
@@ -164,6 +145,8 @@ export default function AssignmentDialog({ row, data, onClose, onConflict, onSav
       {assigning && <div className="grid gap-1.5"><Label htmlFor="assignment-instructor">Instructor</Label><select id="assignment-instructor" required value={selection.instructorId} disabled={busy} onChange={event => change("instructorId", event.target.value)} className={selectStyle}><option value="">Select Instructor</option>{data.instructors.map(item => <option key={item.id} value={item.id}>{item.name || item.email}</option>)}</select></div>}
 
       <fieldset disabled={busy} className="grid gap-5"><legend className="sr-only">{assigning ? "Filter available classes" : "Select a new subject or class"}</legend><div className="grid gap-1.5"><Label htmlFor="assignment-program">Program</Label><select id="assignment-program" value={selection.programId} onChange={event => change("programId", event.target.value)} className={selectStyle}><option value="">All programs</option>{programs.map(program => <option key={program.id} value={program.id}>{program.program_name || program.name}</option>)}</select></div><div className="grid gap-4 min-[480px]:grid-cols-2"><div className="grid gap-1.5"><Label htmlFor="assignment-year">Year Level</Label><select id="assignment-year" value={selection.yearLevel} onChange={event => change("yearLevel", event.target.value)} className={selectStyle}><option value="">All year levels</option>{yearLevels.map(year => <option key={year} value={year}>{year} Year</option>)}</select></div><div className="grid gap-1.5"><Label htmlFor="assignment-semester">Semester</Label><select id="assignment-semester" value={selection.semester} onChange={event => change("semester", event.target.value)} className={selectStyle}><option value="">All semesters</option>{semesters.map(semester => <option key={semester} value={semester}>{semester} Semester</option>)}</select></div></div><div className="grid gap-1.5"><Label htmlFor="assignment-class">Available Class</Label><select id="assignment-class" required value={selection.targetClassId} onChange={event => change("targetClassId", event.target.value)} className={selectStyle}><option value="">Select Available Class</option>{availableClasses.length === 0 ? <option disabled>No available classes</option> : availableClasses.map(item => <option key={item.id} value={String(item.id)} title={optionLabel(item)}>{optionLabel(item)}</option>)}</select></div></fieldset>
+
+      <div className="grid gap-1.5"><Label htmlFor="assignment-reason">Reason</Label><textarea id="assignment-reason" required maxLength={1000} value={reason} disabled={busy} onChange={event => { setReason(event.target.value); setReviewing(false); setError(""); }} rows={3} className="w-full rounded-lg border border-[#172f6b]/60 bg-white px-4 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#284fac]" /></div>
 
       {reviewing && <section className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"><h3 className="font-semibold text-[#172f6b]">Before / After preview</h3><p className="mt-2">{preview}</p></section>}
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}

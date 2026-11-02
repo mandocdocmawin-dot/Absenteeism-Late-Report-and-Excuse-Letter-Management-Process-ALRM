@@ -51,9 +51,7 @@ export function attendanceAlert(course, student) {
   if (percentage == null) return null;
   const weeklyHours = Number(course.weekly_hours);
   const used = usedHours(student);
-  const dropLimit = weeklyHours === 3
-    ? Math.ceil(weeklyHours * ATTENDANCE_POLICY.semesterWeeks * ATTENDANCE_POLICY.absenceLimitRate)
-    : round(weeklyHours * ATTENDANCE_POLICY.semesterWeeks * ATTENDANCE_POLICY.absenceLimitRate);
+  const dropLimit = Math.ceil(weeklyHours * ATTENDANCE_POLICY.semesterWeeks * ATTENDANCE_POLICY.absenceLimitRate);
   const level = used >= dropLimit ? "drop-limit" : used >= weeklyHours * 2 ? "critical" : used >= weeklyHours ? "preventive" : "safe";
   const labels = { safe: "Safe", preventive: "Preventive", critical: "Critical", "drop-limit": "Drop limit" };
   return { used, percentage, level, label: labels[level] };
