@@ -24,7 +24,7 @@ class DevInstructorClassSeederTest extends SecurityTestCase
 
     public function test_all_four_instructors_have_distinct_subjects_in_every_program_and_empty_section(): void
     {
-        $devs = collect(DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS)->map(fn ($email) => User::create([
+        $devs = collect(DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS)->map(fn ($email) => User::factory()->create([
             'email' => $email, 'name' => $email, 'role' => 'instructor',
         ]));
         $programs = Program::where('program_name', '!=', 'General Education')->get();
@@ -50,7 +50,7 @@ class DevInstructorClassSeederTest extends SecurityTestCase
                 continue;
             }
 
-            $student = User::create(['name' => 'Student', 'email' => 'student@example.com', 'role' => 'student']);
+            $student = User::factory()->create(['name' => 'Student', 'email' => 'student@example.com', 'role' => 'student']);
             Enrollment::create(['student_id' => $student->id, 'class_id' => $class->id, 'year_level' => '1st']);
             $oldClass = ClassModel::create([
                 ...$class->only(['subject_name', 'program_id', 'year_level', 'semester', 'school_year', 'section', 'schedule']),
@@ -89,13 +89,14 @@ class DevInstructorClassSeederTest extends SecurityTestCase
 
     public function test_missing_instructors_and_programs_without_classes_do_not_prevent_global_membership(): void
     {
-        $dev = User::create([
+        $dev = User::factory()->create([
             'name' => 'Marwin',
             'email' => DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS[0],
             'role' => 'instructor',
         ]);
         $dev->programs()->attach(Program::where('program_name', 'General Education')->sole()->id);
-        $dev->update(['program_id' => Program::where('program_name', 'General Education')->sole()->id]);
+        $dev->program_id = Program::where('program_name', 'General Education')->sole()->id;
+        $dev->save();
 
         $this->seed(DevInstructorClassSeeder::class);
 
@@ -107,7 +108,7 @@ class DevInstructorClassSeederTest extends SecurityTestCase
 
     public function test_matching_subject_schedule_and_academic_sections_are_preserved(): void
     {
-        $dev = User::create([
+        $dev = User::factory()->create([
             'name' => 'Marwin',
             'email' => DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS[0],
             'role' => 'instructor',
@@ -142,7 +143,7 @@ class DevInstructorClassSeederTest extends SecurityTestCase
     public function test_global_sync_keeps_bsis_as_home_program_even_when_dev_accounts_are_students(): void
     {
         $socialWorkId = Program::where('program_name', 'Bachelor of Science in Social Work')->sole()->id;
-        $devs = collect(DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS)->map(fn ($email) => User::create([
+        $devs = collect(DevInstructorClassSeeder::DEV_INSTRUCTOR_EMAILS)->map(fn ($email) => User::factory()->create([
             'email' => $email,
             'name' => $email,
             'role' => 'student',
@@ -161,7 +162,7 @@ class DevInstructorClassSeederTest extends SecurityTestCase
 
     public function test_admin_user_seeding_saves_bsis_as_dev_home_without_changing_other_staff_defaults(): void
     {
-        // Exercise persistence without calling the external Google Sheets roster.
+        // Exercise the local account defaults independently of class seeding.
         $seeder = new AdminUserSeeder;
         $saveUser = new \ReflectionMethod(AdminUserSeeder::class, 'saveUser');
         $programIds = Program::where('program_name', '!=', 'General Education')->pluck('id')->all();

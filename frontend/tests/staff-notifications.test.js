@@ -66,7 +66,7 @@ test("notification preview and unread-count adapters validate their server respo
   await assert.rejects(api.getNotificationUnreadCount(), /unexpected/i);
 });
 
-test("preview loading caches per account and marks only returned unread notifications", async () => {
+test("preview loading caches per account without marking notifications read", async () => {
   const feed = await load("components/notifications/notificationFeed.js");
   const calls = [];
   mockApiFetch(async (url, options) => {
@@ -80,14 +80,14 @@ test("preview loading caches per account and marks only returned unread notifica
   });
 
   const result = await feed.loadNotificationPreview("account-one");
-  assert.deepEqual(calls, [["/api/notifications/preview", "GET"], ["/api/notifications/unread/read", "PATCH"]]);
-  assert.equal(result.notifications.find(item => item.id === "unread").is_read, true);
-  assert.equal(result.unreadCount, 2);
+  assert.deepEqual(calls, [["/api/notifications/preview", "GET"]]);
+  assert.equal(result.notifications.find(item => item.id === "unread").is_read, false);
+  assert.equal(result.unreadCount, 3);
   assert.deepEqual(feed.getCachedNotificationPreview("account-one"), result);
   assert.equal(feed.getCachedNotificationPreview("account-two"), null);
 });
 
-test("preview read failure keeps loaded records visible with a read error", async () => {
+test("preview loading requires no read endpoint availability", async () => {
   const feed = await load("components/notifications/notificationFeed.js");
   mockApiFetch(async (url) => String(url).endsWith("/preview")
     ? Response.json({ success: true, data: { notifications: [{ id: "cannot-read", is_read: false }], unread_count: 1 } })
@@ -96,7 +96,7 @@ test("preview read failure keeps loaded records visible with a read error", asyn
   const result = await feed.loadNotificationPreview("read-failure-account");
   assert.deepEqual(result.notifications.map(item => item.id), ["cannot-read"]);
   assert.equal(result.unreadCount, 1);
-  assert.match(result.readError, /Read unavailable/);
+  assert.equal(result.readError, "");
   assert.deepEqual(feed.getCachedNotificationPreview("read-failure-account"), result);
 });
 

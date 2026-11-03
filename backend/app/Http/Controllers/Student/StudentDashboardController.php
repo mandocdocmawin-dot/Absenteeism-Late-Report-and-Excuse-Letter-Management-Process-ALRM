@@ -61,7 +61,7 @@ class StudentDashboardController extends Controller
                         ->where('semester', AcademicPeriod::semester())
                         ->where('school_year', AcademicPeriod::schoolYear()))
                     ->count(),
-                'unexcused_absences' => (int) $trackers->sum('total_absences'),
+                'unexcused_absences' => $ownRequests()->where('type', 'absence')->where('status', 'invalid')->count(),
                 'excused_absences' => $excusedAbsences,
                 'lates_recorded' => (int) $trackers->sum('total_lates'),
                 'pending_requests' => $pendingRequests,

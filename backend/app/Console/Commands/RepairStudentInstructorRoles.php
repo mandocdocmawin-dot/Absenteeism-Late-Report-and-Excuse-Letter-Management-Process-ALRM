@@ -37,7 +37,8 @@ class RepairStudentInstructorRoles extends Command
             }
             if ($this->option('apply')) {
                 foreach ($users as $user) {
-                    $user->update(['role' => 'student']);
+                    $user->role = 'student';
+                    $user->save();
                     $user->tokens()->delete();
                     TrustedDevice::where('user_id', $user->id)->delete();
                 }

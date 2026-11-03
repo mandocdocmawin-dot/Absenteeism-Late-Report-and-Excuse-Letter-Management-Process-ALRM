@@ -4,7 +4,7 @@ const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const round = value => Math.round((value + Number.EPSILON) * 100) / 100;
 
 function usedHours(student) {
-  return round(Number(student.invalidAbsenceHours || 0) + Math.floor(Number(student.invalidLates || 0) / ATTENDANCE_POLICY.latesPerHour));
+  return round(Number(student.absenceHours || 0) + Math.floor(Number(student.invalidLates || 0) / ATTENDANCE_POLICY.latesPerHour));
 }
 
 function unitsPerMeeting(course) {

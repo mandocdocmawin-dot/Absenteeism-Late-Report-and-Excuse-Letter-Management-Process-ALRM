@@ -15,6 +15,11 @@ return new class extends Migration
             $table->string('table_affected');
             $table->uuid('record_id');
             $table->timestamp('timestamp')->useCurrent();
+            $table->json('details')->nullable();
+
+            $table->index(['action', 'table_affected', 'timestamp'], 'audit_log_action_table_timestamp_idx');
+            $table->index(['table_affected', 'record_id'], 'audit_log_table_record_idx');
+            $table->index(['user_id', 'timestamp'], 'audit_log_user_timestamp_idx');
         });
     }
 

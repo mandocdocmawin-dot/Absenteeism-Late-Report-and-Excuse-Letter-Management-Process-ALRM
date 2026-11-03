@@ -11,14 +11,6 @@ class ProgramSeeder extends Seeder
 {
     /**
      * List of program_name values to seed.
-     *
-     * Note: BSABSAIS and BSISACT are single sheet tabs in
-     * AdminUserSeeder but map to two separate programs here
-     * (Accountancy / Accountancy Information System, and
-     * Associate in Computer Technology / BSIS - see note below).
-     * Instructors from those combined tabs are linked to only ONE
-     * of the two programs as their "home" program_id (see
-     * AdminUserSeeder::TAB_TO_PROGRAM_NAME comments for details).
      */
     private const array PROGRAM_NAMES = [
         'General Education',

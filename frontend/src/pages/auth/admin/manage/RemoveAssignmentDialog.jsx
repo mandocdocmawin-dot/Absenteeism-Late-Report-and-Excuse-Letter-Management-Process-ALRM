@@ -17,12 +17,12 @@ export default function RemoveAssignmentDialog({ row, instructors, onClose, onSa
     setBusy(true);
     setError("");
     try {
-      await changeTeachingAssignment(row.id, {
+      const result = await changeTeachingAssignment(row.id, {
         action: "remove",
         expected_revision: Number(row.assignment_revision || 0),
         reason: reason.trim(),
       });
-      await onSaved([row.id], "Instructor assignment removed.");
+      await onSaved(result.classes, "Instructor assignment removed.");
     } catch (failure) {
       const messages = Object.values(failure.errors || {}).flat().filter(value => typeof value === "string");
       setError(messages.join(" ") || failure.message || "The assignment could not be removed.");

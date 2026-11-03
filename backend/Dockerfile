@@ -19,7 +19,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     supervisor \
+    qpdf \
     && rm -rf /var/lib/apt/lists/*
+
+RUN qpdf --version
 
 # Install PHP extensions with GD JPEG support
 RUN docker-php-ext-configure gd --with-jpeg \

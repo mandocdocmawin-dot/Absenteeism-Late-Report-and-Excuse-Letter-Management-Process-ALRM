@@ -13,7 +13,7 @@ class OtpEmailContentTest extends TestCase
     {
         $this->freezeTime();
         config(['mail.default' => 'array']);
-        $user = new User(['name' => 'OTP Test', 'email' => 'otp@example.test']);
+        $user = (new User)->forceFill(['name' => 'OTP Test', 'email' => 'otp@example.test']);
         $deadline = now()->addMinutes(5);
         $notification = new SendOtpCode('004217', expiresAt: $deadline);
         $this->travel(121)->seconds();

@@ -1,7 +1,7 @@
 # PHP and application security
 
 Source paths and commands in this guide are relative to `backend/`.
-For request payloads and endpoint behavior, see [API-DOCS.md](API-DOCS.md).
+For request payloads and endpoint behavior, see [API documentation index](api/README.md).
 
 ## User and curriculum access controls
 

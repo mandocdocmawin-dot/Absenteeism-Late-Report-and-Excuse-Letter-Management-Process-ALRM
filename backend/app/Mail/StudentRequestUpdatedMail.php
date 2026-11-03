@@ -34,7 +34,7 @@ class StudentRequestUpdatedMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.student-request-update',
             with: [
-                'viewUrl' => rtrim(config('app.frontend_url'), '/').'/dashboard',
+                'viewUrl' => rtrim(config('app.frontend_url_prod'), '/').'/dashboard',
             ],
         );
     }

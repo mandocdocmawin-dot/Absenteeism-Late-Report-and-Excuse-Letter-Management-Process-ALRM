@@ -25,7 +25,10 @@ class UserResource extends JsonResource
             $fields = [...$fields, 'guardian_name', 'contact_number'];
         }
 
-        $headsProgram = count($this->resource->headedProgramIds()) > 0;
+        $headsProgram = isset($this->resource->heads_program)
+            || isset($this->resource->additional_heads_program)
+            ? (bool) $this->resource->heads_program || (bool) $this->resource->additional_heads_program
+            : count($this->resource->headedProgramIds()) > 0;
 
         return $this->resource->only($fields) + [
             'email_notifications_enabled' => $this->when(

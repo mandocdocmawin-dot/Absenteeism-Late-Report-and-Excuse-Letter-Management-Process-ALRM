@@ -8,7 +8,6 @@
     "require": {
         "php": "~8.3.36 || ~8.4.27 || ~8.5.12",
         "doctrine/dbal": "^4.4",
-        "google/apiclient": "^2.20",
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.30",

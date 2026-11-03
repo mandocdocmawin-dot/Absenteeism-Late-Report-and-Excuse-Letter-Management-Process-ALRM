@@ -19,9 +19,8 @@ return [
 
     /**
      * Dev accounts: instructors on a student-domain email, used to see
-     * the instructor dashboard. AdminUserSeeder never deactivates these
-     * when they are missing from the staff Google Sheet. Comma-separated
-     * in SEED_DEV_INSTRUCTOR_EMAILS; empty by default.
+     * the instructor dashboard. Comma-separated in
+     * SEED_DEV_INSTRUCTOR_EMAILS; empty by default.
      */
     'dev_instructor_emails' => array_values(array_filter(array_map(
         fn (string $email) => strtolower(trim($email)),

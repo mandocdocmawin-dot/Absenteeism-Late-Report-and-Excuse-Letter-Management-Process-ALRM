@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RequestAttachment;
 use App\Models\User;
 use App\Support\EvidenceImageProcessor;
+use App\Support\EvidencePdfValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,8 +41,10 @@ class EvidenceController extends Controller
         }
 
         if ($mime === 'application/pdf') {
-            if (! str_starts_with($data, '%PDF-')) {
-                throw ValidationException::withMessages(['file' => 'Choose a valid PDF file.']);
+            try {
+                EvidencePdfValidator::validate($file->getRealPath());
+            } catch (InvalidArgumentException $error) {
+                throw ValidationException::withMessages(['file' => $error->getMessage()]);
             }
         } else {
             try {

@@ -29,7 +29,8 @@ class AssignProgramHeads extends Command
             foreach ($users as $user) {
                 if ($user->role !== 'program_head') {
                     $previousRole = $user->role;
-                    $user->update(['role' => 'program_head']);
+                    $user->role = 'program_head';
+                    $user->save();
                     $this->record($user, "console_role_changed:{$previousRole}->program_head");
                 }
                 $changes = $user->additionalHeadedPrograms()->syncWithoutDetaching([$program->id]);

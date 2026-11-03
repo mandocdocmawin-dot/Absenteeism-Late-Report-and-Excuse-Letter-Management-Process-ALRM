@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Student\RequestController;
 use App\Models\ExcuseRequest;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Mockery;
@@ -15,27 +13,14 @@ use Tests\SecurityTestCase;
 
 class RequestProofTypesTest extends SecurityTestCase
 {
-    public function test_migration_preserves_existing_requests_and_rolls_back(): void
+    public function test_requests_are_created_with_nullable_proof_types(): void
     {
-        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:']);
-        DB::purge('sqlite');
-
-        Schema::create('requests', function (Blueprint $table) {
-            $table->id();
-            $table->string('reason');
-        });
-        DB::table('requests')->insert(['reason' => 'may sakit po e']);
-
-        $migration = require database_path('migrations/2026_10_12_090000_add_proof_types_to_requests_table.php');
-        $migration->up();
-
+        $request = $this->requestFor($this->user());
         $this->assertTrue(Schema::hasColumn('requests', 'proof_types'));
-        $this->assertNull(DB::table('requests')->first()->proof_types);
-        $this->assertSame('may sakit po e', DB::table('requests')->first()->reason);
+        $this->assertNull($request->fresh()->proof_types);
 
-        $migration->down();
-        $this->assertFalse(Schema::hasColumn('requests', 'proof_types'));
-        $this->assertSame(1, DB::table('requests')->count());
+        $request->update(['proof_types' => ['Medical Certificate']]);
+        $this->assertSame(['Medical Certificate'], $request->fresh()->proof_types);
     }
 
     public function test_update_saves_multiple_proof_types_separately_from_mime_and_reason(): void

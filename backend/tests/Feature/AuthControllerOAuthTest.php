@@ -26,10 +26,10 @@ class AuthControllerOAuthTest extends SecurityTestCase
         ]));
     }
 
-    private function provider(array $overrides = [], string $email = 'student1@student.edu.ph'): void
+    private function provider(array $overrides = [], string $email = 'student1@student.edu.ph', string $subject = 'google-123'): void
     {
         $googleUser = (new SocialiteUser)->setRaw(['email_verified' => true, ...$overrides])->map([
-            'id' => 'google-123', 'email' => $email, 'name' => 'Student',
+            'id' => $subject, 'email' => $email, 'name' => 'Student',
         ]);
         $provider = Mockery::mock(GoogleProvider::class);
         $provider->shouldReceive('setHttpClient')->once()->andReturnSelf();
@@ -215,7 +215,7 @@ class AuthControllerOAuthTest extends SecurityTestCase
                 $program->update(['program_head_id' => $user->id]);
             }
 
-            $this->provider([], $user->email);
+            $this->provider([], $user->email, 'google-'.$role);
             $nonce = Str::random(64);
             $this->withUnencryptedCookies(['alrm_oauth' => $nonce])
                 ->get('/api/auth/google/callback?state='.urlencode($this->state($nonce)))
@@ -223,7 +223,7 @@ class AuthControllerOAuthTest extends SecurityTestCase
 
             $user->refresh();
             $this->assertSame('Student', $user->name);
-            $this->assertSame('google-123', $user->google_id);
+            $this->assertSame('google-'.$role, $user->google_id);
             $this->assertSame('approved', $user->status);
             $this->assertSame($role, $user->role);
             $this->assertSame('ID-'.$role, $user->school_id_number);
@@ -276,6 +276,74 @@ class AuthControllerOAuthTest extends SecurityTestCase
             ->assertRedirectContains('error=account_disabled');
         $this->assertSame(0, $user->tokens()->count());
         $this->assertSame(0, OtpCode::count());
+    }
+
+    public function test_google_subject_finds_existing_account_after_google_email_changes(): void
+    {
+        $user = $this->user('instructor', [
+            'google_id' => 'google-123', 'email' => 'original@staff.edu.ph', 'name' => 'Existing Name',
+        ]);
+        $this->provider([], 'changed@staff.edu.ph');
+        $nonce = Str::random(64);
+        $this->withUnencryptedCookies(['alrm_oauth' => $nonce])
+            ->get('/api/auth/google/callback?state='.urlencode($this->state($nonce)))
+            ->assertRedirectContains('/auth/otp?user_id='.$user->id);
+        $this->assertSame(1, User::count());
+        $this->assertSame('original@staff.edu.ph', $user->fresh()->email);
+        $this->assertSame('Existing Name', $user->fresh()->name);
+        $this->assertSame('instructor', $user->fresh()->role);
+        $this->assertSame(1, OtpCode::where('user_id', $user->id)->count());
+        $this->assertSame(0, $user->tokens()->count());
+    }
+
+    public function test_subject_lookup_takes_precedence_over_a_different_email_matched_account(): void
+    {
+        $subjectOwner = $this->user('instructor', [
+            'google_id' => 'google-123', 'email' => 'original@staff.edu.ph',
+        ]);
+        $emailOwner = $this->user('student', [
+            'google_id' => 'other-subject', 'email' => 'changed@staff.edu.ph',
+        ]);
+        $this->provider([], $emailOwner->email);
+        $nonce = Str::random(64);
+        $this->withUnencryptedCookies(['alrm_oauth' => $nonce])
+            ->get('/api/auth/google/callback?state='.urlencode($this->state($nonce)))
+            ->assertRedirectContains('/auth/otp?user_id='.$subjectOwner->id);
+        $this->assertSame(2, User::count());
+        $this->assertSame('original@staff.edu.ph', $subjectOwner->fresh()->email);
+        $this->assertSame('other-subject', $emailOwner->fresh()->google_id);
+        $this->assertSame(0, OtpCode::where('user_id', $emailOwner->id)->count());
+    }
+
+    public function test_subject_matched_pending_account_keeps_existing_verified_domain_approval_policy(): void
+    {
+        $user = $this->user('student', [
+            'google_id' => 'google-123', 'email' => 'original@gmail.com', 'status' => 'pending',
+        ]);
+        $this->provider([], 'changed@student.edu.ph');
+        $nonce = Str::random(64);
+        $this->withUnencryptedCookies(['alrm_oauth' => $nonce])
+            ->get('/api/auth/google/callback?state='.urlencode($this->state($nonce)))
+            ->assertRedirectContains('/auth/otp?user_id='.$user->id);
+        $this->assertSame('approved', $user->fresh()->status);
+        $this->assertSame('original@gmail.com', $user->fresh()->email);
+        $this->assertSame('student', $user->fresh()->role);
+    }
+
+    public function test_deactivated_subject_cannot_reenter_under_a_changed_google_email(): void
+    {
+        $user = $this->user('student', [
+            'google_id' => 'google-123', 'email' => 'original@student.edu.ph', 'status' => 'deactivated',
+        ]);
+        $this->provider([], 'changed@student.edu.ph');
+        $nonce = Str::random(64);
+        $this->withUnencryptedCookies(['alrm_oauth' => $nonce])
+            ->get('/api/auth/google/callback?state='.urlencode($this->state($nonce)))
+            ->assertRedirect('http://localhost:5173/login?error=account_disabled');
+        $this->assertSame(1, User::count());
+        $this->assertSame('original@student.edu.ph', $user->fresh()->email);
+        $this->assertSame(0, OtpCode::count());
+        $this->assertSame(0, $user->tokens()->count());
     }
 
     public function test_redirect_issues_http_only_state_cookie_and_caches_nonce(): void

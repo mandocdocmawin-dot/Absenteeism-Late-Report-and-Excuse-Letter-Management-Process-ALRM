@@ -87,16 +87,7 @@ export async function loadNotificationFeed(role, userId) {
 
 export async function loadNotificationPreview(userId) {
   const preview = await getNotificationPreview();
-  let result = cachePreview(userId, { notifications: preview.notifications, requests: [], auditLogs: [], warning: "", unreadCount: preview.unreadCount, readError: "" });
-  const unread = preview.notifications.filter(item => item?.is_read !== true);
-  if (!unread.length) return result;
-  try {
-    await markFeedRead(userId, unread);
-    result = getCachedNotificationPreview(userId);
-  } catch (error) {
-    result = cachePreview(userId, { ...result, readError: error.message || "Read status could not be saved." });
-  }
-  return result;
+  return cachePreview(userId, { notifications: preview.notifications, requests: [], auditLogs: [], warning: "", unreadCount: preview.unreadCount, readError: "" });
 }
 
 export async function markFeedRead(userId, items, all = false) {

@@ -16,7 +16,7 @@ class FollowupController extends Controller
     /** GET /api/instructor/followups */
     public function index(): JsonResponse
     {
-        $flags = FollowupFlag::with('request.enrollment.student', 'request.enrollment.class')
+        $flags = FollowupFlag::with('request.enrollment.student', 'request.enrollment.class', 'request.teachingAssignment')
             ->where('escalated_to', Auth::id())
             ->where('status', 'open')
             ->latest('flagged_date');

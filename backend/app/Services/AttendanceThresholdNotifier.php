@@ -60,7 +60,10 @@ class AttendanceThresholdNotifier
             // The shared path also creates consultation flags for automation runs.
             if (in_array($tracker->status, ['critical', 'IR'], true)) {
                 $flagRequest = $request ?? ExcuseRequest::where('enrollment_id', $tracker->enrollment_id)
-                    ->where('status', 'invalid')->latest('date_reviewed')->first();
+                    ->where(function ($query) {
+                        $query->where('status', 'invalid')
+                            ->orWhere(fn ($query) => $query->where('type', 'absence')->whereIn('status', ['approved', 'noted']));
+                    })->latest('date_reviewed')->first();
                 if ($flagRequest && $heads->isNotEmpty()) {
                     $head = $heads->firstWhere('id', $program->program_head_id) ?? $heads->first();
                     FollowupFlag::firstOrCreate(['request_id' => $flagRequest->id], [

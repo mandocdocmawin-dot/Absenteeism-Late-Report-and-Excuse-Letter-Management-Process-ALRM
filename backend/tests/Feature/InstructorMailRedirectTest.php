@@ -6,6 +6,7 @@ use App\Mail\InstructorExcuseRequestMail;
 use App\Models\ClassModel;
 use App\Models\Enrollment;
 use App\Models\ExcuseRequest;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use App\Models\UserNotification;
 use App\Notifications\SendOtpCode;
@@ -55,7 +56,7 @@ class InstructorMailRedirectTest extends TestCase
 
         config(['mail.default' => 'array', 'mail.logo_url' => 'https://backend.example.com/images/mail/lv-logo.png']);
         Mail::swap(new MailManager($this->app));
-        $user = new User(['name' => 'OTP User', 'email' => 'otp-user@example.com']);
+        $user = (new User)->forceFill(['name' => 'OTP User', 'email' => 'otp-user@example.com']);
         $user->notifyNow(new SendOtpCode('123456'));
 
         $messages = $this->arrayMailTransport()->messages();
@@ -91,7 +92,7 @@ class InstructorMailRedirectTest extends TestCase
         (new AppServiceProvider($this->app))->boot();
 
         foreach (['student', 'instructor'] as $role) {
-            $user = new User(['name' => 'OTP User', 'role' => $role, 'email' => $role.'@example.com']);
+            $user = (new User)->forceFill(['name' => 'OTP User', 'role' => $role, 'email' => $role.'@example.com']);
             $user->notifyNow(new SendOtpCode('123456'));
         }
         $messages = $this->arrayMailTransport()->messages();
@@ -102,7 +103,7 @@ class InstructorMailRedirectTest extends TestCase
 
     private function request(): ExcuseRequest
     {
-        $instructor = new User(['name' => 'Teacher', 'email' => 'teacher@example.com', 'status' => 'approved']);
+        $instructor = (new User)->forceFill(['name' => 'Teacher', 'email' => 'teacher@example.com', 'status' => 'approved']);
         $instructor->forceFill(['google_id' => 'google-teacher', 'email_notifications_enabled' => true]);
         $instructor->id = 'teacher-id';
         $class = (new ClassModel(['subject_name' => 'Test Class']))->setRelation('instructor', $instructor);
@@ -112,6 +113,7 @@ class InstructorMailRedirectTest extends TestCase
         $request = new ExcuseRequest(['type' => 'absence']);
         $request->id = 'request-id';
 
-        return $request->setRelation('enrollment', $enrollment);
+        return $request->setRelation('enrollment', $enrollment)
+            ->setRelation('teachingAssignment', (new TeachingAssignment)->setRelation('instructor', $instructor));
     }
 }

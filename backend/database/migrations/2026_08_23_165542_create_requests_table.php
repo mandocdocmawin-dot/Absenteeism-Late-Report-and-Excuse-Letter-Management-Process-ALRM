@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('enrollment_id')->constrained('enrollments')->cascadeOnDelete();
+            $table->foreignUuid('enrollment_id')->constrained('enrollments')->restrictOnDelete();
             $table->enum('type', ['absence', 'late']);
             $table->text('subjects_missed');
             $table->unsignedInteger('minutes_late')->nullable();
@@ -22,10 +22,15 @@ return new class extends Migration
             $table->text('reason');
             $table->string('evidence_file_url')->nullable();
             $table->string('evidence_type')->nullable();
+            $table->json('proof_types')->nullable();
             $table->enum('status', ['pending', 'approved', 'noted', 'invalid', 'cancelled'])->default('pending');
             $table->timestamp('date_submitted')->nullable();
             $table->timestamp('date_reviewed')->nullable();
             $table->foreignUuid('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('teaching_assignment_id')->nullable()
+                ->constrained('teaching_assignments')->restrictOnDelete();
+            $table->json('class_snapshot')->nullable();
+            $table->string('snapshot_source')->nullable();
             $table->timestamps();
         });
     }

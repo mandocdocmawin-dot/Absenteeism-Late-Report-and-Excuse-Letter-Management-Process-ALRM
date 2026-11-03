@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { GraduationCap, Search, UserRoundArrowLeft } from "lucide-react";
-import { getAdminAssignments, getAdminClass } from "@/api/adminAssignments";
+import {
+  getAdminAssignmentCandidates,
+  getAdminClassesPage,
+  getAdminPrograms,
+  getApprovedInstructors,
+} from "@/api/adminAssignments";
 import {
   getResourceCacheEntry,
+  invalidateResourceCache,
   requestCachedResource,
   updateResourceCache,
 } from "@/api/resourceCache";
@@ -30,84 +35,152 @@ import RemoveAssignmentDialog from "./manage/RemoveAssignmentDialog";
 import {
   activeTeachingAssignment,
   assignedInstructor,
+  mergeAssignmentClasses,
 } from "./manage/assignments.js";
 import { usePageViewState } from "@/hooks/usePageViewState";
 
 export default function AdminManage() {
-  const cached = getResourceCacheEntry("admin:assignments");
-  const [data, setData] = useState(cached?.data || null);
-  const [loading, setLoading] = useState(!cached);
-  const [updatedAt, setUpdatedAt] = useState(cached?.updatedAt || null);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const candidateCacheKey = "admin:assignment-candidates";
   const [view, setView] = usePageViewState("admin:assignments:view", {
     search: "",
     programId: "",
     page: 1,
   });
   const { search, programId, page } = view;
+  const cacheKey = `admin:assignments:${page}:${search.trim()}:${programId}`;
+  const cached = getResourceCacheEntry(cacheKey);
+  const cachedPrograms = getResourceCacheEntry("admin:assignment-programs");
+  const cachedInstructors = getResourceCacheEntry("admin:assignment-instructors");
+  const [classData, setClassData] = useState(cached?.data || null);
+  const [classLoading, setClassLoading] = useState(!cached);
+  const [programs, setPrograms] = useState(cachedPrograms?.data || []);
+  const [instructors, setInstructors] = useState(cachedInstructors?.data || []);
+  const [lookupError, setLookupError] = useState("");
+  const [updatedAt, setUpdatedAt] = useState(cached?.updatedAt || null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [dialog, setDialog] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const mounted = useRef(false);
+  const classRequestId = useRef(0);
+  const lookupRequestId = useRef(0);
 
-  const cacheKey = `admin:assignments:${page}:${search.trim()}:${programId}`;
-  const load = useCallback(
-    (force = false) =>
+  const loadClasses = useCallback(
+    (force = false) => {
+      const requestId = ++classRequestId.current;
+      return (
       requestCachedResource(
         cacheKey,
-        (signal) =>
-          getAdminAssignments({
+        async (signal) => {
+          const classes = await getAdminClassesPage({
             signal,
             page,
             perPage: 25,
             filters: { search, programId },
-          }),
+          });
+          return { classes: classes.data, classesMeta: classes.meta };
+        },
         { force },
       )
         .then((next) => {
-          if (mounted.current) {
-            setData(next);
+          if (mounted.current && requestId === classRequestId.current) {
+            setClassData(next);
             setUpdatedAt(
               getResourceCacheEntry(cacheKey)?.updatedAt || Date.now(),
             );
           }
         })
         .catch((failure) => {
-          if (mounted.current) {
-            setData(null);
+          if (mounted.current && requestId === classRequestId.current) {
             setError(failure.message || "Assignments could not be loaded.");
           }
         })
         .finally(() => {
-          if (mounted.current) setLoading(false);
-        }),
+          if (mounted.current && requestId === classRequestId.current) {
+            setClassLoading(false);
+          }
+        })
+      );
+    },
     [cacheKey, page, search, programId],
   );
 
+  const loadPrograms = useCallback((force = false, requestId = lookupRequestId.current) =>
+    requestCachedResource(
+      "admin:assignment-programs",
+      (signal) => getAdminPrograms({ signal }),
+      { force },
+    )
+      .then((next) => {
+        if (mounted.current && requestId === lookupRequestId.current) setPrograms(next);
+      })
+      .catch((failure) => {
+        if (mounted.current && requestId === lookupRequestId.current) {
+          setLookupError(failure.message || "Program options could not be loaded.");
+        }
+      }), []);
+
+  const loadInstructors = useCallback((force = false, requestId = lookupRequestId.current) =>
+    requestCachedResource(
+      "admin:assignment-instructors",
+      (signal) => getApprovedInstructors({ signal }),
+      { force },
+    )
+      .then((next) => {
+        if (mounted.current && requestId === lookupRequestId.current) setInstructors(next);
+      })
+      .catch((failure) => {
+        if (mounted.current && requestId === lookupRequestId.current) {
+          setLookupError(failure.message || "Instructor options could not be loaded.");
+        }
+      }), []);
+
+  const loadLookups = useCallback((force = false) => {
+    const requestId = ++lookupRequestId.current;
+    setLookupError("");
+    return Promise.allSettled([
+      loadPrograms(force, requestId),
+      loadInstructors(force, requestId),
+    ]);
+  }, [loadPrograms, loadInstructors]);
+
   useEffect(() => {
+    const requests = classRequestId;
     mounted.current = true;
-    void load();
+    const timer = window.setTimeout(() => {
+      setClassLoading(!getResourceCacheEntry(cacheKey));
+      setError("");
+      void loadClasses();
+    }, 0);
     return () => {
+      window.clearTimeout(timer);
+      requests.current++;
       mounted.current = false;
     };
-  }, [load]);
+  }, [cacheKey, loadClasses]);
 
-  const selectablePrograms = getSelectablePrograms(data?.programs || []);
-  const assignableClasses = data?.classes || [];
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadLookups(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadLookups]);
+
+  const data = classData ? { ...classData, programs, instructors } : null;
+  const selectablePrograms = getSelectablePrograms(programs);
+  const assignableClasses = classData?.classes || [];
   const rows = assignableClasses.map((row) => {
-    const instructor = assignedInstructor(row, data?.instructors || []);
+    const instructor = assignedInstructor(row, instructors);
     return {
       ...row,
       displayInstructor: instructor?.name || "Unassigned",
       displayProgram:
         row.program?.program_name ||
-        data?.programs.find(
+        programs.find(
           (program) => String(program.id) === String(row.program_id),
         )?.program_name ||
         "Program unavailable",
     };
   });
-  const classesMeta = data?.classesMeta || {};
+  const classesMeta = classData?.classesMeta || {};
   const pagination = {
     currentPage: Number(classesMeta.page || page),
     totalPages: Math.max(1, Number(classesMeta.last_page || 1)),
@@ -132,9 +205,6 @@ export default function AdminManage() {
   const selectedProgram = selectablePrograms.find(
     (program) => String(program.id) === String(programId),
   );
-  const unassignedCount = assignableClasses.filter(
-    (row) => !activeTeachingAssignment(row),
-  ).length;
   const dialogRow = dialog?.classId
     ? assignableClasses.find((row) => String(row.id) === String(dialog.classId))
     : null;
@@ -143,36 +213,37 @@ export default function AdminManage() {
     : null;
 
   function reload() {
-    setLoading(true);
+    setClassLoading(true);
     setError("");
-    return load(true);
+    return loadClasses(true);
   }
 
-  async function refreshRows(ids) {
-    const uniqueIds = [...new Set(ids.filter(Boolean).map(String))];
-    const updated = await Promise.all(uniqueIds.map(getAdminClass));
+  function openAssignmentDialog(classId, force = false) {
+    const cachedCandidates = force ? null : getResourceCacheEntry(candidateCacheKey);
+    setNotice("");
+    setDialog({ classId, classes: cachedCandidates?.data || null, loading: !cachedCandidates, error: "" });
+    if (cachedCandidates) return;
+    requestCachedResource(candidateCacheKey, signal => getAdminAssignmentCandidates({ signal }), { force })
+      .then(classes => setDialog(current => current && current.classId === classId ? { ...current, classes, loading: false, error: "" } : current))
+      .catch(failure => setDialog(current => current && current.classId === classId ? { ...current, loading: false, error: failure.message || "Assignment options could not be loaded." } : current));
+  }
+
+  async function saved(changed, message) {
     const applyRows = (current) =>
       current && {
         ...current,
-        classes: current.classes.map(
-          (row) =>
-            updated.find((item) => String(item.id) === String(row.id)) || row,
-        ),
+        classes: mergeAssignmentClasses(current.classes, changed),
       };
     updateResourceCache(cacheKey, applyRows);
+    updateResourceCache(candidateCacheKey, current => mergeAssignmentClasses(current, changed));
+    invalidateResourceCache(key => key === "admin:assignments" || (key.startsWith("admin:assignments:") && key !== cacheKey));
     if (mounted.current) {
-      setData(applyRows);
+      setClassData(applyRows);
       setUpdatedAt(Date.now());
+      setDialog(null);
+      setRemovingId(null);
+      setNotice(message);
     }
-    return updated;
-  }
-
-  async function saved(ids, message) {
-    await refreshRows(ids);
-    if (!mounted.current) return;
-    setDialog(null);
-    setRemovingId(null);
-    setNotice(message);
   }
 
   return (
@@ -181,7 +252,7 @@ export default function AdminManage() {
       className="space-y-5 font-sans"
     >
       <h1 className="sr-only">Manage</h1>
-      {loading ? (
+      {classLoading && !classData ? (
         <LoadingSkeleton
           variant="table"
           rows={5}
@@ -191,7 +262,6 @@ export default function AdminManage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Skeleton className="h-10 w-[260px] rounded-lg" />
             <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-28 rounded-lg" />
               <Skeleton className="h-10 w-[170px] rounded-lg" />
             </div>
           </div>
@@ -265,22 +335,13 @@ export default function AdminManage() {
             <div className="flex flex-wrap items-center gap-3">
               <ResourceRefresh
                 updatedAt={updatedAt}
-                loading={loading}
+                loading={classLoading}
                 onRefresh={reload}
               />
-              <Link
-                to="/classes"
-                className="inline-flex h-10 items-center rounded-lg border border-[#172f6b]/60 px-3 text-[13px] font-medium text-[#172f6b] hover:bg-slate-50"
-              >
-                Manage classes
-              </Link>
               <Button
                 type="button"
-                disabled={!unassignedCount}
-                onClick={() => {
-                  setNotice("");
-                  setDialog({ classId: null });
-                }}
+                disabled={!instructors.length}
+                onClick={() => openAssignmentDialog(null)}
                 className="h-10 w-[170px] rounded-lg bg-[#172f6b] text-[13px] text-white hover:bg-[#203f8a]"
               >
                 <UserRoundArrowLeft className="size-[18px]" />
@@ -288,6 +349,14 @@ export default function AdminManage() {
               </Button>
             </div>
           </div>
+          {lookupError && (
+            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span>{lookupError}</span>
+              <Button type="button" variant="outline" onClick={() => loadLookups(true)}>
+                Retry lookups
+              </Button>
+            </div>
+          )}
           {notice && (
             <p
               role="status"
@@ -309,12 +378,13 @@ export default function AdminManage() {
               message={
                 search || programId
                   ? "No assignments match the current search and filters."
-                  : "No classes are available. Create a class in Class Management before assigning an instructor."
+                  : "No classes are available for instructor assignment."
               }
             />
           ) : (
             <>
-              <div className="px-2.5">
+              <div className="px-2.5" aria-busy={classLoading}>
+                {classLoading && <p role="status" className="py-2 text-sm text-slate-500">Updating instructor assignments…</p>}
                 <Table className="min-w-[850px] table-fixed text-base">
                   <TableHeader>
                     <TableRow className="h-[60px] border-[#172f6b]/40 hover:bg-transparent">
@@ -360,10 +430,10 @@ export default function AdminManage() {
                                 <>
                                   <Button
                                     type="button"
+                                    disabled={classLoading}
                                     aria-label={`Edit ${row.subject_name}, section ${row.section}`}
                                     onClick={() => {
-                                      setNotice("");
-                                      setDialog({ classId: row.id });
+                                      openAssignmentDialog(row.id);
                                     }}
                                     className="h-7 rounded-sm bg-[#284fac] px-2 text-sm text-white hover:bg-[#203f8a]"
                                   >
@@ -373,6 +443,7 @@ export default function AdminManage() {
                                     type="button"
                                     size="sm"
                                     variant="destructive"
+                                    disabled={classLoading}
                                     aria-label={`Remove instructor assignment from ${row.subject_name}, section ${row.section}`}
                                     onClick={() => {
                                       setNotice("");
@@ -386,9 +457,9 @@ export default function AdminManage() {
                                 <Button
                                   type="button"
                                   size="sm"
+                                  disabled={classLoading || !instructors.length}
                                   onClick={() => {
-                                    setNotice("");
-                                    setDialog({ classId: row.id });
+                                    openAssignmentDialog(row.id);
                                   }}
                                   className="bg-[#284fac] text-white hover:bg-[#203f8a]"
                                 >
@@ -417,7 +488,14 @@ export default function AdminManage() {
       {dialog && data && (
         <AssignmentDialog
           row={dialogRow}
-          data={{ ...data, classes: assignableClasses }}
+          data={{ ...data, classes: dialog.classes || [] }}
+          loading={dialog.loading}
+          loadError={dialog.error}
+          onRetry={() => openAssignmentDialog(dialog.classId, true)}
+          onConflict={() => {
+            openAssignmentDialog(dialog.classId, true);
+            return reload();
+          }}
           onClose={() => setDialog(null)}
           onSaved={saved}
         />

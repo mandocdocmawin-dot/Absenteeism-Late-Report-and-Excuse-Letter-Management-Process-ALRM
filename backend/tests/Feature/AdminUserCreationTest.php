@@ -177,7 +177,8 @@ class AdminUserCreationTest extends SecurityTestCase
         $id = $this->bearer($this->user('administrator'))->postJson('/api/admin/users', $payload)
             ->assertCreated()->assertJsonPath('data.year_level', null)->json('data.id');
         $student = User::findOrFail($id);
-        $student->update(['status' => 'approved']);
+        $student->status = 'approved';
+        $student->save();
 
         $this->bearer($student)->postJson('/api/complete-profile', ['year_level' => '1st'])
             ->assertOk()->assertJsonPath('data.program_id', $class->program_id)

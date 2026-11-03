@@ -3,6 +3,7 @@
 use App\Http\Middleware\ApiSecurityHeaders;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // TODO: Verify ingress restricts origin access and normalizes forwarded headers before trusting '*'.
         $middleware->trustProxies(at: '*');
+        $middleware->append(SecurityHeaders::class);
         $middleware->throttleApi('api');
         $middleware->api(prepend: [ApiSecurityHeaders::class]);
 
@@ -35,6 +38,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Auth failures must not fall through to raw exception reporting.
+        $exceptions->report(function (Throwable $e) {
+            if (app()->bound('request') && request()->is('api/auth/*')) {
+                Log::warning('Authentication request failed', ['exception' => get_class($e)]);
+
+                return false;
+            }
+
+            return null;
+        });
 
         $exceptions->render(function (Throwable $e, Request $request) {
             if (! ($request->is('api/*') || $request->expectsJson())) {
@@ -53,14 +67,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 : 500;
 
             if ($status >= 500) {
-                Log::error('Unhandled API exception', [
-                    'exception' => get_class($e),
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'path' => $request->path(),
-                    'user_id' => $request->user()?->id,
-                ]);
+                $context = ['exception' => get_class($e)];
+                if (! $request->is('api/auth/*')) {
+                    $context += [
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'path' => $request->path(),
+                        'user_id' => $request->user()?->id,
+                    ];
+                }
+                Log::error('Unhandled API exception', $context);
 
                 return response()->json([
                     'success' => false,

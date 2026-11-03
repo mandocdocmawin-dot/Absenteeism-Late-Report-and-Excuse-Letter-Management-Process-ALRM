@@ -80,7 +80,7 @@ class NotificationPreviewTest extends SecurityTestCase
         $this->assertSame(array_reverse(array_slice($ids, -5)), array_column($response->json('data.notifications'), 'id'));
     }
 
-    public function test_feed_indexes_can_be_rolled_back_and_reapplied(): void
+    public function test_notifications_are_created_with_feed_indexes(): void
     {
         $indexes = [
             'notifications_user_channel_date_id_idx' => ['user_id', 'channel', 'date_sent', 'id'],
@@ -89,15 +89,6 @@ class NotificationPreviewTest extends SecurityTestCase
         foreach ($indexes as $name => $columns) {
             $this->assertTrue(Schema::hasIndex('notifications', $name));
             $this->assertTrue(Schema::hasIndex('notifications', $columns));
-        }
-        $migration = require database_path('migrations/2026_10_29_000000_add_notification_feed_indexes.php');
-        $migration->down();
-        foreach (array_keys($indexes) as $name) {
-            $this->assertFalse(Schema::hasIndex('notifications', $name));
-        }
-        $migration->up();
-        foreach (array_keys($indexes) as $name) {
-            $this->assertTrue(Schema::hasIndex('notifications', $name));
         }
     }
 }

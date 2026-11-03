@@ -24,6 +24,12 @@ class AuditLogResource extends JsonResource
             ? $this->excuseRequest
             : $this->followupFlag?->request;
         $enrollment = $excuseRequest?->enrollment;
+        $class = $excuseRequest?->class_snapshot !== null
+            ? array_intersect_key($excuseRequest->class_snapshot, array_flip(['id', 'subject_name', 'program_id', 'instructor_id']))
+            : $enrollment?->class?->only(['id', 'subject_name', 'program_id', 'instructor_id']);
+        if (is_array($class) && $enrollment?->class?->relationLoaded('instructor')) {
+            $class['instructor'] = $enrollment->class->instructor?->only(['id', 'name', 'email', 'role', 'status']);
+        }
 
         return [
             'id' => $this->id,
@@ -38,7 +44,7 @@ class AuditLogResource extends JsonResource
                 'type' => $excuseRequest->type,
                 'current_status' => $excuseRequest->status,
                 'student' => $enrollment?->student?->only(['id', 'name']),
-                'class' => $enrollment?->class?->only(['id', 'subject_name', 'program_id', 'instructor_id']),
+                'class' => $class,
             ] : null,
         ];
     }

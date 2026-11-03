@@ -142,18 +142,13 @@ class OtpVerificationTest extends SecurityTestCase
         Notification::assertNothingSent();
     }
 
-    public function test_migration_removes_legacy_plaintext_but_keeps_hashes_and_rollback_is_noop(): void
+    public function test_new_otp_rows_have_hashed_codes_and_safe_verification_defaults(): void
     {
-        $user = $this->user();
-        $hashed = $this->otp($user);
-        $legacy = $this->otp($user);
-        DB::table('otp_codes')->where('id', $legacy->id)->update(['code' => '004217']);
-        $migration = require database_path('migrations/2026_10_29_000001_remove_legacy_plaintext_otp_codes.php');
+        $otp = $this->otp($this->user())->fresh();
 
-        $migration->up();
-        $this->assertNull($legacy->fresh());
-        $this->assertTrue(Hash::check('004217', $hashed->fresh()->code));
-        $migration->down();
-        $this->assertSame(1, OtpCode::count());
+        $this->assertTrue(Hash::check('004217', $otp->code));
+        $this->assertSame(0, $otp->attempts);
+        $this->assertNull($otp->verified_at);
+        $this->assertSame($otp->code, DB::table('otp_codes')->where('id', $otp->id)->value('code'));
     }
 }

@@ -1,12 +1,6 @@
 import { ShieldCheck, TriangleAlert } from "lucide-react";
 import AttendanceGauge from "./AttendanceGauge";
-
-const appearances = {
-  safe: { label: "Safe", color: "#16a34a", text: "text-green-700 dark:text-green-400" },
-  warning: { label: "Warning", color: "#ff7113", text: "text-[#aa4808] dark:text-orange-400" },
-  critical: { label: "Critical", color: "#dc2626", text: "text-red-700 dark:text-red-400" },
-  IR: { label: "Incident Report", color: "#dc2626", text: "text-red-700 dark:text-red-400" },
-};
+import { resolveThresholdPresentation } from "./thresholdPresentation";
 
 function available(value) {
   return value !== null && value !== undefined && value !== "";
@@ -18,9 +12,8 @@ function formatNumber(value, suffix = "") {
 }
 
 export default function AttendanceThreshold({ threshold = {}, alertsEnabled = true }) {
-  const backendStatus = available(threshold.status) ? String(threshold.status) : "";
-  const appearance = appearances[backendStatus] || { label: backendStatus || "Unavailable", color: "#64748b", text: "text-slate-600 dark:text-slate-300" };
-  const Icon = backendStatus === "safe" ? ShieldCheck : TriangleAlert;
+  const appearance = resolveThresholdPresentation(threshold);
+  const Icon = appearance.label === "Safe" ? ShieldCheck : TriangleAlert;
 
   return <article className="flex min-h-[225px] min-w-0 flex-col overflow-hidden rounded-[7px] border border-[#c9c6c6] bg-white shadow-[0_1px_1px_#0000000d] dark:border-slate-700 dark:bg-slate-900">
     <div className="px-[17px] pt-[9px]">

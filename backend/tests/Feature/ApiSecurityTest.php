@@ -129,9 +129,12 @@ class ApiSecurityTest extends SecurityTestCase
         $payload = ['class_id' => $existing->enrollment->class_id, 'type' => 'late',
             'subjects_missed' => 'Security', 'minutes_late' => 10, 'reason' => 'Bus delay',
             'start_date_of_absence' => '2026-10-21',
+            'evidence_file_url' => $this->unusedEvidence($owner)->id,
             'guardian_name' => 'Guardian', 'contact_number' => '09123456789'];
         $this->bearer($owner)->postJson('/api/requests', $payload)->assertCreated();
-        $this->bearer($owner)->postJson('/api/requests', $payload)->assertConflict();
+        $this->bearer($owner)->postJson('/api/requests', array_replace($payload, [
+            'evidence_file_url' => $this->unusedEvidence($owner)->id,
+        ]))->assertConflict();
         $this->assertSame(2, ExcuseRequest::count());
     }
 

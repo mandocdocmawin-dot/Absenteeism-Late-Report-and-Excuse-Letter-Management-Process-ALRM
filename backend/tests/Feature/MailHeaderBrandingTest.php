@@ -20,8 +20,8 @@ class MailHeaderBrandingTest extends TestCase
     {
         $logoUrl = 'https://backend.example.com/images/mail/lv-logo.png';
         config(['mail.default' => 'array', 'mail.logo_url' => $logoUrl]);
-        $student = new User(['name' => 'Student', 'email' => 'student@example.com']);
-        $instructor = new User(['name' => 'Instructor', 'email' => 'teacher@example.com']);
+        $student = (new User)->forceFill(['name' => 'Student', 'email' => 'student@example.com']);
+        $instructor = (new User)->forceFill(['name' => 'Instructor', 'email' => 'teacher@example.com']);
         $class = (new ClassModel(['subject_name' => 'Test Subject', 'year_level' => '3rd']))
             ->setRelation('program', new Program(['program_name' => 'BSIS']));
         $request = new ExcuseRequest([

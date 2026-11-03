@@ -32,7 +32,8 @@ class FollowUpController extends Controller
 
             $enrollment = $request->enrollment;
             $class = $enrollment->class;
-            $instructor = $class->instructor;
+            $instructor = $request->teachingAssignment?->ended_at === null
+                ? $request->teachingAssignment?->instructor : null;
 
             if ($enrollment->student_id !== Auth::id()) {
                 return $this->fail('Unauthorized.', 403);
@@ -84,7 +85,7 @@ class FollowUpController extends Controller
                 student: $enrollment->student,
                 class: $class,
                 excuseRequest: $request,
-                reviewUrl: rtrim(config('app.frontend_url'), '/').'/instructor/class-requests',
+                reviewUrl: rtrim(config('app.frontend_url_prod'), '/').'/instructor/class-requests',
                 followupCount: $count,
             ), 'instructor');
 

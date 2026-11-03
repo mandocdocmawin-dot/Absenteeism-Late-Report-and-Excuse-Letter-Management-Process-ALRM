@@ -26,9 +26,7 @@ class InstructorRequestController extends Controller
      */
     public function index()
     {
-        $requests = ExcuseRequest::whereHas('enrollment.class', function ($q) {
-            $q->where('instructor_id', Auth::id());
-        })->with('enrollment.student', 'enrollment.class')
+        $requests = ExcuseRequest::forInstructor(Auth::id())->with('enrollment.student', 'enrollment.class', 'teachingAssignment')
             ->latest();
 
         return BoundedCollection::respond($requests);
@@ -36,8 +34,8 @@ class InstructorRequestController extends Controller
 
     /**
      * Approve, Note, or Invalidate a request (per BPM flowchart: Approved/Noted
-     * both resolve to "VALID" — student is excused; Invalid counts against
-     * the attendance tracker).
+     * both resolve to "VALID" — student is excused). All decided absences
+     * count toward attendance thresholds; only invalid lates are counted.
      */
     public function decide(HttpRequest $httpRequest, ExcuseRequest $request)
     {
@@ -63,13 +61,13 @@ class InstructorRequestController extends Controller
                 $request->id
             );
 
-            if ($validated['status'] === 'invalid') {
+            if ($request->type === 'absence' || $validated['status'] === 'invalid') {
                 $this->applyToTracker($request);
             }
 
             $request->loadMissing('enrollment.class.instructor');
 
-            $instructorName = $request->enrollment->class->instructor?->name ?? 'your instructor';
+            $instructorName = $request->class_snapshot['instructor']['name'] ?? 'your instructor';
             $typeLabel = $request->type === 'late' ? 'late' : 'absence';
 
             $dateLabel = $request->start_date_of_absence
@@ -130,7 +128,7 @@ class InstructorRequestController extends Controller
             if ($request->type === 'late') {
                 $tracker->total_lates++;
             } else {
-                $class = $request->enrollment->class;
+                $class = $request->historicalClass();
                 $tracker->absence_hours = ($tracker->absence_hours ?? $tracker->total_absences * $class->unitsPerMeeting())
                     + $class->absenceHoursForPeriod($request->start_date_of_absence, $request->end_date_of_absence);
                 $tracker->total_absences++;

@@ -28,7 +28,7 @@
                                 <tr>
                                     <td style="padding:22px 20px; font-size:14px; line-height:1.6; color:#4a5568; overflow-wrap:anywhere; word-break:break-word;">
                                         <p style="margin:0 0 12px;"><strong style="color:#0b2a52;">Student</strong><br>{{ $student->name }}</p>
-                                        <p style="margin:0 0 12px;"><strong style="color:#0b2a52;">Program and Year Level</strong><br>{{ $class->program?->program_name ?? '—' }} — {{ $class->year_level ?? '—' }}</p>
+                                        <p style="margin:0 0 12px;"><strong style="color:#0b2a52;">Program and Year Level</strong><br>{{ $excuseRequest->class_snapshot['program']['program_name'] ?? $class->program?->program_name ?? '—' }} — {{ $excuseRequest->class_snapshot['year_level'] ?? $class->year_level ?? '—' }}</p>
                                         <p style="margin:0 0 12px;"><strong style="color:#0b2a52;">Subjects missed</strong><br>{{ $excuseRequest->subjects_missed }}</p>
                                         @if($excuseRequest->type === 'late')
                                         <p style="margin:0 0 12px;"><strong style="color:#0b2a52;">Minutes late</strong><br>{{ $excuseRequest->minutes_late }}</p>

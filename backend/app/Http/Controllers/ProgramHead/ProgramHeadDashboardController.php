@@ -11,6 +11,7 @@ use App\Models\FollowupFlag;
 use App\Models\Program;
 use App\Models\User;
 use App\Support\BoundedCollection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -24,7 +25,9 @@ class ProgramHeadDashboardController extends Controller
      */
     public function index()
     {
-        $programIds = Auth::user()->headedProgramIds();
+        /** @var User $user */
+        $user = Auth::user();
+        $programIds = $user->headedProgramIds();
 
         if (! $programIds) {
             return response()->json([
@@ -95,7 +98,9 @@ class ProgramHeadDashboardController extends Controller
      */
     public function requests(Request $request)
     {
-        $programIds = Auth::user()->headedProgramIds();
+        /** @var User $user */
+        $user = Auth::user();
+        $programIds = $user->headedProgramIds();
 
         if (! $programIds) {
             return response()->json([
@@ -123,34 +128,46 @@ class ProgramHeadDashboardController extends Controller
 
     public function students()
     {
-        $programIds = Auth::user()->headedProgramIds();
-        abort_unless($programIds, 403, 'No program is assigned to this account.');
+        /** @var User $user */
+        $user = Auth::user();
+        $programIds = $user->headedProgramIds();
+        abort_unless($programIds !== [], 403, 'No program is assigned to this account.');
 
-        return BoundedCollection::respond(
-            User::where('role', 'student')->whereIn('program_id', $programIds)->with('program')->orderBy('name'),
-            UserResource::class,
-        );
+        /** @var Builder<User> $students */
+        $students = User::query();
+        $students->where('role', 'student')->whereIn('program_id', $programIds)->with('program')->orderBy('name');
+
+        return BoundedCollection::respond($students, UserResource::class);
     }
 
     public function instructors()
     {
-        $programIds = Auth::user()->headedProgramIds();
-        abort_unless($programIds, 403, 'No program is assigned to this account.');
+        /** @var User $user */
+        $user = Auth::user();
+        $programIds = $user->headedProgramIds();
+        abort_unless($programIds !== [], 403, 'No program is assigned to this account.');
 
         return BoundedCollection::respond($this->instructorQuery($programIds)->with('programs')->orderBy('name'), UserResource::class);
     }
 
-    private function instructorQuery(array $programIds)
+    /** @return Builder<User> */
+    private function instructorQuery(array $programIds): Builder
     {
-        return User::where('role', 'instructor')->where(function ($query) use ($programIds) {
+        /** @var Builder<User> $instructors */
+        $instructors = User::query();
+        $instructors->where('role', 'instructor')->where(function ($query) use ($programIds) {
             $query->whereHas('programs', fn ($query) => $query->whereIn('programs.id', $programIds))
                 ->orWhereHas('classesTaught', fn ($query) => $query->whereIn('program_id', $programIds));
         });
+
+        return $instructors;
     }
 
     private function flagQuery()
     {
-        $programIds = Auth::user()->headedProgramIds();
+        /** @var User $user */
+        $user = Auth::user();
+        $programIds = $user->headedProgramIds();
 
         return FollowupFlag::where(function ($query) use ($programIds) {
             $query->where('escalated_to', Auth::id())

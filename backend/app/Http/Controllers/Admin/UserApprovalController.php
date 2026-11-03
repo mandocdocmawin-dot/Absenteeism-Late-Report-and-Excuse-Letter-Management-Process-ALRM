@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Program;
+use App\Models\TeachingAssignment;
 use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Services\AuditLoggerService;
@@ -48,6 +49,9 @@ class UserApprovalController extends Controller
         $request->validate([
             'role' => ['sometimes', 'string', Rule::in(self::CREATABLE_ROLES)],
             'status' => ['sometimes', 'string', Rule::in(['pending', 'approved', 'deactivated', 'inactive'])],
+            'program_id' => ['sometimes', 'uuid'],
+            'year_level' => ['sometimes', 'string', Rule::in(['1st', '2nd', '3rd', '4th'])],
+            'search' => ['sometimes', 'string', 'max:120'],
         ]);
 
         /** @var Builder<User> $query */
@@ -65,9 +69,54 @@ class UserApprovalController extends Controller
             $query->where('status', $status);
         }
 
+        if ($request->filled('program_id')) {
+            $programId = $request->query('program_id');
+            $query->where(function (Builder $programQuery) use ($programId) {
+                $programQuery
+                    ->where('program_id', $programId)
+                    ->orWhereHas('headedProgram', fn (Builder $q) => $q->whereKey($programId))
+                    ->orWhereHas('additionalHeadedPrograms', fn (Builder $q) => $q->whereKey($programId))
+                    ->orWhereHas('programs', fn (Builder $q) => $q->whereKey($programId));
+            });
+        }
+
+        if ($request->filled('year_level')) {
+            $query->where('year_level', $request->query('year_level'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->query('search'));
+            $query->where(function (Builder $searchQuery) use ($search) {
+                $searchQuery
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('school_id_number', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->query('role') === 'program_head') {
+            $query->where(function (Builder $roleQuery) {
+                $roleQuery
+                    ->where('role', 'program_head')
+                    ->orWhereHas('headedProgram')
+                    ->orWhereHas('additionalHeadedPrograms');
+            });
+        }
+
         /** @var Builder<User> $users */
-        $users = $query->with(['program', 'programs'])
-            ->withExists(['headedProgram as heads_program'])
+        $users = $query
+            ->select([
+                'id', 'name', 'email', 'role', 'program_id',
+                'school_id_number', 'status', 'year_level',
+            ])
+            ->with([
+                'program:id,program_name',
+                'programs:id,program_name',
+            ])
+            ->withExists([
+                'headedProgram as heads_program',
+                'additionalHeadedPrograms as additional_heads_program',
+            ])
             ->orderBy('name');
 
         return BoundedCollection::respond($users, UserResource::class);
@@ -129,15 +178,15 @@ class UserApprovalController extends Controller
                 throw ValidationException::withMessages(['program_id' => 'This program already has a program head. Manage its assignment in Programs.']);
             }
 
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $email,
-                'role' => $validated['role'],
-                'program_id' => $validated['role'] === 'student' ? $program?->id : null,
-                'school_id_number' => $validated['school_id_number'] ?? null,
-                'status' => 'pending',
-                'password' => null,
-            ]);
+            $user = new User;
+            $user->name = $validated['name'];
+            $user->email = $email;
+            $user->role = $validated['role'];
+            $user->program_id = $validated['role'] === 'student' ? $program?->id : null;
+            $user->school_id_number = $validated['school_id_number'] ?? null;
+            $user->status = 'pending';
+            $user->password = null;
+            $user->save();
 
             if ($program && $validated['role'] === 'instructor') {
                 $user->programs()->attach($program->id);
@@ -176,6 +225,15 @@ class UserApprovalController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Only pending or deactivated accounts can be deleted. Deactivate this user first.',
+                'data' => null,
+            ], 409);
+        }
+
+        if ($user->classesTaught()->exists() || $user->enrollments()->exists()
+            || TeachingAssignment::where('instructor_id', $user->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This account has enrollment or teaching history. Keep it deactivated to preserve records.',
                 'data' => null,
             ], 409);
         }

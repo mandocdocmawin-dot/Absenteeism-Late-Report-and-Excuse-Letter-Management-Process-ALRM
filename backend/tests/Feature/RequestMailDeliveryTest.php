@@ -10,13 +10,14 @@ use App\Models\UserNotification;
 use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\SecurityTestCase;
 
 class RequestMailDeliveryTest extends SecurityTestCase
 {
     protected function user(string $role = 'student', array $attributes = []): User
     {
-        $user = parent::user($role, ['google_id' => 'google-linked', ...$attributes]);
+        $user = parent::user($role, ['google_id' => 'google-'.Str::uuid(), ...$attributes]);
         $user->forceFill(['email_notifications_enabled' => true])->save();
 
         return $user;
@@ -62,9 +63,11 @@ class RequestMailDeliveryTest extends SecurityTestCase
         Mail::assertQueued(StudentRequestUpdatedMail::class, fn ($mail) => $mail->hasTo('student-tester@example.com') && ! $mail->hasTo($student->email)
             && $mail->tries === 3 && $mail->afterCommit
         );
-        $this->assertDatabaseCount('notifications', 1);
-        $this->bearer($student)->getJson('/api/notifications')->assertOk()
-            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.type', 'request_decision');
+        // The approved absence also reaches the preventive attendance threshold.
+        $this->assertDatabaseCount('notifications', 3);
+        $notifications = $this->bearer($student)->getJson('/api/notifications')->assertOk()
+            ->assertJsonCount(2, 'data')->json('data');
+        $this->assertEqualsCanonicalizing(['request_decision', 'threshold_warning'], array_column($notifications, 'type'));
     }
 
     public function test_followup_queues_once_with_the_same_case_insensitive_recipient_rules(): void
@@ -83,7 +86,7 @@ class RequestMailDeliveryTest extends SecurityTestCase
         Mail::assertQueued(InstructorFollowUpMail::class, 1);
         Mail::assertQueued(InstructorFollowUpMail::class, fn ($mail) => $mail->hasTo('instructor-tester@example.com') && $mail->followupCount === 1
             && $mail->tries === 3 && $mail->afterCommit
-            && str_ends_with($mail->reviewUrl, '/instructor/class-requests')
+            && $mail->reviewUrl === rtrim(config('app.frontend_url_prod'), '/').'/instructor/class-requests'
         );
         $this->assertDatabaseHas('notifications', [
             'user_id' => $instructor->id, 'type' => 'request_followup', 'channel' => 'in_app',

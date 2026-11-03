@@ -20,6 +20,7 @@ use App\Policies\ProgramPolicy;
 use App\Policies\UserNotificationPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
@@ -40,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Model::preventSilentlyDiscardingAttributes(! app()->isProduction());
+
         if ($this->app->environment('production')
             && ! $this->app->runningInConsole()
             && in_array(config('mail.default'), ['log', 'array'], true)) {

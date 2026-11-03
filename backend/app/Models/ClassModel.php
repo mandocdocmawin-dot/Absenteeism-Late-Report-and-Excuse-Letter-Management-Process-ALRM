@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Validation\ValidationException;
 
 #[Fillable(['subject_name', 'instructor_id', 'schedule', 'program_id', 'year_level', 'section', 'semester', 'school_year', 'curriculum_subject_id', 'credit_units', 'weekly_hours', 'meetings_per_week'])]
 class ClassModel extends Model
@@ -24,11 +27,49 @@ class ClassModel extends Model
     // 'class' is a reserved word in PHP — table name must be explicit
     protected $table = 'classes';
 
+    protected $attributes = ['assignment_revision' => 0];
+
     protected $casts = [
+        'assignment_revision' => 'integer',
         'schedule' => 'array',
         'meetings_per_week' => 'integer',
         'credit_units' => 'float',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $class) {
+            if ($class->instructor_id) {
+                $class->forceFill(['assignment_revision' => 1])->saveQuietly();
+                TeachingAssignment::create([
+                    'class_id' => $class->id, 'instructor_id' => $class->instructor_id,
+                    'version' => 1, 'started_at' => now(),
+                ]);
+            }
+        });
+        static::updating(function (self $class) {
+            if ($class->isDirty('instructor_id')) {
+                throw ValidationException::withMessages([
+                    'instructor_id' => 'Use the teaching assignment action to change or remove an instructor.',
+                ]);
+            }
+        });
+    }
+
+    public function teachingAssignments(): HasMany
+    {
+        return $this->hasMany(TeachingAssignment::class, 'class_id');
+    }
+
+    public function activeTeachingAssignment(): HasOne
+    {
+        return $this->hasOne(TeachingAssignment::class, 'class_id')->whereNull('ended_at');
+    }
+
+    public function requests(): HasManyThrough
+    {
+        return $this->hasManyThrough(ExcuseRequest::class, Enrollment::class, 'class_id', 'enrollment_id');
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -117,7 +158,7 @@ class ClassModel extends Model
         return round($this->weekly_hours * config('alrm.critical_absence_weeks'), 2);
     }
 
-    /** 20% of semester hours; round up the limit for 3-hour weekly subjects. */
+    /** 20% of semester hours, rounded up to the next whole hour for every subject. */
     public function allowedAbsenceUnits(): float
     {
         $limit = round(
@@ -125,6 +166,6 @@ class ClassModel extends Model
             2
         );
 
-        return (float) $this->weekly_hours === 3.0 ? ceil($limit) : $limit;
+        return ceil($limit);
     }
 }

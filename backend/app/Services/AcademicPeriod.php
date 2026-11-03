@@ -20,6 +20,7 @@ class AcademicPeriod
             $term = AcademicTerm::query()
                 ->whereDate('starts_on', '<=', today())
                 ->orderByDesc('starts_on')
+                ->orderByDesc('id')
                 ->first();
 
             return [

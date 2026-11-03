@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('enrollments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('student_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignUuid('class_id')->constrained('classes')->cascadeOnDelete();
+            $table->foreignUuid('student_id')->constrained('users')->restrictOnDelete();
+            $table->foreignUuid('class_id')->constrained('classes')->restrictOnDelete();
             $table->enum('year_level', ['1st', '2nd', '3rd', '4th']);
             $table->timestamps();
         });

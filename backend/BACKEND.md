@@ -3,7 +3,7 @@
 
 ### Current documentation
 
-- [API contracts, curriculum catalog, schedules, and operations](docs/API-DOCS.md)
+- [API contracts, curriculum catalog, schedules, and operations](docs/api/README.md)
 - [PHP runtime and application security](docs/SECURITY-PHP.md)
 
 The two guides above describe current behavior and supersede historical notes
@@ -21,7 +21,7 @@ Google's OAuth audience must allow external users for the pending external flow 
 
 > This is the backend-only companion to `ALRM.md`. Purpose: a working guide while building the Laravel API — what already exists, what's missing, and in what order things should be done.
 
-> **Attendance policy update (October 29, 2026):** Preventive alerts start at one week's subject hours; critical consultation alerts start at two weeks' hours; IR identifies the 20% drop limit (rounded up to 10 hours for 3-hour weekly subjects). Three lates add one absent hour. Newly counted absences use the actual missed scheduled hours; legacy trackers retain their count-based fallback. The old 10%/15% policy, fixed 2/3-absence rules and historical follow-up TODOs below are superseded by [the current API documentation](docs/API-DOCS.md#attendance-thresholds).
+> **Attendance policy update (October 29, 2026):** Preventive alerts start at one week's subject hours; critical consultation alerts start at two weeks' hours; IR identifies the 20% drop limit (rounded up to 10 hours for 3-hour weekly subjects). Three lates add one absent hour. Newly counted absences use the actual missed scheduled hours; legacy trackers retain their count-based fallback. The old 10%/15% policy, fixed 2/3-absence rules and historical follow-up TODOs below are superseded by [the current API documentation](docs/api/curriculum-catalog-and-class-schedules.md#attendance-thresholds).
 
 ---
 

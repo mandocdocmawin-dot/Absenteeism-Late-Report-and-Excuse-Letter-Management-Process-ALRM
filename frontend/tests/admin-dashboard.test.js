@@ -24,32 +24,47 @@ before(async () => {
   ({ default: Overview } = await server.ssrLoadModule("/src/pages/auth/admin/dashboard/AdminOverview.jsx"));
 });
 after(async () => { await server?.close(); });
-const resources = { dashboard: { total_students: 110, total_instructors: 20, total_programs: 4, pending_staff_approvals: 14 }, users: [{ id: "one", name: "Ana Student", role: "student", status: "pending", year_level: "1st", program: { program_name: "Information Systems" } }], programs: [], classes: [], loading: {}, ready: {}, errors: {} };
+const resources = { dashboard: { total_students: 110, total_instructors: 20, total_programs: 4, pending_staff_approvals: 14 }, users: [{ id: "one", name: "Ana Student", role: "student" }, { id: "head", role: "program_head" }, { id: "instructor", role: "instructor" }], programs: [], classes: [], loading: {}, ready: { users: true, classes: true }, errors: {} };
 const render = props => renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Overview, { resources, onRetry() {}, ...props })));
 
-test("overview matches the four metrics, approval preview and working navigation targets", () => {
+test("overview uses authoritative dashboard totals instead of partial secondary rosters", () => {
   const html = render();
-  for (const label of ["Welcome back, Admin!", "Total Students", "Total Instructors", "Total Programs", "Pending for Approval", ">110<", ">20<", ">14<", "Pending Account Approvals", "Ana Student", "Quick Access", "Manage users", "Export Report", "System Settings"]) assert.ok(html.includes(label), label);
-  for (const path of ["/user-management", "/reports", "/settings", "/user-management?tab=waiting", "/user-management?tab=waiting&amp;user=one"]) assert.ok(html.includes(`href="${path}"`), path);
+  for (const label of ["Welcome back, Admin!", "Total Students", "Total Instructors", "Total Programs", "Quick Access", "Manage users", "Export Report", "System Settings"]) assert.ok(html.includes(label), label);
+  assert.match(html, /Total Students<\/p><p[^>]*>110<\/p>/);
+  assert.match(html, /Total Instructors<\/p><p[^>]*>20<\/p>/);
+  assert.doesNotMatch(html, /Program Heads/);
+  for (const path of ["/user-management", "/reports", "/settings"]) assert.ok(html.includes(`href="${path}"`), path);
+  assert.doesNotMatch(html, /Pending for Approval|Pending Account Approvals|tab=waiting/);
   assert.doesNotMatch(html, /Staff role assignment|Create class|Create program/);
-  assert.match(html, /This week/);
-  assert.match(html, /Last week/);
-  assert.match(html, /Loading weekly reports/);
+});
+
+test("secondary class assignments cannot change the backend instructor total", () => {
+  const html = render({ resources: { ...resources, classes: [{ instructor_id: "head" }, { instructor_id: "head" }] } });
+  assert.match(html, /Total Instructors<\/p><p[^>]*>20<\/p>/);
+  assert.doesNotMatch(html, /Program Heads/);
+});
+
+test("dashboard totals do not wait for or fail with secondary class resources", () => {
+  const waiting = render({ resources: { ...resources, ready: { users: true }, loading: { classes: true } } });
+  assert.equal((waiting.match(/data-slot="metric-placeholder"/g) || []).length, 0);
+  assert.match(waiting, /Total Instructors<\/p><p[^>]*>20<\/p>/);
+  const failed = render({ resources: { ...resources, errors: { classes: "Could not load classes." } } });
+  assert.match(failed, /Total Instructors<\/p><p[^>]*>20<\/p>/);
 });
 
 test("dashboard skeleton matches four cards and independently loading chart and approvals", () => {
-  const html = render({ resources: { ...resources, dashboard: null, users: [], loading: { dashboard: true, users: true, programs: true, classes: true } } });
+  const html = render({ resources: { ...resources, dashboard: null, users: [], ready: {}, loading: { dashboard: true, users: true, programs: true, classes: true } } });
   assert.match(html, /data-slot="dashboard-skeleton"/);
-  assert.equal((html.match(/data-slot="metric-placeholder"/g) || []).length, 4);
+  assert.equal((html.match(/data-slot="metric-placeholder"/g) || []).length, 3);
   assert.match(html, /data-slot="activity-chart-placeholder"/);
-  assert.match(html, /data-slot="approval-placeholder"/);
+  assert.doesNotMatch(html, /data-slot="approval-placeholder"/);
   assert.doesNotMatch(html, />110<|Ana Student/);
 });
 
 test("admin total programs excludes General Education when program data has loaded", () => {
   const html = render({ resources: {
     ...resources,
-    programs: [{ id: "ge", program_name: "General Education" }, { id: "bsis", program_name: "BS in Information Systems" }],
+    dashboard: { ...resources.dashboard, programs_summary: [{ id: "ge", program_name: "General Education" }, { id: "bsis", program_name: "BS in Information Systems" }] },
     ready: { programs: true },
   } });
   assert.match(html, /Total Programs<\/p><p[^>]*>1<\/p>/);

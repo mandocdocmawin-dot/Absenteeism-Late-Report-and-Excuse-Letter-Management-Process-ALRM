@@ -60,20 +60,22 @@ function destination(role, requestId, type) {
   return "/dashboard";
 }
 
-export function notificationActivity(records, role, preferences, userId) {
+export function notificationActivity(records, role, preferences, userId, { inbox = false } = {}) {
   const normalizedRole = normalizeRole(role);
   const seen = new Set();
   return records.flatMap(record => {
     if (!record?.id || seen.has(record.id) || !record.message || !Number.isFinite(Date.parse(record.date_sent))) return [];
     if (userId != null && String(record.user_id) !== String(userId)) return [];
-    // Preserve generic notices for their recipient; known events follow backend audiences.
-    if (Object.hasOwn(recipients, record.type) && !recipients[record.type].includes(normalizedRole)) return [];
+    const historicalAudience = Object.hasOwn(recipients, record.type) && !recipients[record.type].includes(normalizedRole);
+    // Account inbox history survives preference and role changes, but never ownership changes.
+    const ownedInbox = inbox && userId != null;
+    if (!ownedInbox && historicalAudience) return [];
     seen.add(record.id);
     const threshold = ["threshold_warning", "threshold_critical", "ir_escalation", "attendance_warning", "attendance_ir"].includes(record.type);
-    if (!(threshold ? preferences.thresholdAlerts : preferences.requestUpdates)) return [];
+    if (!ownedInbox && !(threshold ? preferences.thresholdAlerts : preferences.requestUpdates)) return [];
     const message = record.message;
     return [{ id: record.id, type: record.type, requestId: record.request_id, message, detail: threshold ? thresholdDetail(message) : undefined,
-      label: notificationLabel(record.type, message), date: record.date_sent, isRead: record.is_read === true, href: destination(role, record.request_id, record.type) }];
+      label: notificationLabel(record.type, message), date: record.date_sent, isRead: record.is_read === true, href: ownedInbox && historicalAudience ? "/notifications" : destination(role, record.request_id, record.type) }];
   }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 

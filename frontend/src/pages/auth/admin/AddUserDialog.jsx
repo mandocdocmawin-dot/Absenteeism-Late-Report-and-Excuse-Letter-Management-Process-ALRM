@@ -7,6 +7,11 @@ function openDialog(element) {
 }
 
 export default function AddUserDialog({ onClose, onCreated }) {
+  function handleCreated(result) {
+    onCreated?.(result);
+    onClose();
+  }
+
   return <dialog
     ref={openDialog}
     id="add-user-dialog"
@@ -20,6 +25,6 @@ export default function AddUserDialog({ onClose, onCreated }) {
     <div className="mb-1 flex justify-end">
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Close Add User" onClick={onClose}><X aria-hidden="true" /></Button>
     </div>
-    <AdminUserForm embedded onCancel={onClose} onCreated={onCreated} />
+    <AdminUserForm embedded onCancel={onClose} onCreated={handleCreated} />
   </dialog>;
 }

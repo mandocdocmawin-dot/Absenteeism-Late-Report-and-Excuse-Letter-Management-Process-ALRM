@@ -21,7 +21,15 @@ return new class extends Migration
             $table->json('schedule');
             $table->foreignUuid('program_id')->constrained('programs')->cascadeOnDelete();
             $table->string('year_level');
+            $table->decimal('weekly_hours', 7, 2)->default(3);
+            $table->unsignedTinyInteger('meetings_per_week')->default(1);
+            $table->foreignUuid('curriculum_subject_id')->nullable()->constrained()->restrictOnDelete();
+            $table->decimal('credit_units', 6, 2)->nullable();
+            $table->unsignedInteger('assignment_revision')->default(0);
             $table->timestamps();
+
+            $table->index(['program_id', 'year_level', 'semester'], 'classes_program_year_semester_idx');
+            $table->index(['instructor_id', 'program_id'], 'classes_instructor_program_idx');
         });
     }
 

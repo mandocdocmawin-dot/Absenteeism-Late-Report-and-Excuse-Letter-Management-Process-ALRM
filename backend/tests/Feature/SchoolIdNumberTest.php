@@ -6,7 +6,6 @@ use App\Models\Enrollment;
 use App\Models\Program;
 use App\Services\AcademicPeriod;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\SecurityTestCase;
 
@@ -75,14 +74,10 @@ class SchoolIdNumberTest extends SecurityTestCase
         $this->assertSame(0, $student->programs()->count());
     }
 
-    public function test_migration_and_rollback_preserve_existing_ids_and_database_uniqueness(): void
+    public function test_users_are_created_with_the_current_id_field_and_database_uniqueness(): void
     {
         $user = $this->user('student', ['school_id_number' => '000-123']);
-        $migration = require database_path('migrations/2026_10_29_000000_rename_school_student_id_to_school_id_number.php');
-        $migration->down();
-        $this->assertTrue(Schema::hasColumn('users', 'school_student_id'));
-        $this->assertSame('000-123', DB::table('users')->where('id', $user->id)->value('school_student_id'));
-        $migration->up();
+        $this->assertTrue(Schema::hasColumn('users', 'school_id_number'));
         $this->assertFalse(Schema::hasColumn('users', 'school_student_id'));
         $this->assertSame('000-123', $user->fresh()->school_id_number);
 

@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
+use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
 class AuthController extends Controller
@@ -133,39 +134,38 @@ class AuthController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $frontendUrl = $this->decodeState($request);
+        $frontendUrl = $this->allowedOrigins()[0] ?? null;
+        abort_unless($frontendUrl, 500, 'No valid frontend URL configured.');
 
-        if (! $frontendUrl) {
-            $defaultFrontend = $this->allowedOrigins()[0] ?? null;
-            abort_unless($defaultFrontend, 500, 'No valid frontend URL configured.');
+        try {
+            $stateFrontend = $this->decodeState($request);
+            if ($stateFrontend) {
+                $frontendUrl = $stateFrontend;
 
-            return redirect()->away($defaultFrontend.'/login?error=oauth_failed')
-                ->withoutCookie('alrm_oauth', '/api/auth/google');
+                return $this->completeCallback($request, $frontendUrl)
+                    ->withoutCookie('alrm_oauth', '/api/auth/google');
+            }
+        } catch (InvalidStateException $e) {
+            Log::warning('Google OAuth callback failed', ['exception' => get_class($e)]);
+        } catch (\Throwable $e) {
+            Log::warning('Google OAuth callback failed', ['exception' => get_class($e)]);
         }
 
-        return $this->completeCallback($request, $frontendUrl)
+        return redirect()->away($frontendUrl.'/login?error=oauth_failed')
             ->withoutCookie('alrm_oauth', '/api/auth/google');
     }
 
     private function completeCallback(Request $request, string $frontendUrl): RedirectResponse
     {
-        try {
-            /** @var GoogleProvider $driver */
-            $driver = Socialite::driver('google');
-            $driver->setHttpClient(ExternalApiClient::make());
+        /** @var GoogleProvider $driver */
+        $driver = Socialite::driver('google');
+        $driver->setHttpClient(ExternalApiClient::make());
 
-            /** @var SocialiteUser $googleUser */
-            $googleUser = $driver
-                ->stateless()
-                ->redirectUrl($this->callbackUrlFor($frontendUrl))
-                ->user();
-        } catch (\Throwable $e) {
-            Log::warning('Google OAuth callback failed', ['exception' => get_class($e)]);
-
-            return redirect()->away(
-                $frontendUrl.'/login?error=oauth_failed'
-            );
-        }
+        /** @var SocialiteUser $googleUser */
+        $googleUser = $driver
+            ->stateless()
+            ->redirectUrl($this->callbackUrlFor($frontendUrl))
+            ->user();
 
         $email = strtolower((string) $googleUser->getEmail());
         $googleId = (string) $googleUser->getId();
@@ -184,7 +184,16 @@ class AuthController extends Controller
         $isStaff = $domain === $staffDomain;
         $isInstitutional = $isStudent || $isStaff;
 
-        $user = User::query()->firstOrNew(['email' => $email]);
+        $user = User::where('google_id', $googleId)->first();
+        if (! $user) {
+            // TODO: Require explicit account-link confirmation after a product/frontend decision.
+            // Preserve existing first-time email/roster linking until that workflow is approved.
+            $user = User::where('email', $email)->first();
+        }
+        if (! $user) {
+            $user = new User;
+            $user->email = $email;
+        }
 
         $isNewUser = ! $user->exists;
 

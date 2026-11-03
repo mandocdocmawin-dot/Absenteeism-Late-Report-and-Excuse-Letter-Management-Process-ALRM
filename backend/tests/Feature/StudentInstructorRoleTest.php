@@ -13,7 +13,8 @@ class StudentInstructorRoleTest extends SecurityTestCase
     {
         $student = $this->user('student', ['email' => 'ordinary@student.edu.ph']);
         try {
-            $student->update(['role' => 'instructor']);
+            $student->role = 'instructor';
+            $student->save();
             $this->fail('Unexpected instructor promotion.');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('role', $e->errors());

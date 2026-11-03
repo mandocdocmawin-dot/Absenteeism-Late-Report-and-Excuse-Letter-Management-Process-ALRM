@@ -5,10 +5,71 @@ namespace Tests\Feature;
 use App\Models\AttendanceTracker;
 use App\Models\FollowupFlag;
 use App\Models\UserNotification;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\SecurityTestCase;
 
 class AttendanceThresholdPolicyTest extends SecurityTestCase
 {
+    public static function decisionCases(): array
+    {
+        return [
+            ['absence', 'approved', 1, 0],
+            ['absence', 'noted', 1, 0],
+            ['absence', 'invalid', 1, 0],
+            ['late', 'approved', 0, 0],
+            ['late', 'noted', 0, 0],
+            ['late', 'invalid', 0, 1],
+        ];
+    }
+
+    #[DataProvider('decisionCases')]
+    public function test_decisions_count_all_absences_but_only_invalid_lates(string $type, string $status, int $absences, int $lates): void
+    {
+        $request = $this->requestFor($this->user());
+        $request->update(['type' => $type]);
+        $endpoint = '/api/instructor/requests/'.$request->id.'/decision';
+        $this->assertFalse(AttendanceTracker::where('enrollment_id', $request->enrollment_id)->exists());
+
+        $this->bearer($request->enrollment->class->instructor)->patchJson($endpoint, ['status' => $status])->assertOk();
+        $this->patchJson($endpoint, ['status' => $status])->assertConflict();
+
+        $tracker = AttendanceTracker::where('enrollment_id', $request->enrollment_id)->first();
+        $this->assertSame($absences, $tracker?->total_absences ?? 0);
+        $this->assertSame($lates, $tracker?->total_lates ?? 0);
+        $this->assertSame($absences * 3.0, $tracker?->unitsUsed() ?? 0.0);
+        if ($absences > 0) {
+            $this->assertSame('warning', $tracker->status);
+            $this->assertDatabaseHas('notifications', [
+                'request_id' => $request->id, 'type' => 'threshold_warning',
+            ]);
+        }
+        $this->bearer($request->enrollment->student)->getJson('/api/dashboard')->assertOk()
+            ->assertJsonPath('data.unexcused_absences', $type === 'absence' && $status === 'invalid' ? 1 : 0)
+            ->assertJsonPath('data.excused_absences', $type === 'absence' && $status !== 'invalid' ? 1 : 0);
+    }
+
+    #[TestWith(['approved', 2, 0])]
+    #[TestWith(['noted', 2, 0])]
+    #[TestWith(['invalid', 3, 1])]
+    public function test_only_an_invalid_third_late_converts_to_an_absence(string $status, int $lates, int $converted): void
+    {
+        $request = $this->requestFor($this->user());
+        $request->update(['type' => 'late']);
+        $tracker = AttendanceTracker::create([
+            'enrollment_id' => $request->enrollment_id, 'total_lates' => 2,
+            'total_absences' => 0, 'converted_absences' => 0, 'status' => 'safe',
+        ]);
+
+        $this->bearer($request->enrollment->class->instructor)
+            ->patchJson('/api/instructor/requests/'.$request->id.'/decision', ['status' => $status])->assertOk();
+
+        $tracker->refresh();
+        $this->assertSame($lates, $tracker->total_lates);
+        $this->assertSame($converted, $tracker->converted_absences);
+        $this->assertSame((float) $converted, $tracker->unitsUsed());
+    }
+
     public function test_subject_hours_determine_all_three_stages_and_remaining_percentages(): void
     {
         $request = $this->requestFor($this->user());
@@ -20,7 +81,9 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
         foreach ([
             [3, 10.0, [2 => 'safe', 3 => 'warning', 5 => 'warning', 6 => 'critical', 9 => 'critical', 10 => 'IR', 11 => 'IR'], [3 => 14.58, 6 => 8.33, 10 => 0.0]],
             [5, 16.0, [4 => 'safe', 5 => 'warning', 9 => 'warning', 10 => 'critical', 15 => 'critical', 16 => 'IR', 17 => 'IR'], [5 => 13.75, 10 => 7.5, 16 => 0.0]],
-            [2, 6.4, [1 => 'safe', 2 => 'warning', 3 => 'warning', 4 => 'critical', 6 => 'critical', 7 => 'IR'], []],
+            [2, 7.0, [1 => 'safe', 2 => 'warning', 3 => 'warning', 4 => 'critical', 6 => 'critical', 7 => 'IR'], [6 => 3.13, 7 => 0.0]],
+            [1, 4.0, [0 => 'safe', 1 => 'warning', 2 => 'critical', 3 => 'critical', 4 => 'IR'], []],
+            [4, 13.0, [3 => 'safe', 4 => 'warning', 8 => 'critical', 12 => 'critical', 13 => 'IR'], []],
         ] as [$weeklyHours, $limit, $boundaries, $remaining]) {
             // One-hour meetings let us exercise exact unit boundaries.
             $tracker->enrollment->class->forceFill(['weekly_hours' => $weeklyHours, 'meetings_per_week' => $weeklyHours])->save();
@@ -34,6 +97,31 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
                     $this->assertSame($remaining[$absences], $tracker->remainingSemesterPercentage());
                 }
             }
+        }
+    }
+
+    public function test_drop_limit_waits_for_the_rounded_whole_hour_with_fractional_absences(): void
+    {
+        $request = $this->requestFor($this->user());
+        $request->enrollment->class->update(['weekly_hours' => 2, 'meetings_per_week' => 1]);
+        $tracker = AttendanceTracker::create([
+            'enrollment_id' => $request->enrollment_id,
+            'total_lates' => 0, 'total_absences' => 1,
+            'converted_absences' => 0, 'status' => 'safe',
+        ]);
+
+        foreach ([
+            [6.4, 'critical', 1.88],
+            [6.99, 'critical', 0.03],
+            [7.0, 'IR', 0.0],
+            [7.5, 'IR', 0.0],
+        ] as [$hours, $status, $remainingPercentage]) {
+            $tracker->absence_hours = $hours;
+            $tracker->recompute();
+
+            $this->assertSame(7.0, $tracker->allowedUnits());
+            $this->assertSame($status, $tracker->fresh()->status);
+            $this->assertSame($remainingPercentage, $tracker->remainingSemesterPercentage());
         }
     }
 
@@ -53,10 +141,13 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
         $this->assertSame('critical', $tracker->status);
     }
 
-    public function test_automation_creates_a_critical_consultation_flag_once_even_when_warning_was_skipped(): void
+    #[TestWith(['invalid'])]
+    #[TestWith(['approved'])]
+    #[TestWith(['noted'])]
+    public function test_automation_creates_a_critical_consultation_flag_once_even_when_warning_was_skipped(string $status): void
     {
         $request = $this->requestFor($this->user());
-        $request->update(['status' => 'invalid', 'date_reviewed' => now()]);
+        $request->update(['status' => $status, 'date_reviewed' => now()]);
         $head = $this->user('program_head', ['program_id' => $request->enrollment->class->program_id]);
         $tracker = AttendanceTracker::create([
             'enrollment_id' => $request->enrollment_id, 'total_absences' => 2,
@@ -100,18 +191,15 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
             ->assertJsonPath('data.critical_count', 1)->assertJsonPath('data.ir_count', 0);
     }
 
-    public function test_migration_preserves_historical_consultation_delivery_without_suppressing_drop_alert(): void
+    public function test_critical_and_ir_notification_timestamps_are_stored_independently(): void
     {
         $request = $this->requestFor($this->user());
         $tracker = AttendanceTracker::create([
             'enrollment_id' => $request->enrollment_id, 'total_absences' => 4,
-            'total_lates' => 0, 'converted_absences' => 4, 'status' => 'IR',
-            'ir_notified_at' => now()->startOfSecond(),
+            'total_lates' => 0, 'converted_absences' => 4, 'status' => 'critical',
+            'critical_notified_at' => now()->startOfSecond(),
         ]);
-        $deliveredAt = $tracker->ir_notified_at->toDateTimeString();
-        $migration = require database_path('migrations/2026_10_28_120000_add_critical_attendance_stage.php');
-        $migration->down();
-        $migration->up();
+        $deliveredAt = $tracker->critical_notified_at->toDateTimeString();
 
         $tracker->refresh();
         $this->assertSame('critical', $tracker->status);
@@ -119,5 +207,6 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
         $this->assertNull($tracker->ir_notified_at);
         $tracker->recompute();
         $this->assertSame('IR', $tracker->status);
+        $this->assertSame($deliveredAt, $tracker->fresh()->critical_notified_at->toDateTimeString());
     }
 }

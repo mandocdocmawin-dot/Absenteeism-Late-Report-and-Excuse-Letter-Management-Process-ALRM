@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
@@ -18,7 +15,7 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             AcademicCatalogSeeder::class,
             AdminUserSeeder::class,
-            ClassSeeder::class,
+            DevInstructorClassSeeder::class,
         ]);
     }
 }

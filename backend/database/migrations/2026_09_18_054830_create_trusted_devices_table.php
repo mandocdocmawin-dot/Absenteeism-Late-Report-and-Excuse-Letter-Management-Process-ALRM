@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/xxxx_xx_xx_create_trusted_devices_table.php
 
 use Illuminate\Database\Migrations\Migration;

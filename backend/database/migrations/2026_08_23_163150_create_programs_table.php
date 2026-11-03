@@ -17,6 +17,10 @@ return new class extends Migration
             $table->foreignUuid('program_head_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreign('program_id')->references('id')->on('programs')->nullOnDelete();
+        });
     }
 
     /**
@@ -24,6 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['program_id']);
+        });
+
         Schema::dropIfExists('programs');
     }
 };

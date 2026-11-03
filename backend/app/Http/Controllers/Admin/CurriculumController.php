@@ -7,6 +7,7 @@ use App\Models\Curriculum;
 use App\Services\AuditLoggerService;
 use App\Services\CurriculumCatalog;
 use App\Support\BoundedCollection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -23,7 +24,14 @@ class CurriculumController extends Controller
             'version' => ['sometimes', 'string', 'max:50'],
         ]);
 
-        return BoundedCollection::respond(Curriculum::query()->where($filters)->with('program')->withCount(['subjects', 'offerings'])->orderBy('version', 'desc'));
+        /** @var Builder<Curriculum> $curricula */
+        $curricula = Curriculum::query();
+        $curricula->where($filters)
+            ->with('program')
+            ->withCount(['subjects', 'offerings'])
+            ->orderBy('version', 'desc');
+
+        return BoundedCollection::respond($curricula);
     }
 
     public function show(Curriculum $curriculum)

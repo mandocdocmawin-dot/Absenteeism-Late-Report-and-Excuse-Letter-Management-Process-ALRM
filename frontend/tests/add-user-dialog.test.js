@@ -29,3 +29,19 @@ test("Strict Mode ref cleanup does not dismiss the reopened Add User dialog", ()
 
   assert.equal(dismissed, 0);
 });
+
+test("a successfully created user closes the Add User dialog", () => {
+  let dismissed = 0;
+  let createdResult;
+  const result = { data: { id: "student-one", role: "student" } };
+  const element = AddUserDialog({
+    onClose: () => dismissed++,
+    onCreated: (created) => { createdResult = created; },
+  });
+  const form = element.props.children[1];
+
+  form.props.onCreated(result);
+
+  assert.equal(dismissed, 1);
+  assert.equal(createdResult, result);
+});

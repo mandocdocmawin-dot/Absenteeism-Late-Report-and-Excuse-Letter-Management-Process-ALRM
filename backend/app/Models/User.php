@@ -19,15 +19,8 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
-    'google_id',
     'name',
-    'email',
-    'password',
-    'role',
-    'program_id',
     'school_id_number',
-    'status',
-    'deactivated_at',
     'year_level',
     'guardian_name',
     'contact_number',

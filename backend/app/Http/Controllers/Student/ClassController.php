@@ -17,13 +17,15 @@ class ClassController extends Controller
     {
         $enrollments = Enrollment::where('student_id', Auth::id())
             ->whereHas('class.instructor')
-            ->with('class.instructor', 'class.program')
+            ->whereHas('class.activeTeachingAssignment')
+            ->with('class.instructor', 'class.program', 'class.activeTeachingAssignment')
             ->get();
 
         $data = $enrollments->map(function ($enrollment) {
             return [
                 'enrollment_id' => $enrollment->id,
                 'class_id' => $enrollment->class_id,
+                'teaching_assignment_id' => $enrollment->class->activeTeachingAssignment?->id,
                 'subject_name' => $enrollment->class->subject_name,
                 'section' => $enrollment->class->section,
                 'schedule' => $enrollment->class->schedule,

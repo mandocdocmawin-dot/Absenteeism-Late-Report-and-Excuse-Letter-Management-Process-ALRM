@@ -11,15 +11,16 @@ use Illuminate\Support\Facades\DB;
 
 class AuditLoggerService
 {
-    public function log(string $action, string $tableAffected, int|string $recordId): AuditLog
+    public function log(string $action, string $tableAffected, int|string $recordId, ?array $details = null): AuditLog
     {
-        return DB::transaction(function () use ($action, $tableAffected, $recordId) {
+        return DB::transaction(function () use ($action, $tableAffected, $recordId, $details) {
             $log = AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => $action,
                 'table_affected' => $tableAffected,
                 'record_id' => $recordId,
                 'timestamp' => now(),
+                'details' => $details,
             ]);
 
             $this->notifyActivityViewers($log);

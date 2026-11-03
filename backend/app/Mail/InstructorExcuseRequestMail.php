@@ -39,8 +39,8 @@ class InstructorExcuseRequestMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.instructor-excuse-request',
             with: [
-                'reviewUrl' => rtrim(config('app.frontend_url'), '/')
-                    . '/instructor/class-requests',
+                'reviewUrl' => rtrim(config('app.frontend_url_prod'), '/')
+                    .'/instructor/class-requests',
             ],
         );
     }

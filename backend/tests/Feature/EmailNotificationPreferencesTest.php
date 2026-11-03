@@ -62,7 +62,7 @@ class EmailNotificationPreferencesTest extends SecurityTestCase
         $student = $this->user();
         foreach ([[null, true], ['', true], ['linked', false], ['linked', true]] as [$googleId, $enabled]) {
             Mail::fake();
-            $instructor = $this->user('instructor', ['google_id' => $googleId]);
+            $instructor = $this->user('instructor', ['google_id' => $googleId ? $googleId.'-'.($enabled ? 'on' : 'off') : $googleId]);
             $instructor->forceFill(['email_notifications_enabled' => $enabled])->save();
             $request = $this->requestFor($student, $instructor);
             $submission = $request->replicate();
@@ -83,7 +83,7 @@ class EmailNotificationPreferencesTest extends SecurityTestCase
     {
         foreach ([[null, true], ['linked', false], ['linked', true]] as [$googleId, $enabled]) {
             Mail::fake();
-            $student = $this->user('student', ['google_id' => $googleId]);
+            $student = $this->user('student', ['google_id' => $googleId ? $googleId.'-'.($enabled ? 'on' : 'off') : $googleId]);
             $student->forceFill(['email_notifications_enabled' => $enabled])->save();
             $request = $this->requestFor($student);
             $this->bearer($request->enrollment->class->instructor)
@@ -101,7 +101,7 @@ class EmailNotificationPreferencesTest extends SecurityTestCase
             Mail::fake();
             $request = $this->requestFor($this->user());
             $head = $this->user('program_head', [
-                'program_id' => $request->enrollment->class->program_id, 'google_id' => $googleId,
+                'program_id' => $request->enrollment->class->program_id, 'google_id' => $googleId ? $googleId.'-'.($enabled ? 'on' : 'off') : $googleId,
             ]);
             $head->forceFill(['email_notifications_enabled' => $enabled])->save();
             $tracker = AttendanceTracker::create([

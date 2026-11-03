@@ -30,8 +30,7 @@ class InstructorRequestExportTest extends SecurityTestCase
     {
         $instructor = $this->user('instructor');
         $student = $this->user('student', ['name' => '=1+1']);
-        $own = $this->requestFor($student, $instructor);
-        $own->enrollment->class->update(['subject_name' => '+SUM(1,2)', 'section' => '@SUM(1,2)', 'year_level' => '-1+1']);
+        $own = $this->requestFor($student, $instructor, ['subject_name' => '+SUM(1,2)', 'section' => '@SUM(1,2)', 'year_level' => '-1+1']);
         $own->update(['date_submitted' => '2026-10-22 10:00:00']);
         $this->requestFor($this->user('student', ['name' => 'Other instructors student']));
 
@@ -138,6 +137,7 @@ class InstructorRequestExportTest extends SecurityTestCase
         for ($i = 0; $i < 5000; $i++) {
             $rows[] = [
                 'id' => (string) Str::uuid(), 'enrollment_id' => $fixture->enrollment_id,
+                'teaching_assignment_id' => $fixture->teaching_assignment_id,
                 'type' => 'absence', 'subjects_missed' => 'Security', 'reason' => 'Illness',
                 'status' => 'pending', 'date_submitted' => now(), 'created_at' => now(), 'updated_at' => now(),
             ];

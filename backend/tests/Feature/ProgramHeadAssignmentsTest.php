@@ -46,7 +46,8 @@ class ProgramHeadAssignmentsTest extends SecurityTestCase
         $this->assertSame([$first->id], $tester->fresh()->headedProgramIds());
         $this->bearer($tester->fresh())->getJson('/api/program-head/dashboard')->assertOk();
 
-        $tester->update(['program_id' => $second->id]);
+        $tester->program_id = $second->id;
+        $tester->save();
         $this->assertSame([$second->id], $tester->fresh()->headedProgramIds());
 
         $this->bearer($this->user('administrator'))->patchJson('/api/admin/users/'.$tester->id.'/role', ['role' => 'instructor'])

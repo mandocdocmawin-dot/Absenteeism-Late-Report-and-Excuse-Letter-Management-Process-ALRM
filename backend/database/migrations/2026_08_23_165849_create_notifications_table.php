@@ -20,6 +20,9 @@ return new class extends Migration
             $table->enum('channel', ['email', 'in_app']);
             $table->timestamp('date_sent')->useCurrent();
             $table->boolean('is_read')->default(false);
+
+            $table->index(['user_id', 'channel', 'date_sent', 'id'], 'notifications_user_channel_date_id_idx');
+            $table->index(['user_id', 'channel', 'is_read', 'date_sent'], 'notifications_user_channel_read_date_idx');
         });
     }
 
