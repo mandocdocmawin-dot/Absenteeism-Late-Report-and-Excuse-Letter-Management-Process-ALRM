@@ -1,227 +1,141 @@
-# ALRM — Absenteeism, Late Report, and Excuse Letter Management System
+<p align="center"><img src="docs/assets/readme-header.svg" alt="ALRM System — La Verdad Christian College" width="100%"></p>
 
-A web-based Absence/Tardiness Monitoring and Approval System for **La Verdad Christian College, Inc.**, replacing the current manual, form-by-form routing done through Google Forms, spreadsheets, and Viber.
+### Absenteeism, Late Report, and Excuse Letter Management System
 
-> ALRM does not change *who* decides on attendance validity — Instructors and Program Heads keep that authority. ALRM's job is to **route requests automatically, track status in real time, and flag bottlenecks** before they turn into overlooked cases or compliance violations.
+A web-based **Absenteeism, Late Report, and Excuse Letter Management System** for **La Verdad Christian College, Inc.**.
 
----
+**BSIS 3 · Application Development 1**
 
-## 📋 Table of Contents
-- [ALRM — Absenteeism, Late Report, and Excuse Letter Management System](#alrm--absenteeism-late-report-and-excuse-letter-management-system)
-  - [📋 Table of Contents](#-table-of-contents)
-  - [Overview](#overview)
-    - [Email Domains](#email-domains)
-  - [Tech Stack](#tech-stack)
-  - [Deployment Architecture](#deployment-architecture)
-  - [User Roles](#user-roles)
-  - [Getting Started](#getting-started)
-    - [Backend (Laravel)](#backend-laravel)
-    - [Frontend (React)](#frontend-react)
-  - [Project Structure](#project-structure)
-  - [Implementation Phases (To-Do)](#implementation-phases-to-do)
-    - [Phase 1 — Backend Foundation](#phase-1--backend-foundation)
-    - [Phase 2 — Frontend Core](#phase-2--frontend-core)
-    - [Phase 3 — Notifications \& Reporting](#phase-3--notifications--reporting)
-    - [Phase 4 — Polish \& Deploy](#phase-4--polish--deploy)
-    - [Phase 5 — Optional Enhancements (post-presentation)](#phase-5--optional-enhancements-post-presentation)
-  - [Environment Variables](#environment-variables)
+[Live Application](https://absenteeism-late-report-and-excuse.vercel.app/) · [Figma Design](https://www.figma.com/design/tbmJgm9nCtJfOgPXWYHzaj/ALRM-SYSTEM) · [Business Requirements Document](https://docs.google.com/document/d/1nFqp-fZCyO5j8qZaa6OuOl0lhVbuSWaB7XOIJWw5GpU/edit?tab=t.0) · [Project Presentation](https://docs.google.com/presentation/d/1IgaBUyXhlFN-42n0C0u3XsV2WxP67OlfTjqVxvPM1ek/edit?slide=id.p1#slide=id.p1)
 
----
+## About the Project
 
-## Overview
+The existing process for handling student absence and late reports relies on paper forms, Google Forms, spreadsheets, and Viber. The College Secretary manually forwards each request to the appropriate Instructor, students wait for updates, and submitted reports and excuse letters are spread across separate tools.
 
-| | |
+ALRM supports the submission, routing, review, and status tracking of absenteeism reports, late reports, and excuse letters through a centralized web platform.
+
+The assigned **Instructor retains authority over request validity**. The system supports routing, recording, monitoring, and communication throughout the process.
+
+## Project Objectives
+
+- Replace manual forwarding with automatic routing to the Instructor assigned to the selected class.
+- Give students visibility into their submitted requests and decisions.
+- Allow Instructors to review requests and supporting evidence in one place.
+- Notify students about updates to their reports and excuse letters.
+- Organize submitted reports and excuse letters according to user access.
+
+## Team Hierarchy
+
+<p align="center"><img src="docs/assets/team/team-header.svg" alt="The team behind ALRM — six people, one shared project" width="1000"></p>
+
+<table>
+  <tr>
+    <td colspan="5" align="center">
+      <br>
+      <img src="docs/assets/team/jimuel-jarina-portrait.svg" alt="Jimuel Jarina" width="120" height="120"><br>
+      <h3>Jimuel Jarina</h3>
+      <img src="docs/assets/team/project-manager-badge.svg" alt="Project Manager" height="26">
+      <p>Leads planning, schedules, and team coordination.<br>Oversees the project charter, Gantt chart, RACI matrix, and requirements review.</p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5" align="center"><img src="docs/assets/team/hierarchy-connectors.svg" alt="Project Manager leads five equal team roles" width="100%" height="64"></td>
+  </tr>
+  <tr>
+    <td width="20%" align="center" valign="top">
+      <img src="docs/assets/team/mac-robert-savandal-portrait.svg" alt="Mac Robert Savandal" width="100" height="100">
+      <p><strong>Mac Robert Savandal</strong></p>
+      <img src="docs/assets/team/frontend-developer-badge.svg" alt="Frontend Developer" height="26">
+      <p align="left">Builds React interfaces, reusable components, and styling, and integrates the API.</p>
+    </td>
+    <td width="20%" align="center" valign="top">
+      <img src="docs/assets/team/marwin-mandocdoc-portrait.svg" alt="Marwin Mandocdoc" width="100" height="100">
+      <p><strong>Marwin Mandocdoc</strong></p>
+      <img src="docs/assets/team/backend-developer-badge.svg" alt="Backend Developer" height="26">
+      <p align="left">Develops the Laravel API, database, Google SSO, access control, and request workflows.</p>
+    </td>
+    <td width="20%" align="center" valign="top">
+      <img src="docs/assets/team/janice-agnote-portrait.svg" alt="Janice Agnote" width="100" height="100">
+      <p><strong>Janice Agnote</strong></p>
+      <img src="docs/assets/team/business-analyst-badge.svg" alt="Business Analyst" height="26">
+      <p align="left">Gathers requirements, prepares the BRD, and conducts DMAIC analysis and requirements review.</p>
+    </td>
+    <td width="20%" align="center" valign="top">
+      <img src="docs/assets/team/angelene-ariate-portrait.svg" alt="Angelene Ariate" width="100" height="100">
+      <p><strong>Angelene Ariate</strong></p>
+      <img src="docs/assets/team/ui-ux-designer-badge.svg" alt="UI/UX Designer" height="26">
+      <p align="left">Creates user flows, wireframes, and Figma prototypes for the four system roles.</p>
+    </td>
+    <td width="20%" align="center" valign="top">
+      <img src="docs/assets/team/rancel-cuervo-portrait.svg" alt="Rancel Cuervo" width="100" height="100">
+      <p><strong>Rancel Cuervo</strong></p>
+      <img src="docs/assets/team/sqa-badge.svg" alt="Software Quality Assurance (SQA)" height="26">
+      <p align="left">Prepares test plans and cases, records test results, and tracks defects.</p>
+    </td>
+  </tr>
+</table>
+
+## System Users
+
+The application has four user roles, distinct from the development team's roles above.
+
+| User role | Main responsibilities |
 |---|---|
-| **Problem** | Manual, one-by-one routing (College Secretary → Instructor via Viber) causes delays, no visibility into who's responded, and no early warning as a student's absence/late count climbs. |
-| **Solution** | Auto-route excuse/late requests to the correct instructor based on schedule, give every role a real-time dashboard, and auto-flag stale requests for follow-up. |
-| **Core policy logic** | 3 lates = 1 absence · alerts fire at 2 absences (warning) and 3 absences (IR/minor offense) |
+| **Student** | Submit absence or late requests with optional evidence, edit or cancel own pending requests, follow up, and view own records and notifications. |
+| **Instructor** | Review requests and evidence for assigned classes, review explanations, and access reports for their assigned classes. |
+| **Program Head** | View program-scoped absenteeism reports, late reports, and excuse-letter records, and coordinate request follow-ups. |
+| **Administrator / College Secretary** | Manage accounts, roles, programs, curriculum, classes, meeting details, and instructor assignments; access college-wide dashboards, reports, and activity logs. |
 
-### Email Domains
+## Request Workflow
 
-| User type | Domain | Role |
-|---|---|---|
-| Student | `@student.laverdad.edu.ph` | `student` |
-| Faculty / Staff | `@laverdad.edu.ph` | `instructor` by default; Admin can assign `program_head` / `administrator` |
+1. **Sign in:** The student accesses ALRM through Google SSO.
+2. **Submit:** The student selects an enrolled class and submits an absence or late report with optional supporting evidence.
+3. **Route:** The system identifies the assigned Instructor and routes the request directly to their dashboard.
+4. **Review:** The Instructor examines the explanation and evidence, then records a decision.
+5. **Track:** The student views the updated request status and notifications.
+6. **Follow up:** The student follows up on pending reports or excuse letters.
 
-Login uses Google SSO. Verified accounts in either official institutional domain are automatically `approved`, including returning institutional accounts still marked `pending`. New students receive the `student` role and new staff receive `instructor`; pre-registered roles are preserved, and Admin can reassign staff roles. Deactivated accounts stay blocked.
+## Core Features
 
-Verified Google accounts outside both exact domains enter as `pending` with the default `student` role. They can complete OTP verification, but role routes remain blocked until an Administrator reviews and approves them. Admin can assign the appropriate role while the external account is pending. Google OAuth audience settings must allow external users for this flow to reach ALRM; an Internal-only Google app blocks them before the callback.
+- Google SSO, email verification, and role-based access.
+- Digital absence and late reports with optional supporting documents.
+- Automatic routing based on class and Instructor assignments.
+- Evidence viewing and request decision workflows.
+- Student request history, pending-request editing/cancellation, and follow-ups.
+- Dashboards scoped to student, class, program, or college records.
+- Email and in-app notifications.
+- Account, curriculum, class, and Instructor assignment management.
+- Activity logs and role-scoped Excel/CSV reports.
 
----
-
-## Tech Stack
+## Technology Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | **React JS** |
-| Backend / API | **Laravel** |
-| Database | **MySQL** |
-| Styling | Tailwind CSS *(or your chosen UI library)* |
-| Frontend hosting | Vercel |
-| Backend hosting | Render |
-| Database hosting | Railway / Aiven / Clever Cloud *(free MySQL — Render free tier has no persistent disk)* |
+| Frontend | React 19, Vite 8, React Router 7 |
+| UI and styling | Tailwind CSS 4, shadcn/ui, Lucide icons |
+| Backend | Laravel 13, PHP, Eloquent ORM |
+| Authentication | Google SSO, Laravel Socialite, Sanctum, frontend cookie gateway |
+| Database | TiDB Cloud / MySQL-compatible database |
+| Evidence storage | Database-backed attachments |
+| Hosting | Vercel for the frontend and gateway; Render for the Laravel API |
 
-> Stack is **fixed** per the course's Technical Requirements Guide: React JS + Laravel, frontend and backend must be separate deployed applications communicating over REST.
+The browser sends same-origin `/api/*` requests through the frontend gateway to Laravel. The API enforces account status, role permissions, and record-level authorization before accessing application data. Dependency ranges are listed in [frontend/package.json](frontend/package.json) and [backend/composer.json](backend/composer.json).
 
----
+## Project Scope
 
-## Deployment Architecture
+**In scope:** Management of absenteeism reports, late reports, and excuse letters, including submission, routing, review, request status tracking, follow-ups, and related notifications and records.
 
-```mermaid
-flowchart TB
-    classDef frontend fill:#6366f1,stroke:#4338ca,color:#fff
-    classDef backend fill:#0ea5e9,stroke:#0284c7,color:#fff
-    classDef external fill:#f59e0b,stroke:#d97706,color:#fff
+**Out of scope:** Automated timetable generation, grade computation, native mobile applications, automated validity decisions, direct Registrar database integration, and Discipline Office case management.
 
-    subgraph FE["Frontend — Vercel (React JS)"]
-        Student["Student Portal"]
-        Instructor["Instructor Dashboard"]
-        ProgHead["Program Head Dashboard"]
-        Admin["Admin Dashboard"]
-    end
+## Project Resources
 
-    subgraph BE["Backend — Laravel REST API (Render)"]
-        route["API Router"]
-        authCtrl["Auth Controller"]
-        reqCtrl["Request Controller"]
-        notifCtrl["Notification Controller"]
-        job["Scheduled Job — flagging + threshold checks"]
-    end
+- [Live Application](https://absenteeism-late-report-and-excuse.vercel.app/)
+- [Business Requirements Document](https://docs.google.com/document/d/1nFqp-fZCyO5j8qZaa6OuOl0lhVbuSWaB7XOIJWw5GpU/edit?tab=t.0)
+- [Final Project Presentation](https://docs.google.com/presentation/d/1IgaBUyXhlFN-42n0C0u3XsV2WxP67OlfTjqVxvPM1ek/edit?slide=id.p1#slide=id.p1)
+- [Figma Design](https://www.figma.com/design/tbmJgm9nCtJfOgPXWYHzaj/ALRM-SYSTEM)
+- [API Documentation](backend/docs/API-DOCS.md)
+- [Backend Notes](backend/BACKEND.md)
 
-    subgraph DB["Database"]
-        mysql["MySQL — Railway / Aiven / Clever Cloud"]
-    end
+Project descriptions and team responsibilities are based on the supplied BRD and presentation. Technical details are aligned with the code and dependency manifests available in this branch.
 
-    Student & Instructor & ProgHead & Admin -->|HTTP / JSON| route
-    route --> authCtrl
-    route --> reqCtrl
-    route --> notifCtrl
-    job --> notifCtrl
-
-    authCtrl & reqCtrl & notifCtrl & job -->|MySQL| mysql
-
-    class Student,Instructor,ProgHead,Admin frontend
-    class route,authCtrl,reqCtrl,notifCtrl,job backend
-    class mysql external
-```
-
-**Request flow (happy path):**
-`Student submits request` → `Laravel auto-resolves instructor via class schedule` → `Instructor approves/notes/invalids` → `Dashboard updates in real time` → `If unanswered past deadline → auto-flagged to Program Head` → `Email + in-app notification fires at every step`
-
----
-
-## User Roles
-
-| Role | Can do |
-|---|---|
-| **Student** | Log in (Using LVCC Email) · submit excuse/late requests · upload evidence · track own status & threshold history |
-| **Instructor** | Review requests for own classes · approve / note / invalid · manually log attendance · view class-level dashboard |
-| **Program Head** | View program-wide (all instructors/sections) · monitor flagged students · receive auto-escalated requests |
-| **Administrator** | College-wide visibility · assign staff roles (Instructor/Program Head/Admin) · manage programs/subjects/schedules · export reports |
-
----
-
-## Getting Started
-
-### Backend (Laravel)
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-# set DB_* values in .env
-php artisan migrate --seed
-php artisan serve
-```
-
-### Frontend (React)
-```bash
-cd frontend
-npm install
-# set VITE_API_URL (or REACT_APP_API_URL) to point to your Laravel API
-npm run dev
-```
-
----
-
-## Project Structure
-
-```
-alrm/
-├── backend/                 # Laravel API
-│   ├── app/Http/Controllers/
-│   ├── app/Models/
-│   ├── database/migrations/
-│   ├── database/seeders/
-│   └── routes/api.php
-└── frontend/                # React JS
-    ├── src/pages/
-    │   ├── student/
-    │   ├── instructor/
-    │   ├── program-head/
-    │   └── admin/
-    ├── src/components/
-    └── src/api/
-```
-
----
-
-## Implementation Phases (To-Do)
-
-### Phase 1 — Backend Foundation
-- [ ] Migrations: `user`, `programs`, `classes`, `enrollments`, `attendance_tracker`, `requests`, `followup_flags`, `notifications`, `audit_log`
-- [ ] Eloquent models + relationships
-- [ ] Role-based auth (Google SSO + email domain validation + staff-only role assignment + middleware guards)
-- [ ] Auto-routing logic: excuse request → correct instructor via schedule lookup
-- [ ] Threshold engine: 3 lates → 1 absence, 2/3-absence count triggers
-- [ ] Scheduled job for follow-up flagging (unanswered requests past deadline)
-- [ ] Seed database with **real** LVCC programs/subjects/accounts — no placeholder/test data
-
-### Phase 2 — Frontend Core
-- [ ] Login using SSO via Google Workspace (`@student.laverdad.edu.ph`)
-- [ ] Student: submit request form, request history, threshold tracker
-- [ ] Instructor: pending requests list, decision actions, class dashboard
-- [ ] Program Head: aggregated program dashboard, flagged-students view
-- [ ] Admin: staff role-assignment queue (staff-only — students never appear here), CRUD for programs/subjects/schedules, dashboard
-
-### Phase 3 — Notifications & Reporting
-- [ ] Email notifications (e.g., new request)
-- [ ] In-app notification bell/list
-- [ ] Exportable reports (PDF/Excel) for accreditation
-- [ ] Audit trail viewer (admin-facing)
-
-### Phase 4 — Polish & Deploy
-- [ ] Form validation + error states (frontend & backend)
-- [ ] Loading/empty states across all dashboards
-- [ ] Deploy backend → Render, frontend → Vercel, DB → Railway/Aiven/Clever Cloud
-- [ ] End-to-end test on deployed URLs with real seeded data
-- [ ] Mobile browser test (student flow)
-- [ ] Confirm login/test credentials are ready for evaluators
-
-### Phase 5 — Optional Enhancements (post-presentation)
-- [ ] SMS/Viber as an additional notification channel
-- [ ] Full multi-role account support (`user_roles` pivot table, any role combination) — the common Instructor+Program Head case is already handled via a `program_head_id` secondary check, so this is only for other combinations
-- [ ] Term-over-term analytics/trend charts
-
----
-
-## Environment Variables
-
-**Backend (`.env`)**
-```
-DB_CONNECTION=mysql
-DB_HOST=
-DB_PORT=
-DB_DATABASE=alrm
-DB_USERNAME=
-DB_PASSWORD=
-MAIL_MAILER=smtp
-MAIL_HOST=
-MAIL_USERNAME=
-MAIL_PASSWORD=
-```
-
-**Frontend (`.env`)**
-```
-VITE_API_URL=https://your-laravel-api.onrender.com/api
-```
+<p align="center"><img src="docs/assets/readme-footer.svg" alt="Built by the ALRM team — BSIS 3, Group 1" width="100%"></p>
