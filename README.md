@@ -4,7 +4,7 @@
 
 A web-based **Absenteeism, Late Report, and Excuse Letter Management System** for **La Verdad Christian College, Inc.**.
 
-**Group 1**
+**BSIS 3 · Group 1**
 
 [Live Application](https://absenteeism-late-report-and-excuse.vercel.app/) · [Figma Design](https://www.figma.com/design/tbmJgm9nCtJfOgPXWYHzaj/ALRM-SYSTEM) · [Business Requirements Document](https://docs.google.com/document/d/1nFqp-fZCyO5j8qZaa6OuOl0lhVbuSWaB7XOIJWw5GpU/edit?tab=t.0) · [Project Presentation](https://docs.google.com/presentation/d/1IgaBUyXhlFN-42n0C0u3XsV2WxP67OlfTjqVxvPM1ek/edit?slide=id.p1#slide=id.p1)
 
