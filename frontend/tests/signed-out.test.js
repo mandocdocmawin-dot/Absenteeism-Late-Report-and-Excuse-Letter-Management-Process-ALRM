@@ -22,7 +22,7 @@ test("the signed-out page shows the current school branding and a link back to t
     React.createElement(TestAuthContext.Provider, { value: { user: null, loading: false, sessionError: "" } }, React.createElement(Page))));
   assert.match(html, /You&#x27;ve been signed out/);
   assert.match(html, /Thanks for using the system/);
-  assert.match(html, /LV_Logo\.png/);
+  assert.match(html, /lv-logo-auth\.webp/);
   assert.match(html, /LV_Picture\.jpg/);
   assert.match(html, /alt="La Verdad Christian College logo"/);
   assert.match(html, /<a[^>]*href="\/login"[^>]*>/);

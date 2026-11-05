@@ -122,7 +122,7 @@ test("profile completion requires the persisted fields for each role", () => {
   assert.equal(profileSetup.isProfileSetupComplete({ id: "head", role: "program_head" }), true);
 });
 
-test("the form button is unavailable until the role-specific fields are complete", () => {
+test("the form asks only for missing role-specific fields", () => {
   const incompleteStudent = renderProfile({ id: "student-1", role: "student", program_id: "", school_id_number: "", year_level: "" });
   assert.equal(isDisabled(submitButton(incompleteStudent)), true);
 
@@ -136,7 +136,7 @@ test("the form button is unavailable until the role-specific fields are complete
 
   const completeInstructor = renderProfile({ id: "database-uuid", role: "instructor", program_id: "program-1", school_id_number: "FAC-2026-001" });
   assert.equal(isDisabled(submitButton(completeInstructor)), false);
-  assert.match(completeInstructor, /value="FAC-2026-001"/);
+  assert.doesNotMatch(completeInstructor, /setup-school-id-number/);
   assert.doesNotMatch(completeInstructor, /value="database-uuid"/);
 
   const completeStaff = renderProfile({ id: "staff-1", role: "program_head", program_id: "program-1" });
