@@ -3,8 +3,7 @@ import FilterMenu, { RadioFilterGroup as FilterGroup } from "@/components/common
 import { ROLE_LABELS } from "./userManagementData.js";
 import { getSelectablePrograms } from "@/lib/programs";
 
-const yearOptions = [{ value: "", label: "All years" }, { value: "1", label: "1st year" }, { value: "2", label: "2nd year" }, { value: "3", label: "3rd year" }, { value: "4", label: "4th year" }];
-const statusOptions = [{ value: "", label: "All accounts" }, { value: "pending", label: "Awaiting first sign-in" }, { value: "approved", label: "Active accounts" }, { value: "deactivated", label: "Deactivated accounts" }];
+const yearOptions = [{ value: "", label: "All years" }, { value: "1", label: "1st year" }, { value: "2", label: "2nd year" }, { value: "3", label: "3rd year" }, { value: "4", label: "4th year" }, { value: "unassigned", label: "Unassigned" }];
 
 export function UserFilterOptions({ filters, programs, loading, programError, disabled, onChange }) {
   return <div className="grid gap-3 divide-y divide-slate-100 [&>fieldset:not(:first-child)]:pt-3">
@@ -16,8 +15,8 @@ export function UserFilterOptions({ filters, programs, loading, programError, di
     {programError && <p role="status" className="text-xs text-red-700">Programs could not be loaded.</p>}
     {filters.role === "student" && <FilterGroup name="year" label="Year" value={filters.year} disabled={disabled} onChange={onChange}
       options={yearOptions} />}
-    <FilterGroup name="status" label="Account status" value={filters.status} disabled={disabled} onChange={onChange}
-      options={statusOptions} />
+    {filters.tab === "approved" && <FilterGroup name="status" label="Account status" value={filters.status} disabled={disabled} onChange={onChange}
+      options={[{ value: "approved", label: "Approved accounts" }, { value: "deactivated", label: "Deactivated accounts" }]} />}
   </div>;
 }
 
@@ -28,7 +27,7 @@ export default function UserManagementFilters(props) {
     filters.role && { name: "role", label: `Role: ${ROLE_LABELS[filters.role] || filters.role}`, Icon: UsersRound },
     filters.program && { name: "program", label: `Program: ${program?.program_name || program?.name || "Selected program"}`, Icon: GraduationCap },
     filters.role === "student" && filters.year && { name: "year", label: `Year: ${yearOptions.find(option => option.value === filters.year)?.label || filters.year}`, Icon: CalendarDays },
-    filters.status && { name: "status", label: statusOptions.find(option => option.value === filters.status)?.label || filters.status, reset: "", Icon: UsersRound },
+    filters.tab === "approved" && filters.status === "deactivated" && { name: "status", label: "Deactivated accounts", reset: "approved", Icon: UsersRound },
   ].filter(Boolean);
   return <FilterMenu chips={chips} disabled={disabled} onChange={onChange}><UserFilterOptions {...props} /></FilterMenu>;
 }

@@ -1,17 +1,5 @@
 import { historicalInstructor, historicalRequestClass } from "../../../lib/requestHistory.js";
 
-export function programThresholdSummary(dashboard) {
-  const count = (value) => Number.isSafeInteger(value) && value >= 0 ? value : null;
-  const warning = count(dashboard?.warning_count);
-  const critical = count(dashboard?.critical_count);
-  const ir = count(dashboard?.ir_count);
-  return { warning, critical, ir, total: [warning, critical, ir].every(value => value !== null) ? warning + critical + ir : null };
-}
-
-export function flagThresholdLabel(flag) {
-  return { safe: "Safe", warning: "Warning", critical: "Critical", IR: "Incident Report" }[flag.threshold] || "Threshold unavailable";
-}
-
 export function requestDate(request) {
   const value = request.date_submitted || request.created_at;
   const date = value ? new Date(value) : null;

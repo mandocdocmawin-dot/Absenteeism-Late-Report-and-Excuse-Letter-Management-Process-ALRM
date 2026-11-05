@@ -49,5 +49,6 @@ export default function AdminDepartmentChart({ programs = [] }) {
       {!data.some(row => row.absences > 0) && <p className="pointer-events-none absolute inset-x-10 top-1/2 text-center text-sm text-slate-500">No absence reports for this week.</p>}
       <ul className="sr-only">{data.map(row => <li key={row.name}>{row.name}: {row.absences} absence reports. Late total unavailable.</li>)}</ul>
     </div>}
+    <p className="mt-3 text-xs text-slate-500">Counts reflect submitted absence reports. Late totals are currently unavailable.</p>
   </section>;
 }

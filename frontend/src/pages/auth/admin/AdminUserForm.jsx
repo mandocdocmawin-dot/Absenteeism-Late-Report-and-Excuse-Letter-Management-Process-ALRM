@@ -126,7 +126,7 @@ export default function AdminUserForm({
     setSubmitting(true);
     try {
       const result = await createAdminUser(values);
-      setSuccess(`${result?.data?.name || "User"} added. The roster entry activates on its first institutional Google sign-in.`);
+      setSuccess(result?.message || "User pre-registered. The account remains pending until its first institutional Google sign-in.");
       setValues(initialForm(initialRole));
       onCreated?.(result);
     } catch (error) {
@@ -145,7 +145,7 @@ export default function AdminUserForm({
         <FieldSet>
           <FieldLegend className="text-base font-bold text-slate-950">{sectionTitle}</FieldLegend>
           <Separator className="bg-transparent" />
-          {success && <Alert className="border-green-200 bg-green-50 text-green-900"><CheckCircle2 className="size-4" /><AlertTitle>User added</AlertTitle><AlertDescription className="text-green-800">{success}</AlertDescription></Alert>}
+          {success && <Alert className="border-green-200 bg-green-50 text-green-900"><CheckCircle2 className="size-4" /><AlertTitle>Pending account created</AlertTitle><AlertDescription className="text-green-800">{success}</AlertDescription></Alert>}
           {(submitError || programError) && <Alert variant="destructive"><AlertCircle className="size-4" /><AlertTitle>Unable to save</AlertTitle><AlertDescription>{submitError || programError}</AlertDescription></Alert>}
           <FieldGroup className="grid gap-x-12 gap-y-6 md:grid-cols-2">
             <TextField name="first_name" label="First Name" value={values.first_name} onChange={handleChange} placeholder="Enter first name" icon={User} error={errors.first_name} />

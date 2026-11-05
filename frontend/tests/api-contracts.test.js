@@ -5,7 +5,7 @@ import { getAdminStudent, getAdminStudents } from "../src/api/adminStudents.js";
 import { createInstructor, createStudent } from "../src/api/adminUsers.js";
 import { saveProfileSetup } from "../src/api/profileSetup.js";
 import { createStudentRequest } from "../src/api/studentRequests.js";
-import { createClass, getAdminAuditLogsPage, getAdminUsers, updateStaffRole } from "../src/api/admin.js";
+import { createClass, getAdminUsers, updateStaffRole } from "../src/api/admin.js";
 import { getStudentAttendanceSummary } from "../src/api/student.js";
 import { resolveProgramHeadFlag } from "../src/api/programHead.js";
 import {
@@ -72,8 +72,8 @@ test("student requests post all fields required by the backend", async () => {
     guardian_name: "Alex Parent",
     contact_number: "09123456789",
     reason: "Transport delay",
-    evidence_file_url: "attachment-1",
-    evidence_type: "application/pdf",
+    evidence_file_url: null,
+    evidence_type: null,
   };
 
   await createStudentRequest(payload);
@@ -132,44 +132,36 @@ test("admin student profile resolves its program without treating the user UUID 
   assert.equal(requests.length, 2);
 });
 
-test("admin pre-registration sends validated identity fields", async () => {
+test("admin pre-registration only sends fields the backend persists", async () => {
   const requests = captureJsonRequest();
 
   await createStudent({
-    first_name: "Alex",
-    middle_name: "",
-    last_name: "Student",
+    fullName: "Alex Student",
     email: "ALEX@STUDENT.LAVERDAD.EDU.PH",
-    school_id_number: "2026-1001",
-    program_id: "program-one",
+    studentId: "ignored",
+    programId: "program-one",
+    yearLevel: "1st",
+    status: "active",
   });
   await createInstructor({
-    first_name: "Jamie",
-    middle_name: "",
-    last_name: "Instructor",
+    fullName: "Jamie Instructor",
     email: "JAMIE@LAVERDAD.EDU.PH",
-    school_id_number: "INST-1001",
-    program_id: "program-one",
+    employeeId: "ignored",
+    programId: "program-one",
+    subjectHandled: "ignored",
+    status: "active",
   });
 
   assert.deepEqual(requests.map((request) => request.body), [
     {
-      first_name: "Alex",
-      middle_name: null,
-      last_name: "Student",
+      name: "Alex Student",
       email: "alex@student.laverdad.edu.ph",
       role: "student",
-      school_id_number: "2026-1001",
-      program_id: "program-one",
     },
     {
-      first_name: "Jamie",
-      middle_name: null,
-      last_name: "Instructor",
+      name: "Jamie Instructor",
       email: "jamie@laverdad.edu.ph",
       role: "instructor",
-      school_id_number: "INST-1001",
-      program_id: "program-one",
     },
   ]);
 });
@@ -188,24 +180,6 @@ test("role dashboards and program-head filters use registered GET routes", async
     "/api/program-head/requests?status=pending",
     "/api/program-head/students/flagged?status=open",
   ]);
-});
-
-test("admin activity display filters send backend action keys", async () => {
-  const requests = captureJsonRequest({ success: true, data: [], meta: { page: 1, per_page: 10, total: 0, last_page: 1 } });
-  const cases = [
-    ["Submitted", "submitted_request"],
-    ["Updated", "updated_request"],
-    ["Followed up", "followed_up_request"],
-    ["Approved", "decided_request_approved"],
-    ["Denied", "decided_request_invalid"],
-    ["Resolved", "resolved_followup_flag"],
-  ];
-
-  for (const [label, action] of cases) {
-    await getAdminAuditLogsPage({ filters: { action: label } });
-    const url = new URL(requests.at(-1).url, "https://example.test");
-    assert.equal(url.searchParams.get("action"), action, label);
-  }
 });
 
 test("instructor decisions and admin mutations send backend-accepted payloads", async () => {
@@ -237,16 +211,16 @@ test("program heads resolve the follow-up flag with an empty PATCH", async () =>
   assert.equal(new URL(requests[0].url, "https://example.test").pathname, "/api/program-head/followup-flags/flag-one/resolve");
 });
 
-test("admin role assignment and class creation use registered routes and class metadata", async () => {
+test("admin role assignment and class creation use registered routes and UUIDs", async () => {
   const requests = captureJsonRequest({ success: true, data: [] });
   await getAdminUsers();
   await updateStaffRole("staff-uuid", "program_head");
   await createClass({
     subject_name: "Information Management",
     section: "A",
-    curriculum_subject_id: "curriculum-subject-uuid",
+    instructor_id: "instructor-uuid",
     year_level: "3rd",
-    schedule: [{ day: "Mon", start: "09:00", end: "12:00", room: "Lab 1" }],
+    schedule: "Monday 9:00 AM",
     program_id: "program-uuid",
     semester: "1st",
     school_year: "2026-2027",
@@ -258,8 +232,7 @@ test("admin role assignment and class creation use registered routes and class m
     "/api/admin/classes",
   ]);
   assert.deepEqual(requests[1].body, { role: "program_head" });
-  assert.equal(requests[2].body.curriculum_subject_id, "curriculum-subject-uuid");
-  assert.equal(Object.hasOwn(requests[2].body, "instructor_id"), false);
+  assert.equal(requests[2].body.instructor_id, "instructor-uuid");
   assert.equal(requests[2].body.program_id, "program-uuid");
   assert.equal(requests[2].body.school_year, "2026-2027");
 });

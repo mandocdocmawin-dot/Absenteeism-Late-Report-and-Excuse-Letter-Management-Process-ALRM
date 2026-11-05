@@ -1,7 +1,7 @@
 import { mockApiFetch } from "./helpers/mockApiFetch.js";
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
-import { changeManagedUser, getUserManagementPrograms, getUserManagementUsers, getUserManagementUsersPage, userManagementPageCacheKey } from "../src/api/adminUserManagement.js";
+import { changeManagedUser, getUserManagementPrograms, getUserManagementUsers } from "../src/api/adminUserManagement.js";
 import { filterUsers, paginateUsers, studentYearSection, userDepartment, userDisplayId, userErrorMessage, userPermissions } from "../src/pages/auth/admin/userManagementData.js";
 
 const accounts = [
@@ -18,9 +18,9 @@ beforeEach(() => {
 });
 afterEach(() => mock.restoreAll());
 
-test("one user list includes every status and supports explicit status filters", () => {
-  assert.deepEqual(filterUsers(accounts).map((user) => user.id), ["staff1", "s2", "staff2", "s1"]);
-  assert.deepEqual(filterUsers(accounts, { status: "pending" }).map((user) => user.id), ["staff1"]);
+test("approved, waiting, and deactivated views select actual status values", () => {
+  assert.deepEqual(filterUsers(accounts).map((user) => user.id), ["s2", "s1"]);
+  assert.deepEqual(filterUsers(accounts, { tab: "waiting" }).map((user) => user.id), ["staff1"]);
   assert.deepEqual(filterUsers(accounts, { status: "deactivated" }).map((user) => user.id), ["staff2"]);
   assert.equal(filterUsers([{ ...accounts[3], status: "inactive" }], { status: "deactivated" }).length, 1);
 });
@@ -28,25 +28,7 @@ test("one user list includes every status and supports explicit status filters",
 test("role, program, and trimmed case-insensitive search combine", () => {
   assert.deepEqual(filterUsers(accounts, { role: "student", program: "p1", search: "  2026-001  " }, programs).map((user) => user.id), ["s1"]);
   assert.equal(filterUsers(accounts, { role: "student", program: "p1", search: "BSSW" }, programs).length, 0);
-  assert.equal(filterUsers(accounts, { status: "pending", program: "p1", search: "ADA@LAVERDAD" }, programs).length, 1);
-});
-
-test("instructor program filter matches primary program rather than additional memberships", () => {
-  const users = Array.from({ length: 20 }, (_, index) => ({
-    id: `instructor-${index}`, name: `Instructor ${String(index).padStart(2, "0")}`,
-    role: "instructor", status: "approved", program_id: index < 5 ? "p1" : "p2",
-    programs: [{ id: "p1", program_name: "BSIS" }, { id: "p1", program_name: "BSIS" }],
-  }));
-  const outsider = { id: "outside", name: "Outside", role: "instructor", program_id: "p2", programs: null };
-  const filtered = filterUsers([...users, outsider], { role: "instructor", program: "p1" }, programs);
-  assert.equal(filtered.length, 5);
-  assert.equal(new Set(filtered.map(user => user.id)).size, 5);
-  assert.equal(paginateUsers(filtered).pageCount, 1);
-  assert.equal(filterUsers(users, { role: "instructor", program: "p1", search: "Instructor 19", status: "approved" }, programs).length, 0);
-  assert.equal(filterUsers([{ ...users[0], program_id: null, programs: [{ id: 42 }] }], { program: "42" }).length, 1);
-  assert.equal(filterUsers([{ ...users[0], program_id: null, programs: [{ id: "p1" }, { id: "p2" }] }], { program: "p1" }).length, 0);
-  assert.equal(filterUsers([{ ...users[0], program_id: 42 }], { program: "42" }).length, 1);
-  assert.equal(filterUsers([outsider], { program: "p1" }).length, 0);
+  assert.equal(filterUsers(accounts, { tab: "waiting", program: "p1", search: "ADA@LAVERDAD" }, programs).length, 1);
 });
 
 test("student year filtering combines with role, program and search without affecting staff views", () => {
@@ -58,7 +40,7 @@ test("student year filtering combines with role, program and search without affe
   assert.deepEqual(filterUsers(users, { role: "student", year: "3", program: "p1", search: "Alex" }, programs).map(user => user.id), ["numeric-year", "third-year"]);
   assert.deepEqual(filterUsers(users, { role: "student", year: "unassigned" }, programs).map(user => user.id), ["unassigned-year"]);
   assert.equal(filterUsers(users, { role: "student", year: "4" }, programs).length, 0);
-  assert.equal(filterUsers(users, { role: "instructor", status: "pending", year: "3" }, programs)[0].id, "staff1");
+  assert.equal(filterUsers(users, { role: "instructor", tab: "waiting", year: "3" }, programs)[0].id, "staff1");
   assert.equal(filterUsers(users, { role: "student", year: "", program: "p1" }, programs).length, 4);
 });
 
@@ -140,7 +122,7 @@ test("self accounts, unknown sessions, and students cannot receive inappropriate
   assert.deepEqual(userPermissions(accounts[2], "staff1"), { changeRole: false, changeStatus: false });
   assert.deepEqual(userPermissions(accounts[2], null), { changeRole: false, changeStatus: false });
   assert.deepEqual(userPermissions(accounts[0], "admin"), { changeRole: false, changeStatus: true });
-  assert.deepEqual(userPermissions(accounts[2], "admin"), { changeRole: true, changeStatus: false });
+  assert.deepEqual(userPermissions(accounts[2], "admin"), { changeRole: true, changeStatus: true });
 });
 
 test("user listing follows bounded collection metadata before local search or pagination", async () => {
@@ -156,58 +138,6 @@ test("user listing follows bounded collection metadata before local search or pa
   assert.equal(filterUsers(users, { search: "Last User" })[0].id, "last-user");
   assert.deepEqual(pages.map((url) => url.searchParams.get("page")), ["1", "2"]);
   assert.ok(pages.every((url) => url.pathname === "/api/admin/users" && url.searchParams.get("per_page") === "100"));
-});
-
-test("user management loads only the requested server page with supported filters", async () => {
-  const controller = new AbortController();
-  let request;
-  mockApiFetch(async (url, options) => {
-    request = { url: new URL(url, "https://example.test"), options };
-    return Response.json({ success: true, data: [{ id: "visible-user" }], meta: { page: 2, per_page: 10, total: 21, last_page: 3 } });
-  });
-
-  const result = await getUserManagementUsersPage({
-    page: 2,
-    perPage: 10,
-    filters: { search: "  Ada  ", status: "approved", role: "student", program: "p1", year: "3" },
-    signal: controller.signal,
-  });
-
-  assert.deepEqual(result, { data: [{ id: "visible-user" }], meta: { page: 2, per_page: 10, total: 21, last_page: 3 } });
-  assert.equal(request.options.signal, controller.signal);
-  assert.equal(request.url.pathname, "/api/admin/users");
-  assert.deepEqual(Object.fromEntries(request.url.searchParams), {
-    search: "Ada", status: "approved", role: "student", program_id: "p1", year_level: "3rd", page: "2", per_page: "10",
-  });
-});
-
-test("user management omits blank filters and does not silently send unsupported unassigned years", async () => {
-  const requests = [];
-  mockApiFetch(async (url) => {
-    requests.push(new URL(url, "https://example.test"));
-    return Response.json({ success: true, data: [], meta: { page: 1, per_page: 10, total: 0, last_page: 1 } });
-  });
-
-  await getUserManagementUsersPage({ filters: { search: " ", status: "", role: "", program: "", year: "" } });
-  assert.throws(() => getUserManagementUsersPage({ filters: { year: "unassigned" } }), /not supported/);
-  assert.deepEqual(Object.fromEntries(requests[0].searchParams), { page: "1", per_page: "10" });
-  assert.equal(requests.length, 1);
-});
-
-test("user management cache keys are stable per server page and normalized filter set", () => {
-  const filters = { search: " Ada ", status: "approved", role: "student", program: "p1", year: "3" };
-  assert.equal(userManagementPageCacheKey(2, filters), userManagementPageCacheKey(2, { ...filters, search: "Ada" }));
-  assert.notEqual(userManagementPageCacheKey(1, filters), userManagementPageCacheKey(2, filters));
-  assert.notEqual(userManagementPageCacheKey(2, filters), userManagementPageCacheKey(2, { ...filters, status: "deactivated" }));
-});
-
-test("user management receives out-of-range metadata so the page can recover to the last page", async () => {
-  mockApiFetch(async () => Response.json({
-    success: true, data: [], meta: { page: 99, per_page: 10, total: 12, last_page: 2 },
-  }));
-  assert.deepEqual(await getUserManagementUsersPage({ page: 99 }), {
-    data: [], meta: { page: 99, per_page: 10, total: 12, last_page: 2 },
-  });
 });
 
 test("failure on a later collection page does not publish a truncated list", async () => {
@@ -230,16 +160,20 @@ test("program list uses the same complete collection reader", async () => {
   assert.ok(requested.includes("/api/admin/programs?"));
 });
 
-test("pending roster entries cannot issue status mutations", async () => {
-  const fetch = mockApiFetch(async () => { throw new Error("Unexpected mutation"); });
-  await assert.rejects(changeManagedUser(accounts[2], "admin", "status", "approved"), /not available/);
-  await assert.rejects(changeManagedUser(accounts[2], "admin", "status", "deactivated"), /not available/);
-  assert.equal(fetch.mock.callCount(), 0);
+test("pending approval is stored before the user's first Google sign-in", async () => {
+  const updated = { ...accounts[2], status: "approved", google_id: null };
+  mockApiFetch(async (url, options) => {
+    assert.ok(String(url).endsWith("/admin/users/staff1/status"));
+    assert.equal(options.method, "PATCH");
+    assert.deepEqual(JSON.parse(options.body), { status: "approved" });
+    return Response.json({ success: true, data: updated });
+  });
+  assert.deepEqual(await changeManagedUser(accounts[2], "admin", "status", "approved"), updated);
 });
 
 test("status actions require a confirmed resource and never fabricate success from empty HTTP 200", async () => {
   mockApiFetch(async () => Response.json({ success: true, data: null }));
-  await assert.rejects(changeManagedUser(accounts[3], "admin", "status", "approved"), /did not confirm/);
+  await assert.rejects(changeManagedUser(accounts[2], "admin", "status", "approved"), /did not confirm/);
 });
 
 test("role assignment preserves account status and uses the existing staff endpoint", async () => {
@@ -268,7 +202,7 @@ test("deactivation and reactivation require matching server status and resource 
     return Response.json({ success: true, data: { ...account, status: JSON.parse(options.body).status } });
   });
   assert.equal((await changeManagedUser(accounts[0], "admin", "status", "deactivated")).status, "deactivated");
-  await assert.rejects(changeManagedUser(accounts[2], "admin", "status", "deactivated"), /not available/);
+  assert.equal((await changeManagedUser(accounts[2], "admin", "status", "deactivated")).status, "deactivated");
   assert.equal((await changeManagedUser(accounts[3], "admin", "status", "approved")).status, "approved");
   mockApiFetch(async () => Response.json({ success: true, data: { ...accounts[0], status: "approved" } }));
   await assert.rejects(changeManagedUser(accounts[3], "admin", "status", "approved"), /did not confirm/);

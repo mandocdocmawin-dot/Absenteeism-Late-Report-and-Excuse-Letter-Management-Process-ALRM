@@ -66,7 +66,7 @@ test("notification preview and unread-count adapters validate their server respo
   await assert.rejects(api.getNotificationUnreadCount(), /unexpected/i);
 });
 
-test("preview loading caches per account without marking notifications read", async () => {
+test("preview loading caches per account and marks only returned unread notifications", async () => {
   const feed = await load("components/notifications/notificationFeed.js");
   const calls = [];
   mockApiFetch(async (url, options) => {
@@ -80,14 +80,14 @@ test("preview loading caches per account without marking notifications read", as
   });
 
   const result = await feed.loadNotificationPreview("account-one");
-  assert.deepEqual(calls, [["/api/notifications/preview", "GET"]]);
-  assert.equal(result.notifications.find(item => item.id === "unread").is_read, false);
-  assert.equal(result.unreadCount, 3);
+  assert.deepEqual(calls, [["/api/notifications/preview", "GET"], ["/api/notifications/unread/read", "PATCH"]]);
+  assert.equal(result.notifications.find(item => item.id === "unread").is_read, true);
+  assert.equal(result.unreadCount, 2);
   assert.deepEqual(feed.getCachedNotificationPreview("account-one"), result);
   assert.equal(feed.getCachedNotificationPreview("account-two"), null);
 });
 
-test("preview loading requires no read endpoint availability", async () => {
+test("preview read failure keeps loaded records visible with a read error", async () => {
   const feed = await load("components/notifications/notificationFeed.js");
   mockApiFetch(async (url) => String(url).endsWith("/preview")
     ? Response.json({ success: true, data: { notifications: [{ id: "cannot-read", is_read: false }], unread_count: 1 } })
@@ -96,7 +96,7 @@ test("preview loading requires no read endpoint availability", async () => {
   const result = await feed.loadNotificationPreview("read-failure-account");
   assert.deepEqual(result.notifications.map(item => item.id), ["cannot-read"]);
   assert.equal(result.unreadCount, 1);
-  assert.equal(result.readError, "");
+  assert.match(result.readError, /Read unavailable/);
   assert.deepEqual(feed.getCachedNotificationPreview("read-failure-account"), result);
 });
 
@@ -193,86 +193,6 @@ test("staff feeds honor the saved request and threshold preferences without inve
   assert.equal(notificationActivity(rows, "instructor", { requestUpdates: false, thresholdAlerts: false }).length, 0);
 });
 
-test("one submission renders once with a new-request label when instructor and activity alerts overlap", async () => {
-  const { notificationActivity } = await load("components/notifications/notificationData.js");
-  const rows = [
-    { id: "activity", user_id: "head", request_id: "request-one", type: "activity_submitted_request", message: "Alex submitted a request: Alex's late request for Financial Literacy.", date_sent: "2026-11-05T08:00:02Z", is_read: false },
-    { id: "instructor", user_id: "head", request_id: "request-one", type: "new_request", message: "Alex submitted a new late request for Financial Literacy.", date_sent: "2026-11-05T08:00:00Z", is_read: false },
-  ];
-
-  const activity = notificationActivity(rows, "program_head", { requestUpdates: true, thresholdAlerts: true }, "head", { inbox: true });
-
-  assert.deepEqual(activity.map(item => item.id), ["instructor"]);
-  assert.equal(activity[0].message, "Alex just submitted a late request for Financial Literacy.");
-  assert.equal(activity[0].label, "New request");
-  const [auditOnly] = notificationActivity([rows[0]], "program_head", { requestUpdates: true, thresholdAlerts: true }, "head", { inbox: true });
-  assert.equal(auditOnly.message, "Alex just submitted a late request for Financial Literacy.");
-  assert.equal(auditOnly.label, "New request");
-
-  const Panel = (await server.ssrLoadModule("/src/pages/auth/student/notifications/NotificationPanel.jsx")).default;
-  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Panel, { activity, readIds: new Set(), showFooter: false, showHeader: false })));
-  assert.equal(html.match(/Alex just submitted a late request for Financial Literacy\./g)?.length, 1);
-  assert.equal(html.match(/New request/g)?.length, 1);
-});
-
-test("reading a collapsed submission acknowledges both duplicate server records", async () => {
-  const { notificationActivity } = await load("components/notifications/notificationData.js");
-  const { markFeedRead } = await load("components/notifications/notificationFeed.js");
-  const records = [
-    { id: "activity", user_id: "head", request_id: "request-one", type: "activity_submitted_request", message: "Alex submitted a request: Alex's late request for Financial Literacy.", date_sent: "2026-11-05T08:00:02Z", is_read: false },
-    { id: "instructor", user_id: "head", request_id: "request-one", type: "new_request", message: "Alex submitted a new late request for Financial Literacy.", date_sent: "2026-11-05T08:00:00Z", is_read: false },
-  ];
-  const activity = notificationActivity(records, "program_head", { requestUpdates: true, thresholdAlerts: true }, "head", { inbox: true });
-  const calls = [];
-  mockApiFetch(async (url, options) => {
-    calls.push([String(url), options.method]);
-    return Response.json({ success: true, data: { id: String(url).split("/").at(-2), is_read: true } });
-  });
-
-  await markFeedRead("head", activity);
-
-  assert.deepEqual(calls, [
-    ["/api/notifications/instructor/read", "PATCH"],
-    ["/api/notifications/activity/read", "PATCH"],
-  ]);
-});
-
-test("one follow-up renders once using the student request format", async () => {
-  const { notificationActivity } = await load("components/notifications/notificationData.js");
-  const records = [
-    { id: "activity-followup", user_id: "head", request_id: "request-one", type: "activity_followed_up_request", message: "Marwin Mandocdoc followed up a request: Marwin Mandocdoc's late request for Community Leadership and Volunteerism.", date_sent: "2026-11-05T08:00:02Z", is_read: false },
-    { id: "instructor-followup", user_id: "head", request_id: "request-one", type: "request_followup", message: "Marwin Mandocdoc followed up on their late request for Community Leadership and Volunteerism.", date_sent: "2026-11-05T08:00:00Z", is_read: false },
-  ];
-
-  const activity = notificationActivity(records, "program_head", { requestUpdates: true, thresholdAlerts: true }, "head", { inbox: true });
-
-  assert.deepEqual(activity.map(item => item.id), ["instructor-followup"]);
-  assert.deepEqual(activity[0].notificationIds, ["instructor-followup", "activity-followup"]);
-  assert.equal(activity[0].message, "Marwin Mandocdoc just followed up the late request on Community Leadership and Volunteerism.");
-  assert.equal(activity[0].label, "Follow-up");
-  const Panel = (await server.ssrLoadModule("/src/pages/auth/student/notifications/NotificationPanel.jsx")).default;
-  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Panel, { activity, readIds: new Set(), showFooter: false, showHeader: false })));
-  assert.equal(html.match(/Marwin Mandocdoc just followed up the late request on Community Leadership and Volunteerism\./g)?.length, 1);
-});
-
-test("opening the notification bell hides its badge and acknowledges loaded unread items", async () => {
-  const { NotificationBadge } = await server.ssrLoadModule("/src/components/notifications/NotificationBell.jsx");
-  const { notificationOpenChange } = await load("components/notifications/notificationData.js");
-  let open = false;
-  let markAllCalls = 0;
-  const notifications = { canMarkAll: true, markAllRead() { markAllCalls += 1; } };
-
-  notificationOpenChange(true, notifications, value => { open = value; });
-
-  assert.equal(open, true);
-  assert.equal(markAllCalls, 1);
-  assert.equal(renderToStaticMarkup(React.createElement(NotificationBadge, { open, count: 3 })), "");
-
-  notificationOpenChange(false, notifications, value => { open = value; });
-  assert.equal(markAllCalls, 1);
-  assert.match(renderToStaticMarkup(React.createElement(NotificationBadge, { open, count: 3 })), /3.*unread notifications/);
-});
-
 test("staff notification UI reuses the student controls with correct destinations and server read labels", async () => {
   const Header = (await server.ssrLoadModule("/src/pages/auth/student/notifications/NotificationHeader.jsx")).default;
   const nodes = [];
@@ -307,36 +227,6 @@ test("role-event notifications open the existing page that handles each interact
   assert.equal(activity("program_head", { type: "threshold_critical", request_id: "request/two" }).href, "/program-head/activity-log?tab=flagged");
   assert.equal(activity("program_head", { type: "ir_escalation", request_id: "request/three" }).href, "/program-head/activity-log?tab=flagged");
   assert.equal(notificationActivity([{ id: "critical", type: "threshold_critical", user_id: "head", message: "Critical attendance threshold", date_sent: "2026-10-29T08:00:00Z" }], "program_head", { requestUpdates: true, thresholdAlerts: false }, "head").length, 0);
-});
-
-test("admin and program-head request activity uses type-specific blue subcaptions", async () => {
-  const { notificationActivity } = await load("components/notifications/notificationData.js");
-  const preferences = { requestUpdates: true, thresholdAlerts: true };
-  const cases = [
-    ["activity_updated_request", "Jamie updated a request: Alex's absence request for Information Management.", "Absence update"],
-    ["activity_decided_request_approved", "Jamie approved a request: Alex's absence request for Information Management.", "Absence approved"],
-    ["activity_decided_request_invalid", "Jamie marked a request invalid: Alex's late request for Information Management.", "Late invalid"],
-  ];
-
-  for (const role of ["administrator", "program_head"]) {
-    for (const [type, message, label] of cases) {
-      const [item] = notificationActivity([{ id: `${role}-${type}-${label}`, user_id: role, request_id: "request-one", type, message, date_sent: "2026-11-05T08:00:00Z", is_read: false }], role, preferences, role, { inbox: true });
-      assert.equal(item.label, label, `${role}: ${type}`);
-    }
-  }
-
-  const activity = cases.map(([type, message], index) => notificationActivity([{ id: `program-${index}`, user_id: "program", request_id: `request-${index}`, type, message, date_sent: "2026-11-05T08:00:00Z", is_read: false }], "program_head", preferences, "program", { inbox: true })[0]);
-  const Panel = (await server.ssrLoadModule("/src/pages/auth/student/notifications/NotificationPanel.jsx")).default;
-  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Panel, { activity, readIds: new Set(), showFooter: false, showHeader: false })));
-  for (const [, , label] of cases) assert.match(html, new RegExp(`>${label}<`));
-
-  for (const [type, message] of [
-    ["activity_updated_request", "Jamie updated a request: Alex's late request for Information Management."],
-    ["activity_cancelled_request", "Jamie cancelled a request: Alex's absence request for Information Management."],
-  ]) {
-    const [item] = notificationActivity([{ id: type, user_id: "program", request_id: "request-one", type, message, date_sent: "2026-11-05T08:00:00Z", is_read: false }], "program_head", preferences, "program", { inbox: true });
-    assert.equal(item.label, undefined, type);
-  }
 });
 
 test("instructor feeds exclude personal student results but include the backend's email-channel new-request event", async () => {

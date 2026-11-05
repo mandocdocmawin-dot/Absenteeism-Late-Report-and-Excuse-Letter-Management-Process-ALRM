@@ -39,22 +39,24 @@ test("non-student details have a labeled native modal with actual account data",
 });
 
 test("status actions send the existing mutation field and value for each account state", () => {
-  for (const [status, label, value] of [["approved", "Deactivate Account", "deactivated"], ["deactivated", "Activate Account", "approved"], ["inactive", "Activate Account", "approved"]]) {
+  for (const [status, label, value] of [["approved", "Deactivate Account", "deactivated"], ["pending", "Approve Account", "approved"], ["deactivated", "Activate Account", "approved"], ["inactive", "Activate Account", "approved"]]) {
     const changes = [];
     const element = tree({ user: { ...account, status }, onChange: (...args) => changes.push(args) });
     action(element, label).props.onClick();
     assert.deepEqual(changes, [["status", value]]);
   }
-  assert.match(render({ user: { ...account, status: "pending" } }), /first institutional Google sign-in/);
+  assert.match(render({ user: { ...account, status: "pending" } }), /first Google sign-in/);
 });
 
-test("pending roster entries show status without approval or decline actions", () => {
+test("pending accounts have a green approval action and a non-destructive decline action", () => {
   const changes = [];
   const element = tree({ user: { ...account, status: "pending" }, onChange: (...args) => changes.push(args) });
-  assert.equal(action(element, "Approve Account"), undefined);
-  assert.equal(action(element, "Decline"), undefined);
-  assert.match(render({ user: { ...account, status: "pending" } }), /Awaiting first sign-in/);
-  assert.deepEqual(changes, []);
+  const approve = action(element, "Approve Account");
+  const decline = action(element, "Decline");
+  assert.match(approve.props.className, /bg-green-600/);
+  approve.props.onClick();
+  decline.props.onClick();
+  assert.deepEqual(changes, [["status", "approved"], ["status", "deactivated"]]);
   assert.equal(action(element, "Delete Account"), undefined);
 });
 
@@ -84,8 +86,8 @@ test("students use the same modal with their academic details and status action"
   for (const value of ["2026-001", "BSIS", "Year/Section", "3rd / BSIS 3", "Deactivate Account"]) assert.ok(html.includes(value), value);
   assert.doesNotMatch(html, /Assign role|<select/);
   const changes = [];
-  assert.equal(action(tree({ user: { ...student, status: "pending" }, onChange: (...args) => changes.push(args) }), "Approve Account"), undefined);
-  assert.deepEqual(changes, []);
+  action(tree({ user: { ...student, status: "pending" }, onChange: (...args) => changes.push(args) }), "Approve Account").props.onClick();
+  assert.deepEqual(changes, [["status", "approved"]]);
 });
 
 test("missing account fields use existing fallbacks", () => {
@@ -127,66 +129,12 @@ test("native modal lifecycle stays stable across updates and dismisses only when
   assert.equal(dismissed, 2);
 });
 
-test("User Management renders cached users without waiting for program options", async () => {
-  const cache = await server.ssrLoadModule("/src/api/resourceCache.js");
-  const usersApi = await server.ssrLoadModule("/src/api/adminUserManagement.js");
-  await cache.requestCachedResource(
-    usersApi.userManagementPageCacheKey(1, {}),
-    async () => ({ data: [account], meta: { page: 1, per_page: 10, total: 1, last_page: 1 } }),
-    { force: true },
-  );
-  cache.invalidateResourceCache("admin:user-management:programs");
-  try {
-    const Page = (await server.ssrLoadModule("/src/pages/auth/admin/AdminUserManagement.jsx")).default;
-    const { AuthProvider } = await server.ssrLoadModule("/src/context/AuthContext.jsx");
-    const html = renderToStaticMarkup(React.createElement(AuthProvider, null,
-      React.createElement(MemoryRouter, null, React.createElement(Page))));
-    assert.match(html, /Ada Staff/);
-    assert.doesNotMatch(html, /aria-label="Loading users"/);
-    assert.match(html, />Unavailable<\/td>/);
-  } finally {
-    cache.clearResourceCache();
-  }
-});
-
-test("User Management restores active filters from the URL after a reload", async () => {
-  const cache = await server.ssrLoadModule("/src/api/resourceCache.js");
-  const usersApi = await server.ssrLoadModule("/src/api/adminUserManagement.js");
-  const filters = { role: "student", program: "p1", year: "3", status: "approved", search: "Ada" };
-  await cache.requestCachedResource(usersApi.userManagementPageCacheKey(1, filters), async () => ({ data: [account], meta: { page: 1, per_page: 10, total: 1, last_page: 1 } }), { force: true });
-  await cache.requestCachedResource("admin:user-management:programs", async () => props.programs, { force: true });
-  try {
-    const Page = (await server.ssrLoadModule("/src/pages/auth/admin/AdminUserManagement.jsx")).default;
-    const { AuthProvider } = await server.ssrLoadModule("/src/context/AuthContext.jsx");
-    const html = renderToStaticMarkup(React.createElement(AuthProvider, null,
-      React.createElement(MemoryRouter, { initialEntries: ["/user-management?role=student&program=p1&year=3&status=approved&search=Ada"] }, React.createElement(Page))));
-
-    for (const value of ["Role: Student", "Program: BSIS", "Year: 3rd year", "Active accounts"]) assert.ok(html.includes(value), value);
-    assert.match(html, /aria-label="Search users"[^>]*value="Ada"/);
-  } finally {
-    cache.clearResourceCache();
-  }
-});
-
 test("a waiting-account deep link keeps the loading state without exposing stale account actions", async () => {
   const Page = (await server.ssrLoadModule("/src/pages/auth/admin/AdminUserManagement.jsx")).default;
   const { AuthProvider } = await server.ssrLoadModule("/src/context/AuthContext.jsx");
   const html = renderToStaticMarkup(React.createElement(AuthProvider, null,
     React.createElement(MemoryRouter, { initialEntries: ["/admin/user-management?tab=waiting&user=42"] }, React.createElement(Page))));
-  assert.doesNotMatch(html, /Waiting for Approval|Approved Users/);
+  assert.match(html, /aria-current="page"[^>]*>Waiting for Approval/);
   assert.match(html, /aria-label="Loading users"/);
   assert.doesNotMatch(html, /<dialog\b|Deactivate Account|Assign role/);
-});
-
-test("successful page resources clear owned errors and out-of-range pages recover", async () => {
-  const page = await server.ssrLoadModule("/src/pages/auth/admin/userManagementPageState.js");
-  const current = { users: [], usersKey: "old", meta: null, loadingUsers: true, error: "Old users failure", programs: [], loadingPrograms: true, programError: "Old programs failure" };
-  const users = page.mergeUsersPageSuccess(current, { data: [account], meta: { page: 1, per_page: 10, total: 1, last_page: 1 } }, "new");
-  assert.equal(users.error, "");
-  assert.deepEqual(users.users, [account]);
-  const programsState = page.mergeProgramsSuccess(current, props.programs);
-  assert.equal(programsState.programError, "");
-  assert.deepEqual(programsState.programs, props.programs);
-  assert.equal(page.recoverUserManagementPage(99, { last_page: 2 }), 2);
-  assert.equal(page.recoverUserManagementPage(2, { last_page: 2 }), null);
 });

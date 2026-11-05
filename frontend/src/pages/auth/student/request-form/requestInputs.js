@@ -6,8 +6,8 @@ export function prepareRequestInput(data, partial = false) {
   const errors = {};
   if (!partial || Object.hasOwn(data, 'type')) errors.type = ['absence', 'late'].includes(data.type) ? '' : 'Select an available request type.';
   if (!partial) {
-    for (const [key, label] of [['class_id', 'Class'], ['evidence_file_url', 'Attachment'], ['reason', 'Reason'], ['subjects_missed', 'Subject'], ['guardian_name', "Parent or guardian's name"], ['contact_number', 'Contact number']]) {
-      if (!Object.hasOwn(data, key) || data[key] == null || data[key] === '') errors[key] = `${label} is required.`;
+    for (const [key, label] of [['class_id', 'Class'], ['teaching_assignment_id', 'Teaching assignment'], ['reason', 'Reason'], ['subjects_missed', 'Subject'], ['guardian_name', "Parent or guardian's name"], ['contact_number', 'Contact number']]) {
+      if (!Object.hasOwn(data, key)) errors[key] = `${label} is required.`;
     }
     if (data.type === 'late' && data.minutes_late == null) errors.minutes_late = 'Enter minutes late.';
   }
@@ -22,7 +22,7 @@ export function prepareRequestInput(data, partial = false) {
     errors.contact_number = /^(09\d{9}|\+639\d{9})$/.test(payload.contact_number) ? '' : 'Enter all 10 digits after +63, starting with 9.';
   }
   for (const key of ['class_id', 'teaching_assignment_id', 'evidence_file_url']) {
-    if (data[key] == null && (key === 'teaching_assignment_id' || (!partial && key === 'evidence_file_url'))) continue;
+    if (data[key] == null && key === 'evidence_file_url') continue;
     if (!Object.hasOwn(data, key)) continue;
     payload[key] = sanitizeText(data[key]);
     errors[key] = isIdentifier(payload[key]) ? '' : `Choose a valid ${key === 'class_id' ? 'class' : key === 'teaching_assignment_id' ? 'teaching assignment' : 'attachment'}.`;

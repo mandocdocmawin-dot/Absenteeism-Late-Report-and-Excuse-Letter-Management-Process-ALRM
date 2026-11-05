@@ -37,6 +37,7 @@ export default function InstructorClassRecords() {
         <h1 className="min-w-0 break-words text-2xl font-bold text-slate-950">{classId ? course?.subjectName || "Class Records" : "Courses"}</h1>
         <SubjectFilter courses={courses} value={classId || subject} onChange={changeSubject} disabled={resource.loading || Boolean(resource.error) || !courses.length} />
       </div>
+      <p className="text-xs leading-5 text-slate-500">Submitted reports only. Unavailable values are not supplied by the current API.</p>
       <ResourceState error={resource.error} onRetry={resource.reload}>
         {classId ? course ? <CourseStudents course={course} type={type} onTypeChange={value => setParams(current => { current.set("type", value); return current; })} /> : <p className="py-12 text-center text-sm text-slate-500">No request records found for this class.</p> : <CoursesTable courses={filtered} />}
       </ResourceState>

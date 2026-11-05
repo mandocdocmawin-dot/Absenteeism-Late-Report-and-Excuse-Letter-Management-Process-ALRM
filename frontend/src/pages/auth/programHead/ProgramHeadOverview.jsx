@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ArrowRight, BookOpen, GraduationCap, TriangleAlert } from "lucide-react";
-import { flagThresholdLabel, monthlyActivity, programThresholdSummary, requestClass, requestStudent } from "./programHeadData";
+import { monthlyActivity, requestClass, requestStudent } from "./programHeadData";
 import { ErrorState } from "@/components/common/ErrorState";
 import { ActivityChartPlaceholder, MetricPlaceholder, ProgramHeaderPlaceholder, SectionPlaceholder } from "@/components/loading/DashboardSkeleton/StaffDashboardPlaceholder";
 
@@ -30,18 +30,9 @@ function Activity({ requests }) {
   </section>;
 }
 
-function ThresholdSummary({ dashboard }) {
-  const counts = programThresholdSummary(dashboard);
-  return <section aria-labelledby="program-threshold-title" className={`${panel} rounded-md p-5`}>
-    <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="program-threshold-title" className="font-semibold">Attendance thresholds</h2><Link to="/program-head/flagged" className="text-sm font-medium text-blue-800 underline dark:text-blue-300">View escalated cases</Link></div>
-    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Counts are student enrollments by class; one student may appear in several classes.</p>
-    <dl className="mt-4 flex flex-wrap gap-6">{[["Warning", counts.warning], ["Critical", counts.critical], ["Incident Report", counts.ir]].map(([label, value]) => <div key={label}><dt className="text-sm text-slate-500 dark:text-slate-400">{label}</dt><dd className="text-xl font-semibold">{value ?? "Unavailable"}</dd></div>)}</dl>
-  </section>;
-}
-
 function RiskPreview({ flags }) {
   return <section className={`${panel} rounded-md p-5`}><div className="flex items-center justify-between gap-3"><h2 className="font-semibold">Students at risk</h2><Link className="inline-flex items-center gap-1 text-sm font-medium text-blue-800 hover:underline dark:text-blue-300" to="/program-head/flagged">View all <ArrowRight className="size-4" /></Link></div>
-    <div className="mt-4 divide-y divide-slate-200 dark:divide-slate-800">{flags.length ? flags.slice(0, 5).map((flag) => <div key={flag.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] items-center gap-x-6 gap-y-2 py-3 text-left text-sm"><span className="break-words font-medium">{requestStudent(flag.request || {})}</span><span className="break-words text-slate-500 dark:text-slate-400">{requestClass(flag.request || {})?.subject_name || "Class unavailable"}</span><span><span className="block text-rose-700 dark:text-rose-300">{flagThresholdLabel(flag)}</span><span className="text-xs text-slate-500 dark:text-slate-400">Case: {flag.status || "Unavailable"}</span></span></div>) : <p className="py-4 text-sm text-slate-500 dark:text-slate-400">No escalated students in this program.</p>}</div>
+    <div className="mt-4 divide-y divide-slate-200 dark:divide-slate-800">{flags.length ? flags.slice(0, 5).map((flag) => <div key={flag.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] items-center gap-x-6 gap-y-2 py-3 text-left text-sm"><span className="break-words font-medium">{requestStudent(flag.request || {})}</span><span className="break-words text-slate-500 dark:text-slate-400">{requestClass(flag.request || {})?.subject_name || "Class unavailable"}</span><span className="capitalize text-rose-700 dark:text-rose-300">{flag.status}</span></div>) : <p className="py-4 text-sm text-slate-500 dark:text-slate-400">No escalated students in this program.</p>}</div>
   </section>;
 }
 
@@ -51,7 +42,6 @@ export default function ProgramHeadOverview({ dashboard, flags, requests, errors
     {resourceLoading.dashboard && !ready.dashboard ? <ProgramHeaderPlaceholder /> : <header><p className="text-sm font-medium text-blue-900 dark:text-blue-300">Program head</p><h1 className="mt-1 text-2xl font-bold">Welcome back, {user?.name || "Program Head"}</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{dashboard?.program_name || "Your program"} overview</p></header>}
     <Summary dashboard={dashboard} flags={flags} errors={errors} resourceLoading={resourceLoading} ready={ready} />
     {errors.dashboard ? <ErrorState title="Could not load program summary" message={errors.dashboard} /> : null}
-    {resourceLoading.dashboard && !ready.dashboard ? <SectionPlaceholder rows={1} /> : !errors.dashboard && <ThresholdSummary dashboard={dashboard} />}
     {resourceLoading.requests && !ready.requests ? <ActivityChartPlaceholder /> : errors.requests ? <ErrorState title="Could not load request activity" message={errors.requests} /> : <Activity requests={requests} />}
     {resourceLoading.flags && !ready.flags ? <SectionPlaceholder /> : errors.flags ? <ErrorState title="Could not load students at risk" message={errors.flags} /> : <RiskPreview flags={flags} />}
   </div>;

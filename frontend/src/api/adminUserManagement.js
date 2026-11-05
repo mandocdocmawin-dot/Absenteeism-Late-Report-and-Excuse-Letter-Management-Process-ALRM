@@ -8,32 +8,9 @@ export function getUserManagementUsers(options) {
   return getCollection("/api/admin/users", options);
 }
 
-const yearLevels = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
-
-export function userManagementPageCacheKey(page, filters = {}) {
-  const normalized = {
-    search: String(filters.search || "").trim(),
-    status: filters.status || "",
-    role: filters.role || "",
-    program: filters.program || "",
-    year: filters.year || "",
-  };
-  return `admin:user-management:users:${page}:${JSON.stringify(normalized)}`;
-}
-
-export function getUserManagementUsersPage({ signal, page = 1, perPage = 10, filters = {} } = {}) {
-  if (filters.year === "unassigned") {
-    throw new Error("Filtering users with an unassigned year is not supported by the server.");
-  }
-  const query = new URLSearchParams();
-  const search = String(filters.search || "").trim();
-  if (search) query.set("search", search);
-  if (filters.status) query.set("status", filters.status);
-  if (filters.role) query.set("role", filters.role);
-  if (filters.program) query.set("program_id", filters.program);
-  if (filters.year) query.set("year_level", yearLevels[filters.year] || filters.year);
-  const endpoint = query.size ? `/api/admin/users?${query}` : "/api/admin/users";
-  return getCollectionPage(endpoint, { signal, page, perPage, allowOutOfRange: true });
+export async function getPendingUserPreview(options) {
+  const page = await getCollectionPage("/api/admin/users?status=pending", { ...options, page: 1, perPage: 4 });
+  return page.data;
 }
 
 export function getUserManagementPrograms(options) {

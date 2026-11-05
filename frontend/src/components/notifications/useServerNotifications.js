@@ -47,7 +47,7 @@ export default function useServerNotifications(user, { preview = false, enabled 
     }
   }
 
-  const serverActivity = notificationActivity(resource.data?.notifications || [], role, preferences, id, { inbox: true });
+  const serverActivity = notificationActivity(resource.data?.notifications || [], role, preferences, id);
   const fallbackReadIds = new Set([...localReadIds, ...(resource.data?.auditReadIds || [])]);
   const activity = preview ? serverActivity : normalizedRole === "admin"
     ? mergeAdminAuditActivity(serverActivity, preferences.requestUpdates ? resource.data?.auditLogs || [] : [], user, fallbackReadIds)
