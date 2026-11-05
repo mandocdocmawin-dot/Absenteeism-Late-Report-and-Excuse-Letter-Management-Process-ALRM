@@ -40,4 +40,21 @@ Use `data.school_id_number` in the completion response and `/me` response. `year
 
 `GET /notifications/preview` is the bounded bell endpoint. It returns `data: {"notifications":[...],"unread_count":3}`: at most 5 own in-app notifications, newest by `date_sent` then descending `id` for ties, and the unread count across all own in-app notifications (including those outside the preview). An empty inbox returns `notifications: []` and `unread_count: 0`. It does not mark notifications read, load requests, or paginate/count the full list. The existing list and unread-count endpoints retain their contracts. Frontend callers must explicitly switch to this endpoint to use the preview.
 
+### Logical unread counts and frontend integration
+
+Both `/notifications/preview` and `/notifications/unread-count` return a logical unread count instead of a database-row count:
+
+- Submission records (`new_request`, `submitted_request`, `activity_submitted_request`) count once per non-null `request_id`.
+- A direct update, follow-up, or decision and its matching `activity_*` delivery count once when they refer to the same request and action within five minutes. Approved/noted decisions share the approved action; invalid/denied decisions share the denied action. Pairing is one-to-one; repeated events from the same source stay separate.
+- Unknown types and records without a request ID remain independent. Only the authenticated user's unread `in_app` records participate. A logical event stays unread while any underlying delivery is unread.
+
+Frontend developer handoff:
+
+1. Use `data.unread_count` as the server badge total. Do not calculate it from the preview length or add raw duplicate counts or audit fallback totals to it.
+2. The list and preview still return original notification records and IDs. Keep presentation grouping consistent with the rules above. The preview limit is five **rows**, so grouping can produce fewer than five visible items; use the paginated list for the full inbox. The unread total includes events outside the preview.
+3. When marking a grouped item read, mark every underlying notification ID with `PATCH /notifications/{id}/read`, then refresh the count. Marking only one delivery can leave its duplicate unread. `PATCH /notifications/read-all` handles all own in-app deliveries.
+4. Refresh the preview/count after a read operation and during the existing polling cycle. Test eight unread submission rows for four requests: badge total must be four, then zero after read-all. Account/channel isolation and repeated follow-ups must be preserved.
+
+No response fields or database migrations are required for this change. Counting now scans the caller's unread records with a cursor to identify logical events; it does not hydrate the full inbox at once.
+
 Both read endpoints take no body. Marking an already-read notification read succeeds. A single-record operation checks ownership; read-all is scoped to the caller's unread in-app records and returns `data: null` with a count in `message`.

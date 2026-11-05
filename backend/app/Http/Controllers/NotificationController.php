@@ -27,7 +27,7 @@ class NotificationController extends Controller
             ->orderByDesc('id')
             ->limit(5)
             ->get();
-        $unreadCount = (clone $query)->where('is_read', false)->count();
+        $unreadCount = $this->logicalUnreadCount();
 
         return response()->json([
             'success' => true,
@@ -60,23 +60,72 @@ class NotificationController extends Controller
     }
 
     /**
-     * Unread count only — cheap endpoint for a notification bell badge,
+     * Logical unread count for a notification bell badge,
      * so the frontend doesn't have to pull the full list just to show a count.
      *
      * GET /api/notifications/unread-count
      */
     public function unreadCount(): JsonResponse
     {
-        $count = UserNotification::inApp()
-            ->where('user_id', Auth::id())
-            ->where('is_read', false)
-            ->count();
+        $count = $this->logicalUnreadCount();
 
         return response()->json([
             'success' => true,
             'message' => null,
             'data' => ['unread_count' => $count],
         ]);
+    }
+
+    private function logicalUnreadCount(): int
+    {
+        $count = 0;
+        $submissions = [];
+        $events = [];
+        $notifications = UserNotification::inApp()
+            ->where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->select(['id', 'request_id', 'type', 'message', 'date_sent'])
+            ->latest('date_sent')->orderByDesc('id')->cursor();
+
+        foreach ($notifications as $notification) {
+            $action = match ($notification->type) {
+                'new_request', 'submitted_request', 'activity_submitted_request' => 'submitted',
+                'request_updated', 'activity_updated_request' => 'updated',
+                'request_followup', 'activity_followed_up_request' => 'followed_up',
+                'activity_decided_request_approved', 'activity_decided_request_noted' => 'approved',
+                'activity_decided_request_invalid' => 'denied',
+                'request_decision' => preg_match('/\b(approved|noted)\b/i', $notification->message)
+                    ? 'approved'
+                    : (preg_match('/\b(invalid|denied)\b/i', $notification->message) ? 'denied' : null),
+                default => null,
+            };
+
+            if ($notification->request_id && $action === 'submitted') {
+                // The instructor feed shows one submission per request.
+                if (isset($submissions[$notification->request_id])) {
+                    continue;
+                }
+                $submissions[$notification->request_id] = true;
+            } elseif ($notification->request_id && $action && $notification->date_sent) {
+                $key = $notification->request_id.':'.$action;
+                $source = str_starts_with($notification->type, 'activity_') ? 'activity' : 'direct';
+                $timestamp = $notification->date_sent->getTimestamp();
+                foreach ($events[$key] ?? [] as $index => $event) {
+                    // Pair direct/audit deliveries within the frontend's five-minute window.
+                    // Repeated events from the same source remain separate notifications.
+                    if (! isset($event['sources'][$source]) && $event['timestamp'] - $timestamp <= 300) {
+                        $events[$key][$index]['sources'][$source] = true;
+
+                        continue 2;
+                    }
+                }
+                $events[$key][] = ['timestamp' => $timestamp, 'sources' => [$source => true]];
+            }
+
+            $count++;
+        }
+
+        return $count;
     }
 
     /**
