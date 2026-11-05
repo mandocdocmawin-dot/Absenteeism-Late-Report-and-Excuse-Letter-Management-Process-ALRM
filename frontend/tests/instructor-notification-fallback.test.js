@@ -32,7 +32,8 @@ test("missing absence activity appears alongside existing late notifications usi
   const existing = notificationActivity([note], user.role, preferences, user.id);
   const activity = mergeRequestActivity(existing, [request], user);
   assert.deepEqual(activity.map(item => item.requestId), ["late-one", "missing-absence"]);
-  assert.equal(activity[1].message, "Marwin submitted a new absence request for Financial Literacy and Personal Management.");
+  assert.equal(activity[1].message, "Marwin just submitted an absence request for Financial Literacy and Personal Management.");
+  assert.equal(activity[1].label, "New request");
   assert.equal(activity[1].date, request.date_submitted);
   assert.equal(activity[1].href, "/instructor/class-requests?request=missing-absence");
   assert.equal(activity[1].source, "request");

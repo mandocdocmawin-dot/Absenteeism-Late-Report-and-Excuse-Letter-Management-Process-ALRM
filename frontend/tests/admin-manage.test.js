@@ -5,9 +5,16 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import { MemoryRouter } from "react-router-dom";
-import { getAdminAssignments, assignClassInstructor } from "../src/api/adminAssignments.js";
 import {
-  assignmentSelection, changeAssignmentSelection, selectedAssignmentClass, validateAssignment,
+  getAdminAssignmentCandidates,
+  getAdminAssignments,
+  getAdminClassesPage,
+  getAdminPrograms,
+  getApprovedInstructors,
+} from "../src/api/adminAssignments.js";
+import {
+  activeTeachingAssignment, assignmentCandidates, assignmentSelection, buildAssignmentPayload,
+  changeAssignmentSelection, mergeAssignmentClasses,
 } from "../src/pages/auth/admin/manage/assignments.js";
 
 const classes = [
@@ -23,6 +30,10 @@ const instructors = [
   { id: "head", role: "program_head", status: "approved" },
 ];
 
+function buttonHtml(html, label) {
+  return [...html.matchAll(/<button\b[\s\S]*?<\/button>/g)].map(match => match[0]).find(button => button.includes(label)) || "";
+}
+
 beforeEach(() => {
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true, value: { getItem: () => "mock-session", setItem() {}, removeItem() {} },
@@ -37,54 +48,26 @@ afterEach(() => {
   delete globalThis.window;
 });
 
-test("Edit starts from the actual class and its approved instructor", () => {
+test("assignment selection distinguishes assigned and unassigned classes", () => {
   assert.deepEqual(assignmentSelection(classes[1], instructors), {
-    subject: "Data Structures", classId: "c2", instructorId: "i1",
+    sourceClassId: "c2", instructorId: "", programId: "", yearLevel: "", semester: "", targetClassId: "",
   });
-  assert.equal(assignmentSelection({ ...classes[0], instructor_id: "pending" }, instructors).instructorId, "");
+  assert.equal(assignmentSelection({ ...classes[0], instructor_id: null }).targetClassId, "c1");
+  assert.equal(activeTeachingAssignment(classes[0]).instructor_id, "i1");
 });
 
-test("changing instructor retains the selected subject and class", () => {
-  const next = changeAssignmentSelection(assignmentSelection(classes[0], instructors), "instructorId", "i2");
-  assert.deepEqual(next, { subject: "Data Structures", classId: "c1", instructorId: "i2" });
-});
-
-test("changing subject clears only the destination class", () => {
-  const initial = assignmentSelection(classes[0], instructors);
-  assert.deepEqual(changeAssignmentSelection(initial, "subject", "Programming"), {
-    ...initial, subject: "Programming", classId: "",
-  });
-  assert.deepEqual(changeAssignmentSelection(initial, "classId", "c2"), {
-    ...initial, classId: "c2",
+test("changing a program clears dependent assignment filters", () => {
+  const selection = { ...assignmentSelection(), programId: "p1", yearLevel: "3rd", semester: "2nd", targetClassId: "c1" };
+  assert.deepEqual(changeAssignmentSelection(selection, "programId", "p2"), {
+    ...selection, programId: "p2", yearLevel: "", semester: "",
   });
 });
 
-test("class selection is validated against the chosen subject", () => {
-  const initial = assignmentSelection(classes[0], instructors);
-  assert.equal(selectedAssignmentClass(classes, { ...initial, classId: "c3" })?.id, "c3");
-  assert.equal(selectedAssignmentClass(classes, { ...initial, subject: "Other subject" }), undefined);
-  assert.throws(() => validateAssignment(classes, instructors, { ...initial, classId: "missing" }), /existing class/i);
-});
-
-test("assignment validates instructor role and approval before sending", () => {
-  const initial = assignmentSelection(classes[0], instructors);
-  for (const instructorId of ["", "missing", "pending", "inactive", "head"]) {
-    assert.throws(() => validateAssignment(classes, instructors, { ...initial, instructorId }), /approved instructor/i);
-  }
-  assert.deepEqual(validateAssignment(classes, instructors, { ...initial, instructorId: "i2" }), {
-    classId: "c1", instructorId: "i2",
+test("changing a year clears only the semester filter", () => {
+  const selection = { ...assignmentSelection(), programId: "p1", yearLevel: "3rd", semester: "2nd" };
+  assert.deepEqual(changeAssignmentSelection(selection, "yearLevel", "4th"), {
+    ...selection, yearLevel: "4th", semester: "",
   });
-});
-
-test("General Education instructors can be assigned to another program's class", () => {
-  const selection = { subject: "Data Structures", classId: "c1", instructorId: "i2" };
-  assert.deepEqual(validateAssignment(classes, instructors, selection), { classId: "c1", instructorId: "i2" });
-});
-
-test("the same section in a different class or term resolves by actual class ID", () => {
-  const duplicate = { ...classes[0], id: "c4", school_year: "2027-2028" };
-  const selected = { ...assignmentSelection(classes[0], instructors), classId: "c4", instructorId: "i2" };
-  assert.equal(validateAssignment([...classes, duplicate], instructors, selected).classId, "c4");
 });
 
 test("collection loading includes paginated classes, programs and approved role data", async () => {
@@ -115,44 +98,72 @@ test("collection loading includes paginated classes, programs and approved role 
   assert.deepEqual(data.instructors.map(row => row.id), ["i1", "i2"]);
 });
 
-test("assignment PATCH sends only instructor_id and waits for the server response", async () => {
-  let respond;
-  mockApiFetch((url, options) => {
-    assert.equal(url, "/api/admin/classes/class%2Fid");
-    assert.equal(options.method, "PATCH");
-    assert.deepEqual(JSON.parse(options.body), { instructor_id: "i2" });
-    return new Promise(resolve => { respond = resolve; });
+test("class page loading does not request program or instructor lookups", async () => {
+  const requested = [];
+  mockApiFetch(async (url) => {
+    const request = new URL(url, "http://fixture.local");
+    requested.push(request.pathname);
+    return Response.json({
+      data: classes,
+      meta: { page: 1, per_page: 25, total: 3, last_page: 1 },
+    });
   });
-  let completed = false;
-  const saving = assignClassInstructor("class/id", "i2").then(data => { completed = true; return data; });
-  await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(completed, false);
-  respond(Response.json({ success: true, data: { id: "class/id", instructor_id: "i2" } }));
-  assert.equal((await saving).instructor_id, "i2");
+
+  const result = await getAdminClassesPage({
+    page: 1,
+    perPage: 25,
+    filters: { search: "Data", programId: "p1" },
+  });
+
+  assert.deepEqual(requested, ["/api/admin/classes"]);
+  assert.deepEqual(result.data, classes);
+  assert.equal(result.meta.total, 3);
 });
 
-test("missing instructor cannot be sent as an unassignment", async () => {
-  for (const instructorId of [null, "", undefined]) {
-    await assert.rejects(assignClassInstructor("c1", instructorId), /instructor/i);
-  }
+test("program and approved-instructor lookups load independently", async () => {
+  mockApiFetch(async (url) => {
+    const request = new URL(url, "http://fixture.local");
+    if (request.pathname === "/api/admin/programs") {
+      return Response.json({ data: [{ id: "p1", program_name: "BSIS" }] });
+    }
+    assert.equal(request.pathname, "/api/admin/users");
+    return Response.json({ data: instructors });
+  });
+
+  assert.deepEqual(await getAdminPrograms(), [{ id: "p1", program_name: "BSIS" }]);
+  assert.deepEqual((await getApprovedInstructors()).map((row) => row.id), ["i1", "i2"]);
 });
 
-test("backend validation errors remain available to the dialog", async () => {
-  mockApiFetch(async () => Response.json({
-    message: "Validation failed.", errors: { instructor_id: ["The selected instructor is invalid."] },
-  }, { status: 422 }));
-  await assert.rejects(assignClassInstructor("c1", "i2"), error => {
-    assert.equal(error.status, 422);
-    assert.deepEqual(error.errors.instructor_id, ["The selected instructor is invalid."]);
-    return true;
+test("assignment candidates load every backend page in 100-record batches", async () => {
+  mockApiFetch(async (url) => {
+    const request = new URL(url, "http://fixture.local");
+    const page = Number(request.searchParams.get("page"));
+    assert.equal(request.pathname, "/api/admin/classes");
+    assert.equal(request.searchParams.get("per_page"), "100");
+    return Response.json({ data: [{ id: `class-${page}` }], meta: { page, per_page: 100, total: 2, last_page: 2 } });
+  });
+  assert.deepEqual((await getAdminAssignmentCandidates()).map(item => item.id), ["class-1", "class-2"]);
+});
+
+test("assignment actions use only eligible classes and exact versioned payloads", () => {
+  const source = { ...classes[0], semester: "1st", school_year: "2026-2027", assignment_revision: 4 };
+  const unassigned = { ...classes[1], instructor_id: null, semester: "1st", school_year: "2026-2027", assignment_revision: 2 };
+  const other = { ...classes[2], semester: "1st", school_year: "2026-2027", assignment_revision: 7 };
+  const wrongTerm = { id: "c4", instructor_id: null, semester: "2nd", school_year: "2026-2027" };
+  assert.deepEqual(assignmentCandidates([source, unassigned, other, wrongTerm], source, "change_subject").map(item => item.id), ["c2"]);
+  assert.deepEqual(assignmentCandidates([source, unassigned, other, wrongTerm], source, "swap").map(item => item.id), ["c3"]);
+  assert.deepEqual(buildAssignmentPayload("change_instructor", source, { instructorId: "i2" }, "Load change"), {
+    action: "change_instructor", expected_revision: 4, instructor_id: "i2", reason: "Load change",
+  });
+  assert.deepEqual(buildAssignmentPayload("swap", source, { targetClass: other }, "Schedule swap"), {
+    action: "swap", expected_revision: 4, target_class_id: "c3", target_expected_revision: 7, reason: "Schedule swap",
   });
 });
 
-test("an unsuccessful or malformed success response cannot be reported as saved", async () => {
-  for (const payload of [null, { success: false, message: "Assignment rejected." }, { data: { id: "c1", instructor_id: "i1" } }]) {
-    mockApiFetch(async () => Response.json(payload));
-    await assert.rejects(assignClassInstructor("c1", "i2"), /confirm|rejected/i);
-  }
+test("returned assignment classes merge into existing rows without changing pagination membership", () => {
+  const current = [{ id: "c1", assignment_revision: 1, subject_name: "Data" }, { id: "c2", assignment_revision: 2 }];
+  const merged = mergeAssignmentClasses(current, [{ id: "c1", assignment_revision: 3, active_teaching_assignment: { instructor_id: "i2" } }, { id: "later-page" }]);
+  assert.deepEqual(merged, [{ id: "c1", assignment_revision: 3, subject_name: "Data", active_teaching_assignment: { instructor_id: "i2" } }, current[1]]);
 });
 
 test("collection requests forward cancellation", async () => {
@@ -169,7 +180,7 @@ test("collection failures reject loading without supplying fake assignments", as
   await assert.rejects(getAdminAssignments(), /Service unavailable/);
 });
 
-test("assignment dialog has 20px corners and class removal is enabled with destructive styling", async () => {
+test("assignment dialog has 20px corners and the expected assignment controls", async () => {
   const data = {
     classes: [{ ...classes[0], year_level: "3rd" }, ...classes.slice(1), { id: "ge-class", program_id: "ge", subject_name: "General Education Subject", section: "1A" }],
     instructors: instructors.slice(0, 2),
@@ -187,29 +198,32 @@ test("assignment dialog has 20px corners and class removal is enabled with destr
     const dialog = renderToStaticMarkup(React.createElement(AssignmentDialog, { row: classes[0], data }));
     assert.match(dialog, /<dialog\b[^>]*rounded-\[20px\]/);
     const createDialog = renderToStaticMarkup(React.createElement(AssignmentDialog, { row: null, data: { ...data, classes } }));
-    assert.ok(createDialog.indexOf('id="assignment-instructor"') < createDialog.indexOf('id="assignment-subject"'));
-    assert.ok(createDialog.indexOf('id="assignment-subject"') < createDialog.indexOf('id="assignment-class"'));
-    assert.doesNotMatch(createDialog, /id="assignment-program"/);
+    assert.ok(createDialog.indexOf('id="assignment-instructor"') < createDialog.indexOf('id="assignment-program"'));
+    assert.ok(createDialog.indexOf('id="assignment-program"') < createDialog.indexOf('id="assignment-class"'));
     assert.match(createDialog, /Grace/);
-    assert.match(dialog, /BSIS · 3rd year · Section 3A/);
-    const AdminManage = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
-    const { Button } = await server.ssrLoadModule("/src/components/ui/button.jsx");
-    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(AdminManage)));
-    assert.doesNotMatch(html, /General Education/);
-    const removeButtons = [...html.matchAll(/<button\b[^>]*>Remove<\/button>/g)];
-    const deleteButton = renderToStaticMarkup(React.createElement(Button, { size: "sm", variant: "destructive" }, "Delete"));
-    assert.equal(removeButtons.length, classes.length);
-    for (const [remove] of removeButtons) {
-      assert.equal(remove.match(/class="([^"]*)"/)[1], deleteButton.match(/class="([^"]*)"/)[1]);
-      assert.doesNotMatch(remove, /\sdisabled=""/);
-    }
-    assert.doesNotMatch(html, /unassignment-explanation|cannot be removed without a replacement/);
+    assert.match(dialog, /Data Structures — Section 3A/);
+    assert.match(createDialog, /id="assignment-reason"/);
   } finally {
     await server.close();
   }
 });
 
-test("edit assignment allows changing the subject and destination class", async () => {
+test("assigned-class dialog exposes every non-destructive backend action", async () => {
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom" });
+  try {
+    const AssignmentDialog = (await server.ssrLoadModule("/src/pages/auth/admin/manage/AssignmentDialog.jsx")).default;
+    const data = { classes, instructors: instructors.slice(0, 2), programs: [] };
+    const html = renderToStaticMarkup(React.createElement(AssignmentDialog, { row: classes[0], data }));
+    assert.match(html, /id="assignment-action"/);
+    assert.match(html, /value="change_instructor"/);
+    assert.match(html, /value="change_subject"/);
+    assert.match(html, /value="swap"/);
+  } finally {
+    await server.close();
+  }
+});
+
+test("edit assignment allows filtering and selecting the destination class", async () => {
   const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom" });
   try {
     const AssignmentDialog = (await server.ssrLoadModule("/src/pages/auth/admin/manage/AssignmentDialog.jsx")).default;
@@ -219,12 +233,14 @@ test("edit assignment allows changing the subject and destination class", async 
       programs: [{ id: "p1", program_name: "BSIS" }, { id: "p2", program_name: "BSA" }],
     };
     const dialog = renderToStaticMarkup(React.createElement(AssignmentDialog, { row: classes[0], data }));
-    const subject = dialog.match(/<select\b[^>]*id="assignment-subject"[^>]*>/)?.[0] || "";
+    const program = dialog.match(/<select\b[^>]*id="assignment-program"[^>]*>/)?.[0] || "";
+    const year = dialog.match(/<select\b[^>]*id="assignment-year"[^>]*>/)?.[0] || "";
+    const semester = dialog.match(/<select\b[^>]*id="assignment-semester"[^>]*>/)?.[0] || "";
     const destination = dialog.match(/<select\b[^>]*id="assignment-class"[^>]*>/)?.[0] || "";
-    assert.ok(subject, "Subject dropdown must render");
-    assert.ok(destination, "Program, year and section dropdown must render");
-    assert.doesNotMatch(subject, /\sdisabled(?:=|\s|$)/);
-    assert.doesNotMatch(destination, /\sdisabled(?:=|\s|$)/);
+    for (const [control, label] of [[program, "Program"], [year, "Year"], [semester, "Semester"], [destination, "Class"]]) {
+      assert.ok(control, `${label} dropdown must render`);
+      assert.doesNotMatch(control, /\sdisabled(?:=|\s|$)/);
+    }
   } finally {
     await server.close();
   }
@@ -241,8 +257,137 @@ test("Manage announces its heading and loads with matching filter, action and ta
     assert.equal((html.match(/data-slot="skeleton-row"/g) || []).length, 5);
     assert.match(html, /data-slot="skeleton"[^>]*w-\[260px\]/);
     assert.match(html, /data-slot="skeleton"[^>]*w-\[170px\]/);
+    assert.doesNotMatch(html, /data-slot="skeleton"[^>]*w-28/);
     assert.doesNotMatch(html, /<(select|button)\b/);
     assert.doesNotMatch(html, /animate-spin/);
+  } finally {
+    await server.close();
+  }
+});
+
+test("Manage renders loaded classes while assignment lookups are still loading", async () => {
+  const classData = {
+    classes: [{ ...classes[0], instructor_id: null }],
+    classesMeta: { page: 1, per_page: 25, total: 1, last_page: 1 },
+  };
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{
+    name: "progressive-manage-page", enforce: "pre", transform(code, id) {
+      if (id.replaceAll("\\", "/").endsWith("/src/pages/auth/admin/AdminManage.jsx")) {
+        return code
+          .replace("const [classData, setClassData] = useState(cached?.data || null);", `const [classData, setClassData] = useState(${JSON.stringify(classData)});`)
+          .replace("const [classLoading, setClassLoading] = useState(!cached);", "const [classLoading, setClassLoading] = useState(false);");
+      }
+    },
+  }] });
+  try {
+    const AdminManage = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(AdminManage)));
+    assert.match(html, /Data Structures/);
+    assert.doesNotMatch(html, /aria-label="Loading instructor assignments"/);
+    assert.match(buttonHtml(html, "Assign Instructor"), /\sdisabled(?:=|\s|>)/);
+    assert.match(buttonHtml(html, "Assign instructor"), /\sdisabled(?:=|\s|>)/);
+  } finally {
+    await server.close();
+  }
+});
+
+test("search refresh keeps the search control and loaded table mounted", async () => {
+  const classData = { classes: [classes[0]], classesMeta: { page: 1, per_page: 25, total: 1, last_page: 1 } };
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{
+    name: "refreshing-manage-search", enforce: "pre", transform(code, id) {
+      if (id.replaceAll("\\", "/").endsWith("/src/pages/auth/admin/AdminManage.jsx")) {
+        return code
+          .replace("const [classData, setClassData] = useState(cached?.data || null);", `const [classData, setClassData] = useState(${JSON.stringify(classData)});`)
+          .replace("const [classLoading, setClassLoading] = useState(!cached);", "const [classLoading, setClassLoading] = useState(true);");
+      }
+    },
+  }] });
+  try {
+    const Page = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Page)));
+    assert.match(html, /aria-label="Search instructor assignments"/);
+    assert.match(html, /Data Structures/);
+    assert.doesNotMatch(html, /aria-label="Loading instructor assignments"/);
+    assert.match(html, /Updating instructor assignments/);
+  } finally { await server.close(); }
+});
+
+test("lookup failures keep the class table visible and offer a retry", async () => {
+  const classData = {
+    classes: [classes[0]],
+    classesMeta: { page: 1, per_page: 25, total: 1, last_page: 1 },
+  };
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{
+    name: "failed-manage-lookups", enforce: "pre", transform(code, id) {
+      if (id.replaceAll("\\", "/").endsWith("/src/pages/auth/admin/AdminManage.jsx")) {
+        return code
+          .replace("const [classData, setClassData] = useState(cached?.data || null);", `const [classData, setClassData] = useState(${JSON.stringify(classData)});`)
+          .replace("const [classLoading, setClassLoading] = useState(!cached);", "const [classLoading, setClassLoading] = useState(false);")
+          .replace('const [lookupError, setLookupError] = useState("");', 'const [lookupError, setLookupError] = useState("Instructor options could not be loaded.");');
+      }
+    },
+  }] });
+  try {
+    const AdminManage = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(AdminManage)));
+    assert.match(html, /Data Structures/);
+    assert.match(html, /Instructor options could not be loaded/);
+    assert.match(html, />Retry lookups<\/button>/);
+  } finally {
+    await server.close();
+  }
+});
+
+test("Manage keeps class administration out of the instructor assignment workflow", async () => {
+  const data = {
+    classes: [],
+    classesMeta: { page: 1, per_page: 25, total: 0, last_page: 1 },
+    instructors: [],
+    programs: [],
+  };
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{
+    name: "loaded-manage-page", enforce: "pre", transform(code, id) {
+      if (id.replaceAll("\\", "/").endsWith("/src/pages/auth/admin/AdminManage.jsx")) {
+        return code
+          .replace("const [classData, setClassData] = useState(cached?.data || null);", `const [classData, setClassData] = useState(${JSON.stringify({ classes: data.classes, classesMeta: data.classesMeta })});`)
+          .replace("const [classLoading, setClassLoading] = useState(!cached);", "const [classLoading, setClassLoading] = useState(false);");
+      }
+    },
+  }] });
+  try {
+    const AdminManage = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(AdminManage)));
+    assert.match(html, />Assign Instructor<\/button>/);
+    assert.match(buttonHtml(html, "Assign Instructor"), /\sdisabled(?:=|\s|>)/);
+    assert.doesNotMatch(html, /href="\/classes"/);
+    assert.doesNotMatch(html, />Manage classes<\/a>/i);
+  } finally {
+    await server.close();
+  }
+});
+
+test("global Assign stays enabled when only the current page is fully assigned", async () => {
+  const data = {
+    classes: [{ ...classes[0], active_teaching_assignment: { instructor_id: "i1" } }],
+    classesMeta: { page: 1, per_page: 25, total: 26, last_page: 2 },
+    instructors: [instructors[0]], programs: [],
+  };
+  const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{
+    name: "assigned-current-page", enforce: "pre", transform(code, id) {
+      if (id.replaceAll("\\", "/").endsWith("/src/pages/auth/admin/AdminManage.jsx")) {
+        return code
+          .replace("const [classData, setClassData] = useState(cached?.data || null);", `const [classData, setClassData] = useState(${JSON.stringify({ classes: data.classes, classesMeta: data.classesMeta })});`)
+          .replace("const [classLoading, setClassLoading] = useState(!cached);", "const [classLoading, setClassLoading] = useState(false);")
+          .replace("const [instructors, setInstructors] = useState(cachedInstructors?.data || []);", `const [instructors, setInstructors] = useState(${JSON.stringify(data.instructors)});`);
+      }
+    },
+  }] });
+  try {
+    const AdminManage = (await server.ssrLoadModule("/src/pages/auth/admin/AdminManage.jsx")).default;
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(AdminManage)));
+    const button = buttonHtml(html, "Assign Instructor");
+    assert.ok(button);
+    assert.doesNotMatch(button, /\sdisabled(?:=|\s|>)/);
   } finally {
     await server.close();
   }

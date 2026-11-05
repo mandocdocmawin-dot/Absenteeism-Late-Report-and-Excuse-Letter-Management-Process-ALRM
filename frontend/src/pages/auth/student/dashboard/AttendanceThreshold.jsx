@@ -1,12 +1,6 @@
-import { CircleAlert, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ShieldCheck, TriangleAlert } from "lucide-react";
 import AttendanceGauge from "./AttendanceGauge";
-
-const appearances = {
-  safe: { label: "Safe", color: "#16a34a", text: "text-green-700 dark:text-green-400" },
-  warning: { label: "Warning", color: "#ff7113", text: "text-[#aa4808] dark:text-orange-400" },
-  critical: { label: "Critical", color: "#dc2626", text: "text-red-700 dark:text-red-400" },
-  IR: { label: "Incident Report", color: "#dc2626", text: "text-red-700 dark:text-red-400" },
-};
+import { resolveThresholdPresentation } from "./thresholdPresentation";
 
 function available(value) {
   return value !== null && value !== undefined && value !== "";
@@ -18,14 +12,12 @@ function formatNumber(value, suffix = "") {
 }
 
 export default function AttendanceThreshold({ threshold = {}, alertsEnabled = true }) {
-  const backendStatus = available(threshold.status) ? String(threshold.status) : "";
-  const appearance = appearances[backendStatus] || { label: backendStatus || "Unavailable", color: "#64748b", text: "text-slate-600 dark:text-slate-300" };
-  const Icon = backendStatus === "safe" ? ShieldCheck : TriangleAlert;
+  const appearance = resolveThresholdPresentation(threshold);
+  const Icon = appearance.label === "Safe" ? ShieldCheck : TriangleAlert;
 
   return <article className="flex min-h-[225px] min-w-0 flex-col overflow-hidden rounded-[7px] border border-[#c9c6c6] bg-white shadow-[0_1px_1px_#0000000d] dark:border-slate-700 dark:bg-slate-900">
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-[17px] pt-[9px]">
-      <h2 className="flex items-center gap-2 text-[14px] font-normal leading-5">Attendance Threshold <span title="Values are calculated by the backend from recorded contact hours."><CircleAlert className="size-[19px] shrink-0 text-[#717171] dark:text-slate-400" aria-hidden="true" /></span></h2>
-      <span className="flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] leading-3 text-slate-600 dark:bg-slate-800 dark:text-slate-300"><span className="size-1 rounded-full bg-current" />Backend result</span>
+    <div className="px-[17px] pt-[9px]">
+      <h2 className="text-[14px] font-normal leading-5">Attendance Threshold</h2>
     </div>
     <div className="flex flex-1 items-center gap-4 px-3 py-[17px]">
       <AttendanceGauge used={threshold.used} limit={threshold.limit} color={appearance.color} />

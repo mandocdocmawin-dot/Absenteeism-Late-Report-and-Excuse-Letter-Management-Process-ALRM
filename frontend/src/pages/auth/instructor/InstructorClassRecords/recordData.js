@@ -28,14 +28,12 @@ export function buildClassRecords(requests = [], programs = []) {
     const studentId = enrollment.student?.id || enrollment.student_id;
     if (!studentId) continue;
     if (!course.students.has(studentId)) {
-      course.students.set(studentId, { id: studentId, name: enrollment.student?.name || "Name unavailable", absences: 0, lates: 0, invalidAbsenceHours: 0, invalidLates: 0, threshold: null });
+      course.students.set(studentId, { id: studentId, name: enrollment.student?.name || "Name unavailable", absences: 0, lates: 0, absenceHours: 0, invalidLates: 0, threshold: null });
     }
     const student = course.students.get(studentId);
     student[request.type === "absence" ? "absences" : "lates"] += 1;
-    if (request.status === "invalid") {
-      if (request.type === "absence") student.invalidAbsenceHours += absenceHours(source, request);
-      else student.invalidLates += 1;
-    }
+    if (request.type === "absence" && ["approved", "noted", "invalid"].includes(request.status)) student.absenceHours += absenceHours(source, request);
+    if (request.type === "late" && request.status === "invalid") student.invalidLates += 1;
     student.threshold = attendancePercentage(source, student);
   }
   return [...classes.values()].map(course => ({ ...course, students: [...course.students.values()].sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)) }))

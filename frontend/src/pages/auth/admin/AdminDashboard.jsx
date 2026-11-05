@@ -2,15 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createClass,
   createProgram,
-  deleteClass,
-  deleteProgram,
   getAdminDashboard,
   getClasses,
   getPrograms,
   updateClass,
   updateStaffRole,
 } from "@/api/admin";
-import { getPendingUserPreview, getUserManagementUsers } from "@/api/adminUserManagement";
+import { getUserManagementUsers } from "@/api/adminUserManagement";
 import { getResourceCacheEntry, requestCachedResource } from "@/api/resourceCache";
 import AdminOverview from "./dashboard/AdminOverview";
 import AdminReports from "./reports/AdminReports";
@@ -24,11 +22,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isGeneralEducationProgram } from "@/lib/programs";
 import ClassForm from "./classes/ClassForm";
+import ClassFormDialog from "./classes/ClassFormDialog";
+import { filterAdminClasses } from "./classes/classFilters";
 
 const emptyProgramForm = { program_name: "", program_head_id: "" };
-const endpoints = { dashboard: getAdminDashboard, users: getUserManagementUsers, pendingUsers: getPendingUserPreview, programs: getPrograms, classes: getClasses };
-const resourceDefaults = { dashboard: false, users: false, pendingUsers: false, programs: false, classes: false };
-const viewResources = { dashboard: ["dashboard", "pendingUsers"], users: ["users"], programs: ["programs", "users"], classes: ["classes", "programs"], reports: ["programs"] };
+const endpoints = { dashboard: getAdminDashboard, users: getUserManagementUsers, programs: getPrograms, classes: getClasses };
+const resourceDefaults = { dashboard: false, users: false, programs: false, classes: false };
+const viewResources = { dashboard: ["dashboard"], users: ["users"], programs: ["programs", "users"], classes: ["classes", "programs"], reports: ["programs"] };
 
 function hoursValue(value) {
   if (value === null || value === undefined || value === "") return "Unavailable";
@@ -55,7 +55,7 @@ function initialResources(view) {
   const requested = viewResources[view] || [];
   return {
     dashboard: cached.dashboard?.data || null,
-    users: cached.users?.data || [], pendingUsers: cached.pendingUsers?.data || [],
+    users: cached.users?.data || [],
     programs: cached.programs?.data || [], classes: cached.classes?.data || [],
     loading: { ...resourceDefaults, ...Object.fromEntries(requested.map((key) => [key, !cached[key]])) }, errors: {},
     ready: Object.fromEntries(Object.entries(cached).map(([key, entry]) => [key, Boolean(entry)])),
@@ -76,6 +76,8 @@ export function AdminDashboard({ view = "dashboard" }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [classEditor, setClassEditor] = useState(null);
+  const [classFilters, setClassFilters] = useState({ search: "", programId: "" });
+  const filteredClasses = filterAdminClasses(visibleClasses, classFilters);
 
   const loadData = useCallback(async ({ force = false } = {}) => {
     if (!mounted.current) return;
@@ -159,8 +161,8 @@ export function AdminDashboard({ view = "dashboard" }) {
       else await createClass(values);
       if (!mounted.current) return;
       setNotice(classEditor?.item ? "Class updated." : "Class created.");
-      setClassEditor(null);
       await loadData({ force: true });
+      if (mounted.current) setClassEditor(null);
     } finally {
       if (mounted.current) setWorking("");
     }
@@ -228,7 +230,7 @@ export function AdminDashboard({ view = "dashboard" }) {
             <div className="flex items-end md:col-span-2 xl:col-span-1"><Button type="submit" disabled={!programOptionsReady || working === "create-program"} className="h-11 w-full rounded-lg bg-[#172f6b] px-6 text-white hover:bg-[#203f8a] sm:w-[140px] xl:w-full">Create</Button></div>
           </form>
           {visiblePrograms.length === 0 ? <EmptyState title="No programs found" /> : (
-            <div className="grid gap-4 lg:grid-cols-2">{visiblePrograms.map((program) => <article key={program.id} className="min-w-0 rounded-lg border border-slate-200 p-4"><div className="flex items-start justify-between gap-3"><span className="min-w-0 break-words font-medium">{program.program_name}</span><Button size="sm" variant="destructive" className="shrink-0" onClick={() => { setWorking(`delete-program-${program.id}`); runAction(() => deleteProgram(program.id), "Program deleted."); }}>Delete</Button></div><p className="mt-2 break-words text-xs text-slate-500">ID {program.id} · {program.classes_count || 0} classes</p></article>)}</div>
+            <div className="grid gap-4 lg:grid-cols-2">{visiblePrograms.map((program) => <article key={program.id} className="min-w-0 rounded-lg border border-slate-200 p-4"><span className="min-w-0 break-words font-medium">{program.program_name}</span><p className="mt-2 break-words text-xs text-slate-500">ID {program.id} · {program.classes_count || 0} classes</p></article>)}</div>
           )}
         </div> : null}
 
@@ -236,11 +238,15 @@ export function AdminDashboard({ view = "dashboard" }) {
           {!showPrograms && errors.programs ? resourceError("programs") : null}
           {errors.users ? resourceError("users") : null}
           <div className="flex justify-end"><CreateClassButton onClick={() => setClassEditor({ item: null })} disabled={Boolean(working)} /></div>
-          {classEditor && <ClassForm key={classEditor.item?.id || "new"} item={classEditor.item} programs={visiblePrograms} saving={working === "save-class"} onCancel={() => setClassEditor(null)} onSave={handleSaveClass} />}
+          {classEditor?.item ? <ClassFormDialog key={classEditor.item.id} item={classEditor.item} programs={visiblePrograms} saving={working === "save-class"} onCancel={() => setClassEditor(null)} onSave={handleSaveClass} /> : classEditor && <ClassForm programs={visiblePrograms} saving={working === "save-class"} onCancel={() => setClassEditor(null)} onSave={handleSaveClass} />}
           <section aria-labelledby="existing-classes-title" className="min-w-0 rounded-lg border border-slate-200 bg-white p-5">
           <h2 id="existing-classes-title" className="mb-4 text-lg font-semibold">Existing Classes</h2>
-          {visibleClasses.length === 0 ? <EmptyState title="No classes found" /> : (
-            <div className="grid gap-3 lg:grid-cols-2">{visibleClasses.map((item) => <article key={item.id} className="min-w-0 rounded-lg border border-slate-200 p-4"><div className="flex items-start justify-between gap-3"><span className="min-w-0 break-words font-medium">{item.subject_name}</span><div className="flex shrink-0 gap-2"><Button size="sm" variant="outline" onClick={() => setClassEditor({ item })} disabled={Boolean(working)}>Edit</Button><Button size="sm" variant="destructive" onClick={() => { setWorking(`delete-class-${item.id}`); runAction(() => deleteClass(item.id), "Class deleted."); }}>Delete</Button></div></div><p className="mt-2 break-words text-xs text-slate-500">{item.program?.program_name || "Program"} · {item.year_level || "Year unavailable"} · {item.semester || "Semester unavailable"} Semester</p><ClassHours item={item} /></article>)}</div>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <Input type="search" aria-label="Search classes" placeholder="Search subject, section, instructor or program" value={classFilters.search} onChange={event => setClassFilters(current => ({ ...current, search: event.target.value }))} />
+            <select aria-label="Filter classes by program" className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm" value={classFilters.programId} onChange={event => setClassFilters(current => ({ ...current, programId: event.target.value }))}><option value="">All programs</option>{visiblePrograms.map(program => <option key={program.id} value={program.id}>{program.program_name}</option>)}</select>
+          </div>
+          {filteredClasses.length === 0 ? <EmptyState title={classFilters.search || classFilters.programId ? "No classes match the current search and filters" : "No classes found"} /> : (
+            <div className="grid gap-3 lg:grid-cols-2">{filteredClasses.map((item) => <article key={item.id} className="min-w-0 rounded-lg border border-slate-200 p-4"><div className="flex items-start justify-between gap-3"><span className="min-w-0 break-words font-medium">{item.subject_name}</span><Button size="sm" variant="outline" onClick={() => setClassEditor({ item })} disabled={Boolean(working)}>Edit</Button></div><p className="mt-2 break-words text-xs text-slate-500">{item.program?.program_name || "Program"} · {item.year_level || "Year unavailable"} · {item.semester || "Semester unavailable"} Semester</p><ClassHours item={item} /></article>)}</div>
           )}
           </section>
         </div> : null}

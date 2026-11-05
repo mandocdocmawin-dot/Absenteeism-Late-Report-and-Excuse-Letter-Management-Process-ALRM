@@ -76,6 +76,14 @@ export function requestCachedResource(key, load, { force = false } = {}) {
   return promise;
 }
 
+export function cancelResourceRequest(key) {
+  const request = inFlight.get(key);
+  if (!request) return false;
+  request.controller.abort();
+  inFlight.delete(key);
+  return true;
+}
+
 export function invalidateResourceCache(match) {
   const matches = typeof match === "function" ? match : (key) => key === match || key.startsWith(match);
   for (const key of [...entries.keys()]) {
