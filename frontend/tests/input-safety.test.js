@@ -19,18 +19,19 @@ function capture() {
   return mockApiFetch(async () => Response.json({ success: true, data: {} }));
 }
 
-const course = { subject_name: 'Data Structures', section: 'BSIS 3', schedule: 'Monday 9 AM', instructor_id: 'instructor-one', program_id: 'program-one', year_level: '3rd', semester: '1st', school_year: '2026-2027' };
+const course = { subject_name: 'Data Structures', section: 'BSIS 3', schedule: [], weekly_hours: 3, meetings_per_week: 1, curriculum_subject_id: 'curriculum-subject-one', program_id: 'program-one', year_level: '3rd', semester: '1st', school_year: '2026-2027' };
+const account = { first_name: 'Alex', middle_name: '', last_name: 'Parent', email: 'a@laverdad.edu.ph', program_id: 'program-one', school_id_number: 'FAC-001' };
 const request = { class_id: 'class-one', type: 'late', subjects_missed: 'Data Structures', reason: 'Traffic delay', minutes_late: 5, start_date_of_absence: '2026-10-20', guardian_name: 'Alex Parent', contact_number: '+639123456789' };
 
 test('account submission normalizes Unicode and control characters while preserving real names', async () => {
   const fetch = capture();
-  await createInstructor({ fullName: "  Jose\u0301\u0000 O’Neill-Santos  ", email: '  JOSE@LAVERDAD.EDU.PH\u0000 ' });
-  assert.deepEqual(JSON.parse(fetch.mock.calls[0].arguments[1].body), { name: 'José O’Neill-Santos', email: 'jose@laverdad.edu.ph', role: 'instructor' });
+  await createInstructor({ ...account, first_name: "  Jose\u0301\u0000 ", last_name: ' O’Neill-Santos ', email: '  JOSE@LAVERDAD.EDU.PH\u0000 ' });
+  assert.deepEqual(JSON.parse(fetch.mock.calls[0].arguments[1].body), { first_name: 'José', middle_name: null, last_name: 'O’Neill-Santos', email: 'jose@laverdad.edu.ph', role: 'instructor', school_id_number: 'FAC-001', program_id: 'program-one' });
 });
 
 test('invalid account names, emails and overlong fields never reach the network', async () => {
   const fetch = capture();
-  for (const form of [{ fullName: '   ', email: 'a@laverdad.edu.ph' }, { fullName: '<script>alert(1)</script>', email: 'a@laverdad.edu.ph' }, { fullName: 'Alex Parent', email: 'not-an-email' }, { fullName: 'A'.repeat(51), email: 'a@laverdad.edu.ph' }]) {
+  for (const form of [{ ...account, first_name: '   ' }, { ...account, first_name: '<script>alert(1)</script>' }, { ...account, email: 'not-an-email' }, { ...account, first_name: 'A'.repeat(51) }]) {
     await assert.rejects(() => createInstructor(form), error => error.status === 422 && Boolean(error.fieldErrors));
   }
   assert.equal(fetch.mock.callCount(), 0);

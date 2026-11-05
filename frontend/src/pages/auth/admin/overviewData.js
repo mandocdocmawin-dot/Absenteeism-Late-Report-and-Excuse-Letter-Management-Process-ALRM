@@ -15,7 +15,7 @@ export function requestActivity(requests = []) {
     const info = requestInfo(request);
     const events = [{ ...info, id: `${request.id}-submitted`, date: request.date_submitted || request.created_at, action: "Submitted" }];
     const action = { approved: "Approved", invalid: "Denied" }[normalizeRequestStatus(request.status)];
-    if (action && eventDate(request.date_reviewed)) events.push({ ...info, id: `${request.id}-reviewed`, date: request.date_reviewed, action });
+    if (action && eventDate(request.date_reviewed)) events.push({ ...info, instructor: request.reviewer?.name || info.instructor, id: `${request.id}-reviewed`, date: request.date_reviewed, action });
     if (eventDate(request.followupFlag?.flagged_date || request.followup_flag?.flagged_date)) {
       const flag = request.followupFlag || request.followup_flag;
       events.push({ ...info, id: `${request.id}-flagged`, date: flag.flagged_date, action: "Flagged" });
@@ -23,11 +23,13 @@ export function requestActivity(requests = []) {
     return events;
   }));
 }
-export function flagActivity(flags = []) {
+export function flagActivity(flags = [], classes = []) {
   return newest(flags.map(flag => {
     const request = flag.request || {};
     const info = requestInfo(request);
-    const instructor = historicalInstructorName(request);
+    const course = historicalRequestClass(request);
+    const matchingClass = classes.find(item => String(item.id) === String(course?.id));
+    const instructor = historicalInstructorName(request, "", []) || historicalInstructor(matchingClass)?.name || "Unavailable";
     return { ...info, id: flag.id, date: flag.flagged_date || flag.created_at, action: "Flagged", instructor, flaggedBy: instructor };
   }));
 }
@@ -42,6 +44,7 @@ export function auditActivity(logs = [], { classes = [], requests = [], instruct
     const instructor = historicalInstructorName(request, "", instructors)
       || historicalInstructorName(matchingRequest, "", instructors)
       || historicalInstructor(matchingClass, instructors)?.name
+      || (["administrator", "program_head", "instructor"].includes(log.actor?.role) ? log.actor?.name : "")
       || "—";
     return { id: log.id, requestId: request.id || "", date: log.timestamp, student: request.student?.name || request.enrollment?.student?.name || "Unavailable", studentId: "", email: "", subject: course.subject_name || "Unavailable", classId: course.id || "", type: request.type === "absence" ? "Absent" : request.type === "late" ? "Late" : "Unavailable", action: auditActions[log.action] || normalizeRequestStatusText(log.description) || "Unavailable", instructor, actor: log.actor?.name || "Unavailable", description: normalizeRequestStatusText(log.description || auditActions[log.action] || "Activity recorded") };
   }));

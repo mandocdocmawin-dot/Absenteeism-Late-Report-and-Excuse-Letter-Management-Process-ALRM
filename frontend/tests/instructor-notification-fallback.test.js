@@ -32,7 +32,8 @@ test("missing absence activity appears alongside existing late notifications usi
   const existing = notificationActivity([note], user.role, preferences, user.id);
   const activity = mergeRequestActivity(existing, [request], user);
   assert.deepEqual(activity.map(item => item.requestId), ["late-one", "missing-absence"]);
-  assert.equal(activity[1].message, "Marwin submitted a new absence request for Financial Literacy and Personal Management.");
+  assert.equal(activity[1].message, "Marwin just submitted an absence request for Financial Literacy and Personal Management.");
+  assert.equal(activity[1].label, "New request");
   assert.equal(activity[1].date, request.date_submitted);
   assert.equal(activity[1].href, "/instructor/class-requests?request=missing-absence");
   assert.equal(activity[1].source, "request");
@@ -134,7 +135,7 @@ test("fallback entries disclose browser-local reads and partial errors do not hi
   const { mergeRequestActivity } = await dataModule();
   const Panel = (await server.ssrLoadModule("/src/pages/auth/student/notifications/NotificationPanel.jsx")).default;
   const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Panel, { activity: mergeRequestActivity([], [request], user), readIds: new Set(), unreadTitle: "Unread in your account", warning: "Notifications could not be loaded.", onRefresh() {} })));
-  assert.match(html, /Marwin submitted/);
+  assert.match(html, /Marwin just submitted/);
   assert.match(html, /Notifications could not be loaded/);
   assert.match(html, /Unread request activity on this browser/);
   assert.match(html, /read status is saved on this browser/i);

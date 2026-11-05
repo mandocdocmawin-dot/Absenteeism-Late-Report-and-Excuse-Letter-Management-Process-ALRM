@@ -79,16 +79,17 @@ const protectedPaths = [
 ];
 
 for (const [path] of protectedPaths) {
-  test(`session restoration at ${path} shows the centered logo before page skeletons`, () => {
+  test(`session restoration at ${path} shows a neutral application shell`, () => {
     const { html } = renderSession(path);
-    assert.match(html, /data-slot="auth-loading"/);
-    assert.match(html, /La Verdad Christian College logo/);
-    assert.match(html, /min-h-screen place-items-center/);
+    assert.doesNotMatch(html, /data-slot="auth-loading"|La Verdad Christian College logo|Signing you in/);
+    assert.match(html, /flex min-h-screen/);
+    assert.match(html, /<aside\b/);
     assert.match(html, /<main\b/);
     assert.match(html, /aria-busy="true"/);
     assert.equal((html.match(/role="status"/g) || []).length, 1);
-    assert.match(html, /aria-label="Loading ALRM System\.\.\."/);
-    assert.doesNotMatch(html, /Signing you in|session-restore-skeleton|data-slot="skeleton"|<(button|input|select|a)\b/);
+    assert.match(html, /aria-label="Loading ALRM System"/);
+    assert.match(html, /data-slot="skeleton"/);
+    assert.doesNotMatch(html, /<(button|input|select|a)\b/);
     assert.doesNotMatch(html, /data-variant="(student|admin|instructor|program)"/);
   });
 }
@@ -98,8 +99,8 @@ test("restoration never presents unvalidated account data or a role-specific das
     user: { name: "UNVALIDATED ACCOUNT", role: "admin", email: "private@example.test" },
   });
   assert.doesNotMatch(html, /UNVALIDATED ACCOUNT|private@example\.test|data-variant="admin"/);
-  assert.match(html, /data-slot="auth-loading"/);
-  assert.doesNotMatch(html, /data-slot="skeleton"/);
+  assert.match(html, /aria-label="Loading ALRM System"/);
+  assert.match(html, /data-slot="skeleton"/);
 });
 
 test("a settled session failure keeps HTTP 503, its description and the exact retry callback", () => {
@@ -118,7 +119,7 @@ test("a settled session failure keeps HTTP 503, its description and the exact re
   }
 });
 
-test("returning accounts show the same logo regardless of a stale layout hint", () => {
+test("returning accounts show the same neutral shell regardless of a stale layout hint", () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
   const items = new Map();
   Object.defineProperty(globalThis, "sessionStorage", { configurable: true, value: { getItem: key => items.get(key) ?? null, setItem: (key, value) => items.set(key, value), removeItem: key => items.delete(key) } });
@@ -126,7 +127,9 @@ test("returning accounts show the same logo regardless of a stale layout hint", 
     for (const role of ["instructor", "student", "program", "admin"]) {
       items.set("alrm_loading_layout", role);
       const { html } = renderSession("/dashboard", { user: { name: "UNVALIDATED ACCOUNT", email: "private@example.test" } });
-      assert.match(html, /data-slot="auth-loading"/);
+      assert.match(html, /aria-label="Loading ALRM System"/);
+      assert.match(html, /data-slot="skeleton"/);
+      assert.doesNotMatch(html, /data-slot="auth-loading"|La Verdad Christian College logo/);
       assert.doesNotMatch(html, /data-slot="metric-placeholder"/);
       assert.equal((html.match(/role="status"/g) || []).length, 1);
       assert.doesNotMatch(html, /UNVALIDATED ACCOUNT|private@example\.test|<(button|input|a)\b/);

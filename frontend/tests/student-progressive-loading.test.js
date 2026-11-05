@@ -11,7 +11,7 @@ let pending, resources;
 const originalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
 const user = { id: "student-one", name: "Ana Santos", school_id_number: "2026-001", year_level: "1st", program: { program_name: "BS Information Systems" } };
 const requests = [{ id: "request-one", type: "absence", status: "approved", subjects_missed: "Mathematics", date_submitted: "2026-10-20T09:00:00Z", date_reviewed: "2026-10-21T09:00:00Z" }];
-const attendance = [{ class_id: "class-one", subject_name: "Mathematics", tracker: { converted_absences: "2" } }];
+const dashboard = { threshold: { used: 2, limit: 4, remaining_semester_percentage: 50, status: "warning" } };
 const classes = [{ class_id: "class-one", section: "A", semester: "1st", school_year: "2026-2027" }];
 
 before(async () => {
@@ -83,7 +83,7 @@ function render(account = user) {
 async function start() {
   const html = render();
   await setImmediate();
-  assert.deepEqual([...pending.keys()].sort(), ["/api/attendance/summary", "/api/classes", "/api/requests"]);
+  assert.deepEqual([...pending.keys()].sort(), ["/api/classes", "/api/dashboard", "/api/requests"]);
   return html;
 }
 
@@ -106,7 +106,7 @@ test("verified name and action show immediately with one status and no fake metr
   assert.doesNotMatch(html, /Absences Recorded|Good Standing|No recent request updates/);
 });
 
-test("requests reveal recorded metrics and notifications while attendance and classes wait", async () => {
+test("requests reveal recorded metrics and notifications while threshold and classes wait", async () => {
   await start();
   const html = await settle("/api/requests", requests);
   assert.match(html, /Absences Recorded/);
@@ -118,24 +118,24 @@ test("requests reveal recorded metrics and notifications while attendance and cl
   assert.equal((html.match(/data-slot="metric-placeholder"/g) || []).length, 1);
 });
 
-test("attendance gauge reveals independently and stays visible when classes finish", async () => {
+test("attendance threshold reveals independently and stays visible when classes finish", async () => {
   await start();
-  let html = await settle("/api/attendance/summary", attendance);
-  assert.match(html, /Cautionary Standing/);
+  let html = await settle("/api/dashboard", dashboard);
+  assert.match(html, /Warning/);
   assert.doesNotMatch(html, /data-slot="threshold-placeholder"/);
   assert.equal((html.match(/data-slot="metric-placeholder"/g) || []).length, 2);
   html = await settle("/api/classes", classes);
-  assert.match(html, /Cautionary Standing/);
+  assert.match(html, /Warning/);
   assert.match(html, /1st Semester A.Y. 2026-2027/);
   assert.match(html, /data-slot="notification-placeholder"/);
 });
 
 test("each endpoint failure leaves successful components and offers only one retry alert", async () => {
-  for (const failed of ["/api/requests", "/api/attendance/summary", "/api/classes"]) {
+  for (const failed of ["/api/requests", "/api/dashboard", "/api/classes"]) {
     resources.clear();
     pending.clear();
     await start();
-    for (const [path, data] of [["/api/requests", requests], ["/api/attendance/summary", attendance], ["/api/classes", classes]]) {
+    for (const [path, data] of [["/api/requests", requests], ["/api/dashboard", dashboard], ["/api/classes", classes]]) {
       await settle(path, path === failed ? "Endpoint unavailable" : data, path === failed ? 503 : 200);
     }
     let html = render();
@@ -144,26 +144,24 @@ test("each endpoint failure leaves successful components and offers only one ret
     assert.match(html, /Retry/);
     assert.equal((html.match(/role="alert"/g) || []).length, 1, failed);
     assert.doesNotMatch(html, /role="status"|data-slot="metric-placeholder"/);
-    if (failed !== "/api/attendance/summary") assert.match(html, /Cautionary Standing/);
+    if (failed !== "/api/dashboard") assert.match(html, /Warning/);
     if (failed !== "/api/requests") assert.match(html, /Mathematics approved/);
     const resource = [...resources.values()].find((entry) => entry.error);
     resource.reload();
     html = render();
-    if (failed !== "/api/attendance/summary") assert.match(html, /Cautionary Standing/);
+    if (failed !== "/api/dashboard") assert.match(html, /Warning/);
     if (failed !== "/api/requests") assert.match(html, /Mathematics approved/);
     await setImmediate();
-    await settle(failed, failed === "/api/requests" ? requests : failed === "/api/classes" ? classes : attendance);
+    await settle(failed, failed === "/api/requests" ? requests : failed === "/api/classes" ? classes : dashboard);
     assert.doesNotMatch(render(), /role="alert"|role="status"|data-slot="skeleton"/);
   }
 });
 
-test("malformed arrays and invalid tracker numbers become unavailable, never zero or NaN", async () => {
+test("malformed collections and dashboard arrays become unavailable, never zero or NaN", async () => {
   for (const [path, data] of [
     ["/api/requests", {}], ["/api/requests", [null]],
     ["/api/requests", [{ id: "bad", type: "unknown", status: "pending" }]],
-    ["/api/attendance/summary", [{ class_id: "class-one", tracker: { converted_absences: "invalid" } }]],
-    ["/api/attendance/summary", [{ class_id: "class-one", tracker: { converted_absences: -1 } }]],
-    ["/api/attendance/summary", [null]], ["/api/classes", [null]],
+    ["/api/dashboard", []], ["/api/classes", [null]],
     ["/api/classes", [{ class_id: "class-one", semester: {} }]],
   ]) {
     resources.clear();
@@ -190,10 +188,10 @@ test("simultaneous failures show one alert per endpoint and no invented totals o
 
 test("empty successes settle honestly without keeping placeholders", async () => {
   await start();
-  for (const path of [...pending.keys()]) await settle(path, []);
+  for (const path of [...pending.keys()]) await settle(path, path === "/api/dashboard" ? { threshold: {} } : []);
   const html = render();
   assert.match(html, /Across 0 enrolled courses/);
-  assert.match(html, /No Attendance Recorded/);
+  assert.match(html, /Unavailable/);
   assert.match(html, /No recent request updates/);
   assert.doesNotMatch(html, /role="status"|role="alert"|data-slot="skeleton"/);
 });

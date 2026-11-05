@@ -87,20 +87,11 @@ export async function loadNotificationFeed(role, userId) {
 
 export async function loadNotificationPreview(userId) {
   const preview = await getNotificationPreview();
-  let result = cachePreview(userId, { notifications: preview.notifications, requests: [], auditLogs: [], warning: "", unreadCount: preview.unreadCount, readError: "" });
-  const unread = preview.notifications.filter(item => item?.is_read !== true);
-  if (!unread.length) return result;
-  try {
-    await markFeedRead(userId, unread);
-    result = getCachedNotificationPreview(userId);
-  } catch (error) {
-    result = cachePreview(userId, { ...result, readError: error.message || "Read status could not be saved." });
-  }
-  return result;
+  return cachePreview(userId, { notifications: preview.notifications, requests: [], auditLogs: [], warning: "", unreadCount: preview.unreadCount, readError: "" });
 }
 
 export async function markFeedRead(userId, items, all = false) {
-  const serverIds = [...new Set(items.filter(item => !item.source).map(item => item.id))];
+  const serverIds = [...new Set(items.filter(item => !item.source).flatMap(item => item.notificationIds || [item.id]))];
   if (all) await markAllNotificationsRead();
   else if (serverIds.length) await Promise.all(serverIds.map(markNotificationRead));
   cachedPreviewWithReadIds(userId, serverIds, all);

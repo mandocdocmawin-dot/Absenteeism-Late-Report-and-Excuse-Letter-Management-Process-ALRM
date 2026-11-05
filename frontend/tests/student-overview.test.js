@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { attendanceStanding, programShortName, recentRequestActivity, requestTotals, studentProfile } from "../src/pages/auth/student/dashboard/studentOverview.js";
+import { programShortName, recentRequestActivity, requestTotals, studentProfile } from "../src/pages/auth/student/dashboard/studentOverview.js";
 
 test("dashboard program labels abbreviate recognized degrees and preserve unknown names", () => {
   assert.equal(programShortName("Bachelor of Science in Information Technology"), "BSIT");
@@ -17,20 +17,6 @@ test("recorded totals exclude cancellations and distinguish reviewed and pending
     { type: "late", status: "cancelled" },
   ];
   assert.deepEqual(requestTotals(requests), { absences: 4, lates: 1, excused: 2, unexcused: 1, pending: 1 });
-});
-
-test("attendance standing applies thresholds per class rather than accumulating different classes", () => {
-  const rows = ["Math", "English", "Science"].map((subject_name) => ({ subject_name, tracker: { converted_absences: 1 } }));
-  assert.equal(attendanceStanding(rows).status, "safe");
-  rows[1].tracker.converted_absences = 2;
-  assert.deepEqual(attendanceStanding(rows), { converted: 2, status: "warning", subject: "English", hasData: true });
-  rows[2].tracker.converted_absences = 4;
-  assert.equal(attendanceStanding(rows).status, "IR");
-});
-
-test("missing trackers are distinguished from an actual zero absence record", () => {
-  assert.equal(attendanceStanding([{ subject_name: "Math", tracker: null }]).hasData, false);
-  assert.deepEqual(attendanceStanding([{ subject_name: "Math", tracker: { converted_absences: 0 } }]), { converted: 0, status: "safe", subject: "Math", hasData: true });
 });
 
 test("profile shows school identity and actual academic data without exposing database ID", () => {
