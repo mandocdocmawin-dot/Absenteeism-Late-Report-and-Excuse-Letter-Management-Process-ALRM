@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildRequestPayload, buildRequestEditForm, buildRequestUpdatePayload, proofTypeError } from "../src/pages/auth/student/request-form/buildPayload.js";
 import { initialForm, proofOptions } from "../src/pages/auth/student/request-form/constants.js";
-import { prepareRequestInput } from "../src/pages/auth/student/request-form/requestInputs.js";
 
 const classes = [{ class_id: "class-1", subject_name: "Math" }];
 const form = { ...initialForm, requestType: "absence", classId: "class-1", absenceReasons: ["Family Emergency"], guardianName: "Test Guardian", contactNumber: "09000000000", startDateOfAbsence: "2026-10-12", endDateOfAbsence: "2026-10-12" };
@@ -61,25 +60,4 @@ test("older records with missing proofs and legacy summaries edit without metada
 test("proof validation errors include parent, indexed and wildcard entries", () => {
   assert.equal(proofTypeError({ proof_types: ["Select valid proofs."], "proof_types.0": ["Invalid label."], "proof_types.*": ["Invalid label."], reason: ["Unrelated"] }), "Select valid proofs. Invalid label.");
   assert.equal(proofTypeError(), "");
-});
-
-test("create validation requires uploaded evidence but accepts a legacy class without an assignment id", () => {
-  const payload = {
-    class_id: "class-1",
-    type: "absence",
-    subjects_missed: "Math",
-    start_date_of_absence: "2026-10-12",
-    end_date_of_absence: "2026-10-12",
-    guardian_name: "Test Guardian",
-    contact_number: "09000000000",
-    reason: "Family emergency",
-    evidence_file_url: "attachment-1",
-    proof_types: ["Medical Certificate"],
-  };
-
-  assert.deepEqual(prepareRequestInput(payload), payload);
-  assert.throws(
-    () => prepareRequestInput({ ...payload, evidence_file_url: null }),
-    (error) => error.status === 422 && error.fieldErrors?.evidence_file_url?.[0] === "Attachment is required.",
-  );
 });

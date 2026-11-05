@@ -9,21 +9,13 @@ export default function NotificationPreferences({ user, userId = user?.id, role 
   const prefix = student ? "student" : "notification";
   const { preferences, updatePreference, error } = useNotificationPreferences(userId, role);
   const emailAvailable = typeof user?.email_notifications_enabled === "boolean";
-  const serverEmail = user?.email_notifications_enabled;
-  const [emailState, setEmailState] = useState(() => ({ serverEmail, enabled: serverEmail === true }));
+  const [emailEnabled, setEmailEnabled] = useState(user?.email_notifications_enabled === true);
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
-  // Accept refreshed server values while idle; preserve the user's queued choice during a save.
-  if (emailState.serverEmail !== serverEmail) {
-    setEmailState({ serverEmail, enabled: savingEmail ? emailState.enabled : serverEmail === true });
-  }
-  const emailEnabled = emailState.enabled;
-  const setEmailEnabled = enabled => setEmailState(current => ({ ...current, enabled }));
   const emailSave = useRef({ active: false, desired: emailEnabled, confirmed: emailEnabled });
 
   async function changeEmailPreference(checked) {
     if (!emailAvailable || !userId) return;
-    if (!emailSave.current.active) emailSave.current.confirmed = emailEnabled;
     setEmailEnabled(checked);
     setEmailError("");
     const save = emailSave.current;

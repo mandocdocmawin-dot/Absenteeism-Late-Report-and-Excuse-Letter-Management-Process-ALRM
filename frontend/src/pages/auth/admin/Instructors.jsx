@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Plus, Users } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AdminPageLayout from "./AdminPageLayout";
@@ -36,9 +37,18 @@ function Instructors() {
               Instructor directory
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              Use the add button to create an instructor account.
+              Use the add button to create an instructor account. The current
+              backend exposes pending-user approval and program endpoints, but
+              not a complete instructor listing endpoint yet.
             </p>
           </div>
+          <Alert>
+            <AlertTitle>Backend endpoint needed for full listing</AlertTitle>
+            <AlertDescription>
+              Expected future endpoint: GET /api/admin/users?role=instructor or
+              equivalent.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </AdminPageLayout>

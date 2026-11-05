@@ -85,14 +85,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const refreshUser = useCallback((options) => {
-    clearSessionUserCache();
-    return loadUser(options);
-  }, [loadUser]);
-
   return (
     <AuthContext.Provider value={{ user: session.user, loading: session.loading, sessionError: session.error,
-      logoutDestination, completeCookieLogin, logout, refreshUser }}>
+      logoutDestination, completeCookieLogin, logout, refreshUser: loadUser }}>
       {children}
     </AuthContext.Provider>
   );

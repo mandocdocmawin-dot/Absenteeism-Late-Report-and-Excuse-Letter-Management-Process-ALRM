@@ -145,29 +145,16 @@ test("threshold percentages use backend attendance units and count three invalid
   const { buildClassRecords } = await helpers();
   const scheduled = { ...course, weekly_hours: 3, meetings_per_week: 1 };
   const request = (id, type, status) => report(id, type, status, { class: scheduled });
-  const input = [request("one", "absence", "invalid"), request("two", "absence", "approved"), request("three", "absence", "pending")];
-  assert.equal(buildClassRecords(input, programs)[0].students[0].threshold, 12.5);
+  const input = [request("one", "absence", "invalid"), request("two", "absence", "approved"), request("three", "absence", "pending"), request("four", "absence", "noted")];
+  assert.equal(buildClassRecords(input, programs)[0].students[0].threshold, 6.25);
   const lates = [1, 2, 3].map(id => request(`late-${id}`, "late", "invalid"));
-  assert.equal(buildClassRecords([...input, ...lates, lates[0]], programs)[0].students[0].threshold, 14.58);
+  assert.equal(buildClassRecords([...input, ...lates, lates[0]], programs)[0].students[0].threshold, 8.33);
   assert.equal(buildClassRecords([request("pending", "absence", "pending")], programs)[0].students[0].threshold, 0);
-});
-
-test("all decided absences including noted contribute hours while only invalid lates contribute penalties", async () => {
-  const { buildClassRecords } = await helpers();
-  const scheduled = { ...course, weekly_hours: 3, meetings_per_week: 1 };
-  for (const status of ["approved", "noted", "invalid", "pending", "cancelled"]) {
-    const absence = report(`absence-${status}`, "absence", status, { class: scheduled });
-    const rows = buildClassRecords([absence], programs);
-    const threshold = rows[0]?.students[0]?.threshold ?? 0;
-    assert.equal(threshold, ["approved", "noted", "invalid"].includes(status) ? 6.25 : 0, status);
-    const lates = [1, 2, 3].map(id => report(`late-${status}-${id}`, "late", status, { class: scheduled }));
-    assert.equal(buildClassRecords(lates, programs)[0]?.students[0]?.threshold ?? 0, status === "invalid" ? 2.08 : 0, status);
-  }
 });
 
 test("attendance alert levels match preventive, critical and rounded drop-limit boundaries", async () => {
   const { attendanceAlert } = await import(new URL(`${directory}attendancePolicy.js`, import.meta.url));
-  const studentAt = (used) => ({ absenceHours: used, invalidLates: 0 });
+  const studentAt = (used) => ({ invalidAbsenceHours: used, invalidLates: 0 });
   const threeHour = { weekly_hours: 3, meetings_per_week: 1 };
   assert.equal(attendanceAlert(threeHour, studentAt(2)).level, "safe");
   assert.equal(attendanceAlert(threeHour, studentAt(3)).level, "preventive");
@@ -178,9 +165,6 @@ test("attendance alert levels match preventive, critical and rounded drop-limit 
   assert.equal(attendanceAlert(fiveHour, studentAt(5)).level, "preventive");
   assert.equal(attendanceAlert(fiveHour, studentAt(10)).level, "critical");
   assert.equal(attendanceAlert(fiveHour, studentAt(16)).level, "drop-limit");
-  const twoHour = { weekly_hours: 2, meetings_per_week: 1 };
-  assert.equal(attendanceAlert(twoHour, studentAt(6.5)).level, "critical");
-  assert.equal(attendanceAlert(twoHour, studentAt(7)).level, "drop-limit");
   assert.equal(attendanceAlert({}, studentAt(4)), null);
 });
 

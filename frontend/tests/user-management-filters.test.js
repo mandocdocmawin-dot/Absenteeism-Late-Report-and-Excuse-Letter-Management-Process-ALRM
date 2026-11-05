@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 
 let server, Filters, Options;
-const props = { filters: { role: "student", program: "p1", year: "3", status: "approved" }, programs: [{ id: "p1", program_name: "Information Systems" }], onChange() {} };
+const props = { filters: { tab: "approved", role: "student", program: "p1", year: "3", status: "approved" }, programs: [{ id: "p1", program_name: "Information Systems" }], onChange() {} };
 before(async () => {
   server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom" });
   ({ default: Filters, UserFilterOptions: Options } = await server.ssrLoadModule("/src/pages/auth/admin/UserManagementFilters.jsx"));
@@ -27,11 +27,10 @@ test("the filter icon is a labeled popover trigger with no toolbar selects", () 
 
 test("radio choices expose roles, actual programs, student years and account status", () => {
   const html = renderOptions();
-  for (const text of ["All roles", "Student", "Instructor", "Program Head", "Administrator", "All programs", "Information Systems", "All years", "1st year", "4th year", "Active accounts", "Awaiting first sign-in", "All accounts", "Deactivated accounts"]) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /Unassigned/);
+  for (const text of ["All roles", "Student", "Instructor", "Program Head", "Administrator", "All programs", "Information Systems", "All years", "1st year", "4th year", "Unassigned", "Approved accounts", "Deactivated accounts"]) assert.ok(html.includes(text), text);
   const radios = [...html.matchAll(/<input\b[^>]*type="radio"[^>]*>/g)].map(([input]) => input);
   assert.ok(radios.find(input => input.includes('name="user-filter-year"') && input.includes('value="3"')).includes('checked=""'));
-  assert.doesNotMatch(renderOptions({ role: "instructor" }), /user-filter-year/);
+  assert.doesNotMatch(renderOptions({ role: "instructor", tab: "waiting" }), /user-filter-year|user-filter-status/);
 });
 
 test("General Education is absent from admin program filters", () => {
