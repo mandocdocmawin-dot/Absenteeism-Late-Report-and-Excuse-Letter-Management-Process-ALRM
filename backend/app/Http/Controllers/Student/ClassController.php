@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Services\AcademicPeriod;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ClassController extends Controller
@@ -13,9 +15,11 @@ class ClassController extends Controller
      *
      * GET /api/classes
      */
-    public function index()
+    public function index(Request $request)
     {
+        $period = AcademicPeriod::resolveFilters($request);
         $enrollments = Enrollment::where('student_id', Auth::id())
+            ->whereHas('class', fn ($query) => $query->forAcademicPeriod($period))
             ->whereHas('class.instructor')
             ->whereHas('class.activeTeachingAssignment')
             ->with('class.instructor', 'class.program', 'class.activeTeachingAssignment')

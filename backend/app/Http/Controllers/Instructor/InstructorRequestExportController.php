@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Instructor;
 use App\Exports\InstructorRequestExport;
 use App\Http\Controllers\Controller;
 use App\Models\ExcuseRequest;
+use App\Services\AcademicPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -16,13 +17,15 @@ class InstructorRequestExportController extends Controller
     public function export(Request $request)
     {
         $filters = $request->validate([
+            ...AcademicPeriod::filterRules(),
             'class_id' => ['nullable', 'uuid', Rule::exists('teaching_assignments', 'class_id')->where('instructor_id', $request->user()->id)],
             'type' => ['nullable', Rule::in(['absence', 'late'])],
             'status' => ['nullable', Rule::in(['pending', 'approved', 'noted', 'invalid', 'cancelled'])],
             'search' => ['nullable', 'string', 'max:50'],
-        ]);
+        ]) + AcademicPeriod::current();
 
         $query = ExcuseRequest::forInstructor($request->user()->id)->whereHas('enrollment.class', function ($query) use ($filters) {
+            $query->forAcademicPeriod($filters);
             if (! empty($filters['class_id'])) {
                 $query->whereKey($filters['class_id']);
             }

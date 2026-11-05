@@ -11,7 +11,11 @@
 | `/program-head/dashboard` | Combined `program_name`, `total_students`, `total_instructors`, `total_classes`, `pending_requests`, `warning_count`, `critical_count`, `ir_count`, up to 5 `recent_flags` |
 | `/admin/dashboard` | `total_programs`, `total_classes`, `total_students`, `total_instructors`, `total_program_heads`, `pending_staff_approvals`, `pending_requests`, `warning_count`, `critical_count`, `ir_count`, `open_followup_flags`, `programs_summary`, up to 10 `recent_flags` |
 
-`pending_staff_approvals` currently counts all pending users despite its field name. Most dashboard aggregate queries are not restricted to the current academic term; only the student `total_classes` calculation explicitly is.
+Dashboard class counts, attendance totals, thresholds, request counts, and flags use the saved current semester and school year. User-account counts, program counts, staff approvals, and notifications retain their existing account/program scope. `pending_staff_approvals` currently counts all pending users despite its field name.
+
+`/classes`, `/attendance/summary`, `/program-head/requests`, and `/program-head/students/flagged` also default to the current academic period. Each supports historical access with both `semester=1st|2nd` and `school_year=YYYY-YYYY` (consecutive years); incomplete or invalid period filters return `422`. For example: `/attendance/summary?semester=1st&school_year=2025-2026`. Existing ownership/program rules still apply. Dashboards always show the current period.
+
+Changing the saved academic period switches query results without changing existing classes, enrollments, requests, or trackers. The current-period enrollment rules used during profile completion and class creation/update remain in place; changing the period alone does not auto-enroll students into new classes. Student and instructor request-history lists and authorized individual-request access remain available across periods, including pending historical requests that still need review.
 
 Student `threshold` contains `used`, `limit`, `status`, and `remaining_semester_percentage`. The closest class is selected by usage ratio; overall status is the highest severity among trackers. These values need not describe the same tracker.
 

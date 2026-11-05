@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Services\AcademicPeriod;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-    public function summary()
+    public function summary(Request $request)
     {
+        $period = AcademicPeriod::resolveFilters($request);
         $enrollments = Enrollment::where('student_id', Auth::id())
+            ->whereHas('class', fn ($query) => $query->forAcademicPeriod($period))
             ->with(['class', 'attendanceTracker'])
             ->get();
 

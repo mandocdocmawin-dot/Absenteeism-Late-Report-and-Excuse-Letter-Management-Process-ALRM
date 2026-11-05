@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\ExcuseRequest;
+use App\Services\AcademicPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,7 @@ class ReportController extends Controller
     private function resolveFilters(Request $request): array
     {
         $validated = $request->validate([
+            ...AcademicPeriod::filterRules(),
             'program_id' => ['nullable', 'string', 'uuid', 'exists:programs,id'],
             'status'     => ['nullable', 'string', Rule::in(['pending', 'approved', 'noted', 'invalid'])],
             'date_from'  => ['nullable', 'date'],
@@ -60,7 +62,7 @@ class ReportController extends Controller
             $validated['date_to'] = now()->toDateString();
         }
 
-        return $validated;
+        return $validated + AcademicPeriod::current();
     }
 
     /**
@@ -72,7 +74,7 @@ class ReportController extends Controller
         $from = Carbon::parse($validated['date_from'])->startOfDay();
         $to   = Carbon::parse($validated['date_to'])->endOfDay();
 
-        $query = ExcuseRequest::query();
+        $query = ExcuseRequest::whereHas('enrollment.class', fn ($query) => $query->forAcademicPeriod($validated));
 
         if (! empty($validated['program_id'])) {
             $query->whereHas('enrollment.class', function ($q) use ($validated) {
@@ -127,6 +129,8 @@ class ReportController extends Controller
                 'max_export_rows'  => self::MAX_EXPORT_ROWS,
                 'date_from'        => $validated['date_from'],
                 'date_to'          => $validated['date_to'],
+                'semester'         => $validated['semester'],
+                'school_year'      => $validated['school_year'],
                 'used_default_range' => ! $request->filled('date_from') && ! $request->filled('date_to'),
             ],
         ]);

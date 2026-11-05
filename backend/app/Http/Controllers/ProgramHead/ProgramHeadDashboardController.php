@@ -10,6 +10,7 @@ use App\Models\ExcuseRequest;
 use App\Models\FollowupFlag;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\AcademicPeriod;
 use App\Support\BoundedCollection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -38,16 +39,16 @@ class ProgramHeadDashboardController extends Controller
         }
 
         $trackerQuery = AttendanceTracker::whereHas('enrollment.class', function ($q) use ($programIds) {
-            $q->whereIn('program_id', $programIds);
+            $q->whereIn('program_id', $programIds)->forAcademicPeriod();
         });
 
         $data = [
             'program_name' => Program::whereIn('id', $programIds)->pluck('program_name')->implode(', '),
             'total_students' => User::where('role', 'student')->whereIn('program_id', $programIds)->count(),
             'total_instructors' => $this->instructorQuery($programIds)->count(),
-            'total_classes' => Program::whereIn('id', $programIds)->withCount('classes')->get()->sum('classes_count'),
+            'total_classes' => Program::whereIn('id', $programIds)->withCount(['classes' => fn ($q) => $q->forAcademicPeriod()])->get()->sum('classes_count'),
             'pending_requests' => ExcuseRequest::whereHas('enrollment.class', function ($q) use ($programIds) {
-                $q->whereIn('program_id', $programIds);
+                $q->whereIn('program_id', $programIds)->forAcademicPeriod();
             })->where('status', 'pending')->count(),
             'warning_count' => (clone $trackerQuery)->where('status', 'warning')->count(),
             'ir_count' => (clone $trackerQuery)->where('status', 'IR')->count(),
@@ -72,7 +73,7 @@ class ProgramHeadDashboardController extends Controller
      */
     public function flaggedStudents(Request $request)
     {
-        $query = $this->flagQuery()
+        $query = $this->flagQuery(AcademicPeriod::resolveFilters($request))
             ->with([
                 'request.enrollment.student',
                 'request.enrollment.class',
@@ -110,9 +111,11 @@ class ProgramHeadDashboardController extends Controller
             ], 403);
         }
 
-        $query = ExcuseRequest::whereHas('enrollment.class', function ($q) use ($programIds) {
-            $q->whereIn('program_id', $programIds);
-        })->with(['enrollment.student', 'enrollment.class.instructor', 'reviewer', 'followupFlag']);
+        $period = AcademicPeriod::resolveFilters($request);
+        $query = ExcuseRequest::whereHas('enrollment.class', function ($q) use ($programIds, $period) {
+            $q->whereIn('program_id', $programIds)->forAcademicPeriod($period);
+        })
+            ->with(['enrollment.student', 'enrollment.class.instructor', 'reviewer', 'followupFlag']);
 
         if ($request->filled('status')) {
             $request->validate([
@@ -163,7 +166,7 @@ class ProgramHeadDashboardController extends Controller
         return $instructors;
     }
 
-    private function flagQuery()
+    private function flagQuery(?array $period = null)
     {
         /** @var User $user */
         $user = Auth::user();
@@ -172,6 +175,6 @@ class ProgramHeadDashboardController extends Controller
         return FollowupFlag::where(function ($query) use ($programIds) {
             $query->where('escalated_to', Auth::id())
                 ->orWhereHas('request.enrollment.class', fn ($query) => $query->whereIn('program_id', $programIds));
-        });
+        })->whereHas('request.enrollment.class', fn ($q) => $q->forAcademicPeriod($period));
     }
 }

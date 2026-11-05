@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\AcademicPeriod;
 use Carbon\CarbonInterface;
 use Database\Factories\ClassModelFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +37,14 @@ class ClassModel extends Model
         'meetings_per_week' => 'integer',
         'credit_units' => 'float',
     ];
+
+    public function scopeForAcademicPeriod(Builder $query, ?array $period = null): Builder
+    {
+        $period ??= AcademicPeriod::current();
+
+        return $query->where('semester', $period['semester'])
+            ->where('school_year', $period['school_year']);
+    }
 
     protected static function booted(): void
     {

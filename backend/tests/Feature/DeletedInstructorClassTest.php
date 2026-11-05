@@ -34,7 +34,7 @@ class DeletedInstructorClassTest extends SecurityTestCase
         $enrollment = Enrollment::create(['student_id' => $student->id, 'class_id' => $class->id, 'year_level' => '1st']);
         Auth::login($student);
 
-        $this->assertCount(1, app(ClassController::class)->index()->getData(true)['data']);
+        $this->assertCount(1, app(ClassController::class)->index(Request::create('/api/classes'))->getData(true)['data']);
         try {
             $instructor->delete();
             $this->fail('Teaching history must prevent instructor deletion.');
@@ -45,7 +45,7 @@ class DeletedInstructorClassTest extends SecurityTestCase
             'action' => 'remove', 'expected_revision' => 1, 'reason' => 'Remove teaching load',
         ]);
         $this->assertNull($class->fresh()->instructor_id);
-        $this->assertSame([], app(ClassController::class)->index()->getData(true)['data']);
+        $this->assertSame([], app(ClassController::class)->index(Request::create('/api/classes'))->getData(true)['data']);
         $this->assertNotNull($enrollment->fresh());
 
         $request = Request::create('/api/requests', 'POST', [

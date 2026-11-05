@@ -31,7 +31,7 @@
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/dashboard` | Student dashboard snapshot |
-| GET | `/classes` | Enrolled classes with an existing instructor |
+| GET | `/classes` | Current-period enrolled classes with an existing instructor; historical `semester` + `school_year` supported |
 | POST | `/requests/evidence` | Upload evidence; `201` |
 | POST | `/requests` | Submit request; `201` |
 | GET | `/requests` | Own requests; **Paged** |
@@ -39,13 +39,13 @@
 | PATCH | `/requests/{request}` | Edit own pending request |
 | DELETE | `/requests/{request}` | Cancel own pending request; preserves record |
 | POST | `/requests/{request}/follow-up` | Follow up own pending request; `201` |
-| GET | `/attendance/summary` | Own enrollments and nullable attendance trackers |
+| GET | `/attendance/summary` | Current-period own enrollments and nullable trackers; historical `semester` + `school_year` supported |
 
 ## Instructor endpoints
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/instructor/requests/export` | Download scoped XLSX |
+| GET | `/instructor/requests/export` | Download scoped XLSX; current period by default, historical `semester` + `school_year` supported |
 | GET | `/instructor/requests` | Requests for taught classes; **Paged** |
 | PATCH | `/instructor/requests/{request}/decision` | Approve, note, or invalidate own class's request |
 | GET | `/instructor/dashboard` | Class and attendance snapshot |
@@ -56,14 +56,14 @@
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/program-head/reports/export` | Download program-scoped activity/risk CSV |
+| GET | `/program-head/reports/export` | Download program-scoped activity/risk CSV; current period by default, historical `semester` + `school_year` supported |
 | GET | `/program-head/audit-logs` | Scoped student/instructor activity; **Paged**; primary-role restriction applies |
 | GET | `/program-head/dashboard` | Summary of headed programs |
 | GET | `/program-head/students` | Students in headed programs; **Paged** |
 | GET | `/program-head/instructors` | Instructors linked to or teaching in headed programs; **Paged** |
-| GET | `/program-head/students/flagged` | Flags escalated to user OR belonging to headed programs; adds attendance `threshold` and `percentage`; **Paged** |
+| GET | `/program-head/students/flagged` | Flags escalated to user OR belonging to headed programs; current period by default, historical `semester` + `school_year` supported; adds attendance `threshold` and `percentage`; **Paged** |
 | PATCH | `/program-head/followup-flags/{followupFlag}/resolve` | Resolve an authorized flag and audit the action; 409 if already resolved |
-| GET | `/program-head/requests` | Requests in headed programs; **Paged** |
+| GET | `/program-head/requests` | Requests in headed programs; current period by default, historical `semester` + `school_year` supported; **Paged** |
 
 ## Administrator endpoints
 
@@ -92,7 +92,7 @@
 | GET | `/admin/curricula` | List curriculum revisions; optional program/version filters; **Paged** |
 | POST | `/admin/curricula` | Add a curriculum revision; `201`, or `200` for an identical existing payload |
 | GET | `/admin/curricula/{curriculum}` | Curriculum subjects, offerings, program, and sources |
-| GET | `/admin/reports/export` | Download college-wide XLSX |
-| GET | `/admin/reports/preview` | Preview export row count and date window |
+| GET | `/admin/reports/export` | Download college-wide XLSX; current period by default, historical `semester` + `school_year` supported |
+| GET | `/admin/reports/preview` | Preview export row count, date window, and academic period; same period filters as export |
 
 `PUT/PATCH` denotes both registered resource update methods. There are no resource create/edit HTML routes. `/up` is a separate Laravel health route outside `/api`; `/` serves the welcome view.

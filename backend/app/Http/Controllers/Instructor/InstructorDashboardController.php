@@ -16,6 +16,7 @@ class InstructorDashboardController extends Controller
     public function index()
     {
         $classes = ClassModel::where('instructor_id', Auth::id())
+            ->forAcademicPeriod()
             ->with(['enrollments.student', 'enrollments.attendanceTracker'])
             ->get();
 
@@ -34,6 +35,7 @@ class InstructorDashboardController extends Controller
         })->values();
 
         $pendingRequests = ExcuseRequest::forInstructor(Auth::id(), true)->where('status', 'pending')
+            ->whereHas('enrollment.class', fn ($query) => $query->forAcademicPeriod())
             ->with('enrollment.student', 'enrollment.class')
             ->latest()
             ->get();

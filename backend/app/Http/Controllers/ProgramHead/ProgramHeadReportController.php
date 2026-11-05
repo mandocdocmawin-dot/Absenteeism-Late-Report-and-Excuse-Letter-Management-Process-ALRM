@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExcuseRequest;
 use App\Models\FollowupFlag;
 use App\Models\User;
+use App\Services\AcademicPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -24,11 +25,12 @@ class ProgramHeadReportController extends Controller
         abort_unless($programIds !== [], 403, 'No program is assigned to this account.');
 
         $filters = $request->validate([
+            ...AcademicPeriod::filterRules(),
             'report_type' => ['nullable', Rule::in(['activity', 'risk'])],
             'program_id' => ['nullable', 'uuid', Rule::in($programIds)],
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
-        ]);
+        ]) + AcademicPeriod::current();
         $risk = ($filters['report_type'] ?? 'activity') === 'risk';
         $to = Carbon::parse($filters['date_to'] ?? now()->toDateString())->startOfDay();
         $from = isset($filters['date_from'])
@@ -43,7 +45,7 @@ class ProgramHeadReportController extends Controller
         $query = $risk ? FollowupFlag::query() : ExcuseRequest::query();
         // Never broaden risk reports just because a flag was escalated to this account.
         $query->whereHas($risk ? 'request.enrollment.class' : 'enrollment.class',
-            fn ($query) => $query->whereIn('program_id', $programIds));
+            fn ($query) => $query->whereIn('program_id', $programIds)->forAcademicPeriod($filters));
         $dateColumn = $risk ? 'flagged_date' : 'COALESCE(date_submitted, created_at)';
         $query->whereRaw($dateColumn.' >= ? AND '.$dateColumn.' < ?', [
             $from->toDateTimeString(), $to->copy()->addDay()->toDateTimeString(),
