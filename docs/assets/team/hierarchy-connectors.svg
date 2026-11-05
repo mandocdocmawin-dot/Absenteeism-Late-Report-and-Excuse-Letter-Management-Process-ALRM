@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="64" viewBox="0 0 1000 64" preserveAspectRatio="none" role="img" aria-label="Project Manager connects to five equal team roles">
+  <path vector-effect="non-scaling-stroke" d="M500 0V28" fill="none" stroke="#d2b074" stroke-width="2"/>
+  <path vector-effect="non-scaling-stroke" d="M100 64V44Q100 28 116 28H884Q900 28 900 44V64M300 28V64M500 28V64M700 28V64" fill="none" stroke="#667e96" stroke-width="1.5"/>
+  <circle cx="500" cy="28" r="4" fill="#d2b074"/>
+  <circle cx="100" cy="60" r="3" fill="#8dc8f5"/>
+  <circle cx="300" cy="60" r="3" fill="#91d5cf"/>
+  <circle cx="500" cy="60" r="3" fill="#e9c584"/>
+  <circle cx="700" cy="60" r="3" fill="#c8b5ef"/>
+  <circle cx="900" cy="60" r="3" fill="#b1d3a2"/>
+</svg>
