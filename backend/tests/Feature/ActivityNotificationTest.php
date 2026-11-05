@@ -109,8 +109,19 @@ class ActivityNotificationTest extends SecurityTestCase
         $this->bearer($instructor)->patchJson("/api/instructor/requests/{$id}/decision", ['status' => 'approved'])->assertOk();
         $this->patchJson("/api/instructor/requests/{$id}/decision", ['status' => 'approved'])->assertConflict();
 
+        $activityTypes = [
+            'activity_submitted_request',
+            'activity_followed_up_request',
+            'activity_decided_request_approved',
+        ];
         foreach ([$admin, $head] as $recipient) {
-            $this->assertSame(3, UserNotification::where('user_id', $recipient->id)->count());
+            // One default three-hour absence also triggers a preventive alert for the head.
+            $expected = $recipient->is($head) ? [...$activityTypes, 'threshold_warning'] : $activityTypes;
+            $this->assertEqualsCanonicalizing($expected, UserNotification::where('user_id', $recipient->id)->pluck('type')->all());
+        }
+        foreach ([$head, $student, $instructor] as $recipient) {
+            $this->assertSame(1, UserNotification::where('user_id', $recipient->id)
+                ->where('request_id', $id)->where('type', 'threshold_warning')->count());
         }
         foreach (['new_request', 'request_followup'] as $type) {
             $this->assertDatabaseHas('notifications', ['user_id' => $instructor->id, 'request_id' => $id, 'type' => $type]);
