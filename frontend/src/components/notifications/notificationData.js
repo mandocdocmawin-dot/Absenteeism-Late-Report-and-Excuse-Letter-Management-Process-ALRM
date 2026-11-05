@@ -21,6 +21,11 @@ const recipients = {
   account_status_changed: ["student", "instructor", "program", "admin"],
 };
 
+export function notificationOpenChange(nextOpen, notifications, setOpen) {
+  setOpen(nextOpen);
+  if (nextOpen && notifications.canMarkAll) void notifications.markAllRead();
+}
+
 function thresholdDetail(message) {
   const match = String(message).match(/([\d.]+) of ([\d.]+) allowable units; ([\d.]+)% of semester hours remaining before the IR limit/i);
   if (!match) return undefined;
@@ -32,15 +37,46 @@ function thresholdDetail(message) {
   return `${remaining} units and ${percentage}% remaining before the absence limit.`;
 }
 
+function submissionMessage(type, message) {
+  if (!["new_request", "activity_submitted_request"].includes(type)) return message;
+  const text = String(message).trim();
+  const match = text.match(/^(.+?) (?:just submitted an?|submitted a new) (absence|late) request for (.+?)(?:\.)?$/i)
+    || text.match(/^(.+?) submitted a request: .+?'s (absence|late) request for (.+?)(?:\.)?$/i);
+  if (!match) return message;
+  const [, student, requestType, subject] = match;
+  const article = requestType.toLowerCase() === "absence" ? "an" : "a";
+  return `${student} just submitted ${article} ${requestType.toLowerCase()} request for ${subject}.`;
+}
+
+function followupMessage(type, message) {
+  if (!["request_followup", "activity_followed_up_request"].includes(type)) return message;
+  const text = String(message).trim();
+  const match = text.match(/^(.+?) just followed up the (absence|late) request on (.+?)(?:\.)?$/i)
+    || text.match(/^(.+?) followed up on their (absence|late) request for (.+?)(?:\.)?$/i)
+    || text.match(/^(.+?) followed up a request: .+?'s (absence|late) request for (.+?)(?:\.)?$/i);
+  if (!match) return message;
+  const [, student, requestType, subject] = match;
+  return `${student} just followed up the ${requestType.toLowerCase()} request on ${subject}.`;
+}
+
 function notificationLabel(type, message) {
   if (type === "threshold_warning" || type === "attendance_warning") return "Preventive attendance alert";
   if (type === "threshold_critical") return "Critical attendance alert";
   if (type === "ir_escalation" || type === "attendance_ir") return "Drop-limit attendance alert";
-  if (type === "request_followup" || type === "followup_flag") return "Follow-up";
-  if (["request_decision", "new_request", "request_updated"].includes(type)) {
+  if (["request_followup", "followup_flag", "activity_followed_up_request"].includes(type)) return "Follow-up";
+  if (type === "activity_resolved_followup_flag") return "Follow-up resolved";
+  if (["new_request", "activity_submitted_request"].includes(type)) return "New request";
+  const absenceUpdate = ["request_updated", "activity_updated_request"].includes(type) && /\babsence\b/i.test(message);
+  const activityOutcome = {
+    activity_decided_request_approved: "approved",
+    activity_decided_request_noted: "approved",
+    activity_decided_request_invalid: "invalid",
+  }[type];
+  if (type === "request_decision" || absenceUpdate || activityOutcome) {
     const requestType = /\blate\b/i.test(message) ? "Late" : /\babsence\b/i.test(message) ? "Absence" : "Request";
-    const outcome = /\b(approved|noted)\b/i.test(message) ? " approved" : /\b(invalid|denied)\b/i.test(message) ? " invalid" : " update";
-    return `${requestType}${outcome}`;
+    const outcome = activityOutcome || (absenceUpdate ? "update"
+      : /\b(approved|noted)\b/i.test(message) ? "approved" : /\b(invalid|denied)\b/i.test(message) ? "invalid" : "update");
+    return `${requestType} ${outcome}`;
   }
   return undefined;
 }
@@ -63,7 +99,7 @@ function destination(role, requestId, type) {
 export function notificationActivity(records, role, preferences, userId, { inbox = false } = {}) {
   const normalizedRole = normalizeRole(role);
   const seen = new Set();
-  return records.flatMap(record => {
+  const activity = records.flatMap(record => {
     if (!record?.id || seen.has(record.id) || !record.message || !Number.isFinite(Date.parse(record.date_sent))) return [];
     if (userId != null && String(record.user_id) !== String(userId)) return [];
     const historicalAudience = Object.hasOwn(recipients, record.type) && !recipients[record.type].includes(normalizedRole);
@@ -73,10 +109,21 @@ export function notificationActivity(records, role, preferences, userId, { inbox
     seen.add(record.id);
     const threshold = ["threshold_warning", "threshold_critical", "ir_escalation", "attendance_warning", "attendance_ir"].includes(record.type);
     if (!ownedInbox && !(threshold ? preferences.thresholdAlerts : preferences.requestUpdates)) return [];
-    const message = record.message;
+    const message = followupMessage(record.type, submissionMessage(record.type, record.message));
     return [{ id: record.id, type: record.type, requestId: record.request_id, message, detail: threshold ? thresholdDetail(message) : undefined,
       label: notificationLabel(record.type, message), date: record.date_sent, isRead: record.is_read === true, href: ownedInbox && historicalAudience ? "/notifications" : destination(role, record.request_id, record.type) }];
-  }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  });
+  const directEvent = { new_request: "submitted", request_followup: "followed-up" };
+  const activityEvent = { activity_submitted_request: "submitted", activity_followed_up_request: "followed-up" };
+  const directEvents = new Map(activity.filter(item => directEvent[item.type] && item.requestId != null)
+    .map(item => [`${directEvent[item.type]}:${item.requestId}`, item]));
+  for (const item of activity) {
+    const direct = activityEvent[item.type] && item.requestId != null
+      ? directEvents.get(`${activityEvent[item.type]}:${item.requestId}`) : null;
+    if (direct) direct.notificationIds = [...new Set([...(direct.notificationIds || [direct.id]), item.id])];
+  }
+  return activity.filter(item => !activityEvent[item.type] || !directEvents.has(`${activityEvent[item.type]}:${item.requestId}`))
+    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 
 export function groupNotificationActivity(activity, filter = "all", now = new Date(), readIds) {
@@ -135,8 +182,9 @@ export function mergeRequestActivity(activity, requests, user, readIds = new Set
     if (!Number.isFinite(Date.parse(request.date_submitted))) continue;
     seen.add(String(request.id));
     const id = `request-submitted:${request.id}`;
+    const article = request.type === "absence" ? "an" : "a";
     combined.push({ id, type: "new_request", source: "request", readKey: `instructor:${user.id}`, requestId: request.id,
-      message: `${student.name} submitted a new ${request.type} request for ${course.subject_name}.`,
+      message: `${student.name} just submitted ${article} ${request.type} request for ${course.subject_name}.`, label: "New request",
       date: request.date_submitted, isRead: readIds.has(id), href: destination(user.role, request.id),
       readStatusTitle: "Request activity: read status is saved on this browser.",
       unreadTitle: "Unread request activity on this browser",

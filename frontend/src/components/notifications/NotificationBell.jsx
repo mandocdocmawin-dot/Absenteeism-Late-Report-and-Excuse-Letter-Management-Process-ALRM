@@ -7,6 +7,11 @@ import NotificationHeader from "@/pages/auth/student/notifications/NotificationH
 import NotificationPanel from "@/pages/auth/student/notifications/NotificationPanel";
 import useServerNotifications from "./useServerNotifications";
 import NotificationAccountNotice from "./NotificationAccountNotice";
+import { notificationOpenChange } from "./notificationData";
+
+export function NotificationBadge({ open, count }) {
+  return !open && count > 0 ? <span className="absolute right-0 top-0 min-w-4 rounded-full bg-red-600 px-1 text-center text-[10px] font-bold leading-4 text-white">{count > 99 ? "99+" : count}<span className="sr-only"> unread notifications</span></span> : null;
+}
 
 function AccountNotifications({ user }) {
   const [open, setOpen] = useState(false);
@@ -20,10 +25,10 @@ function AccountNotifications({ user }) {
   }, [reload]);
   const count = notifications.unreadCount;
   const close = () => setOpen(false);
-  return <Popover open={open} onOpenChange={setOpen}>
+  return <Popover open={open} onOpenChange={nextOpen => notificationOpenChange(nextOpen, notifications, setOpen)}>
     <PopoverTrigger aria-label="Notifications" title="Notifications" className="relative rounded-full p-2 text-slate-900 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-500">
       <Bell aria-hidden="true" className="size-5" strokeWidth={2} />
-      {count > 0 && <span className="absolute right-0 top-0 min-w-4 rounded-full bg-red-600 px-1 text-center text-[10px] font-bold leading-4 text-white">{count > 99 ? "99+" : count}<span className="sr-only"> unread notifications</span></span>}
+      <NotificationBadge open={open} count={count} />
     </PopoverTrigger>
     <PopoverContent align="end" sideOffset={12} className="max-h-[calc(100dvh-6rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto border border-slate-200 bg-white p-4 text-slate-950">
       {open && <>

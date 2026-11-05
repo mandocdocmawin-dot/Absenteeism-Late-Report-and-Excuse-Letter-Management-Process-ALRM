@@ -5,7 +5,7 @@ import { getAdminStudent, getAdminStudents } from "../src/api/adminStudents.js";
 import { createInstructor, createStudent } from "../src/api/adminUsers.js";
 import { saveProfileSetup } from "../src/api/profileSetup.js";
 import { createStudentRequest } from "../src/api/studentRequests.js";
-import { createClass, getAdminUsers, updateStaffRole } from "../src/api/admin.js";
+import { createClass, getAdminAuditLogsPage, getAdminUsers, updateStaffRole } from "../src/api/admin.js";
 import { getStudentAttendanceSummary } from "../src/api/student.js";
 import { resolveProgramHeadFlag } from "../src/api/programHead.js";
 import {
@@ -188,6 +188,24 @@ test("role dashboards and program-head filters use registered GET routes", async
     "/api/program-head/requests?status=pending",
     "/api/program-head/students/flagged?status=open",
   ]);
+});
+
+test("admin activity display filters send backend action keys", async () => {
+  const requests = captureJsonRequest({ success: true, data: [], meta: { page: 1, per_page: 10, total: 0, last_page: 1 } });
+  const cases = [
+    ["Submitted", "submitted_request"],
+    ["Updated", "updated_request"],
+    ["Followed up", "followed_up_request"],
+    ["Approved", "decided_request_approved"],
+    ["Denied", "decided_request_invalid"],
+    ["Resolved", "resolved_followup_flag"],
+  ];
+
+  for (const [label, action] of cases) {
+    await getAdminAuditLogsPage({ filters: { action: label } });
+    const url = new URL(requests.at(-1).url, "https://example.test");
+    assert.equal(url.searchParams.get("action"), action, label);
+  }
 });
 
 test("instructor decisions and admin mutations send backend-accepted payloads", async () => {

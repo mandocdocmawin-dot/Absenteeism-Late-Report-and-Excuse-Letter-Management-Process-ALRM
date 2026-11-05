@@ -91,7 +91,7 @@ export async function loadNotificationPreview(userId) {
 }
 
 export async function markFeedRead(userId, items, all = false) {
-  const serverIds = [...new Set(items.filter(item => !item.source).map(item => item.id))];
+  const serverIds = [...new Set(items.filter(item => !item.source).flatMap(item => item.notificationIds || [item.id]))];
   if (all) await markAllNotificationsRead();
   else if (serverIds.length) await Promise.all(serverIds.map(markNotificationRead));
   cachedPreviewWithReadIds(userId, serverIds, all);
