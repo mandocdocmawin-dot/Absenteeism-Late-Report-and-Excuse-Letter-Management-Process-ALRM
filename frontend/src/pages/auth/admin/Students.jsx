@@ -332,8 +332,6 @@ function Students() {
             <AlertTitle>Unable to load student data</AlertTitle>
             <AlertDescription>
               {error}
-              {error.includes("404") &&
-                " Confirm that GET /api/admin/users?role=student is available on the backend."}
             </AlertDescription>
           </Alert>
         )}

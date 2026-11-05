@@ -26,18 +26,15 @@ export default function ManagedAccountDialog({ user, currentUserId, programs, wo
         <Button type="button" variant="ghost" size="icon-sm" aria-label="Close account details" disabled={working} onClick={close}><X aria-hidden="true" /></Button>
       </div>
       <dl className="grid gap-4 text-sm sm:grid-cols-2">
-        {[["Name", user.name || "Unnamed user"], ["ID", userDisplayId(user)], [user.role === "student" ? "Program" : "Department", userDepartment(user, programs)], ["Email", user.email || "Unavailable"], ["Role", ROLE_LABELS[user.role] || "Role unavailable"], ["Status", status || "Status unavailable"], ...(user.role === "student" ? [["Year/Section", studentYearSection(user)]] : [])].map(([label, value]) => (
+        {[["Name", user.name || "Unnamed user"], ["ID", userDisplayId(user)], [user.role === "student" ? "Program" : "Department", userDepartment(user, programs)], ["Email", user.email || "Unavailable"], ["Role", ROLE_LABELS[user.role] || "Role unavailable"], ["Status", status === "pending" ? "Awaiting first sign-in" : status || "Status unavailable"], ...(user.role === "student" ? [["Year/Section", studentYearSection(user)]] : [])].map(([label, value]) => (
           <div key={label} className="min-w-0"><dt className="text-slate-600">{label}</dt><dd className="break-words font-medium">{value}</dd></div>
         ))}
       </dl>
       {String(user.id) === String(currentUserId) && <p className="text-sm text-slate-600">You cannot change your own role or account status.</p>}
-      {status === "pending" && <p className="text-sm text-slate-600">Approve to keep this account ready for its first Google sign-in, or decline to keep it inactive.</p>}
+      {status === "pending" && <p className="text-sm text-slate-600">This roster entry activates on its first institutional Google sign-in.</p>}
       {actionError && <div role="alert"><ErrorState title="Account change failed" message={actionError} /></div>}
       <footer className="flex flex-wrap items-center justify-start gap-3 border-t border-slate-200 pt-5">
-        {permissions.changeStatus && status === "pending" ? <>
-          <Button type="button" className="h-10 rounded-lg bg-green-600 px-4 font-semibold text-white hover:bg-green-700" disabled={working} onClick={() => onChange("status", "approved")}>Approve Account</Button>
-          <Button type="button" variant="destructive" className="h-10 rounded-lg px-4" disabled={working} onClick={() => onChange("status", "deactivated")}>Decline</Button>
-        </> : permissions.changeStatus && <Button type="button" variant={status === "approved" ? "destructive" : "outline"} className={`h-10 rounded-lg px-4 ${status === "approved" ? "bg-[#e44343] font-semibold text-white hover:bg-red-600" : ""}`} disabled={working} onClick={() => onChange("status", status === "approved" ? "deactivated" : "approved")}>
+        {permissions.changeStatus && <Button type="button" variant={status === "approved" ? "destructive" : "outline"} className={`h-10 rounded-lg px-4 ${status === "approved" ? "bg-[#e44343] font-semibold text-white hover:bg-red-600" : ""}`} disabled={working} onClick={() => onChange("status", status === "approved" ? "deactivated" : "approved")}>
           {status === "approved" ? "Deactivate Account" : "Activate Account"}
         </Button>}
         {working && <span role="status" className="text-sm text-slate-600">Saving account change…</span>}

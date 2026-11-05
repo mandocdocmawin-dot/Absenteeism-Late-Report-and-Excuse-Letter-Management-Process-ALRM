@@ -8,15 +8,17 @@ import { createServer } from "vite";
 let server, Context, Overview, AdminLog, ProgramLog, ProgramAccess, AdminReports;
 const request = { id: "r1", type: "absence", status: "pending", date_submitted: "2026-10-01T10:00:00Z", enrollment: { student: { name: "Test Student" }, class: { id: "c1", subject_name: "Test Class", instructor: { name: "Test Instructor" } } } };
 const data = {
-  getAdminDashboard: { total_programs: 1, total_students: 12, warning_count: 1, ir_count: 1, pending_requests: 1, programs_summary: [{ id: "p1", program_name: "BSIS", student_count: 12 }], recent_flags: [{ id: "f1", flagged_date: "2026-10-01", request }] },
-  getAdminAuditLogs: [{ id: "audit-one", action: "decided_request_approved", description: "Approved a request", timestamp: "2026-10-02T10:00:00Z", actor: { id: "i1", name: "Audit Instructor", role: "instructor" }, request: { id: "r1", type: "absence", student: { id: "s1", name: "Audit Student" }, class: { id: "c1", subject_name: "Audit Class", program_id: "p1", instructor_id: "i1" } } }],
+  getAdminDashboard: { total_programs: 1, total_students: 12, warning_count: 1, ir_count: 1, pending_requests: 1, programs_summary: [{ id: "p1", program_name: "BSIS", student_count: 12, classes_count: 3 }, { id: "ge", program_name: "General Education", classes_count: 1 }], recent_flags: [{ id: "f1", flagged_date: "2026-10-01", request }] },
+  getAdminAuditLogsPage: { data: [{ id: "audit-one", action: "decided_request_approved", description: "Approved a request", timestamp: "2026-10-02T10:00:00Z", actor: { id: "i1", name: "Audit Instructor", role: "instructor" }, request: { id: "r1", type: "absence", student: { id: "s1", name: "Audit Student" }, class: { id: "c1", subject_name: "Audit Class", program_id: "p1", instructor_id: "i1" } } }], meta: { page: 1, last_page: 1, per_page: 10, total: 1 } },
   getProgramHeadAuditLogs: [{ id: "program-audit-one", action: "followed_up_request", description: "Followed up a request", timestamp: "2026-10-03T10:00:00Z", actor: { id: "s2", name: "Program Audit Actor", role: "student" }, request: { id: "r2", type: "late", student: { id: "s2", name: "Program Audit Student" }, class: { id: "c2", subject_name: "Program Audit Class", program_id: "p1", instructor_id: "i1" } } }],
   loadClasses: [{ id: "c1", program_id: "p1", instructor_id: "i1", instructor: { name: "Test Instructor" } }],
+  getClasses: [{ id: "head-class", instructor_id: "head", program_id: "p1" }],
+  getUserManagementUsers: [{ id: "i1", program_id: "p1", role: "instructor" }, { id: "head", name: "Jerreck", program_id: "p1", role: "program_head" }, { id: "ge-teacher", role: "instructor", program_id: "ge" }, { id: "unassigned", role: "instructor" }, ...[1, 2, 3].map(id => ({ id: `student-${id}`, role: "student", program_id: "p1", programs: [{ id: "p1" }, { id: "act" }] }))],
   loadRequests: [request], loadFlags: [{ id: "f1", flagged_date: "2026-10-01", request: { ...request, enrollment: { ...request.enrollment, class: { id: "c1", subject_name: "Test Class" } } } }],
 };
 before(async () => {
   server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", plugins: [{ name: "figma-resource-states", enforce: "pre", transform(code, id) {
-    if (id.replaceAll("\\", "/").endsWith("/src/hooks/useApiResource.js")) return `import { createContext, useContext } from 'react'; export const TestResourceContext = createContext(null); export function useApiResource(load) { return useContext(TestResourceContext)(load.name); }`;
+    if (id.replaceAll("\\", "/").endsWith("/src/hooks/useApiResource.js")) return `import { createContext, useContext } from 'react'; export const TestResourceContext = createContext(null); export function useApiResource(load, queryKey, options = {}) { const key = options.cacheKey?.startsWith('admin:activity-logs:') ? 'getAdminAuditLogsPage' : load.name; return useContext(TestResourceContext)(key); }`;
     if (id.replaceAll("\\", "/").endsWith("/src/context/AuthContext.jsx")) return `export function useAuth() { return { user: { id: 'instructor-test', role: 'instructor' } }; }`;
   } }] });
   ({ TestResourceContext: Context } = await server.ssrLoadModule("/src/hooks/useApiResource.js"));
@@ -33,8 +35,13 @@ function render(Page, path = "/", loading = false) {
 test("overview renders only database-backed program row values", () => {
   const html = render(Overview);
   assert.match(html, /Program Overview/);
-  assert.match(html, />12</);
+  assert.doesNotMatch(html, />12</);
+  assert.match(html, /BSIS<\/td><td[^>]*>3<\/td>/);
   for (const heading of ["Department", "Students", "Classes", "Instructors"]) assert.match(html, new RegExp(`>${heading}<`));
+  assert.match(html, /<td class="px-4 py-5">2<\/td>/);
+  assert.doesNotMatch(html, /Program Heads|instructors and program heads/);
+  assert.match(html, /<td class="px-4 py-5">3<\/td>/);
+  assert.match(html, /4 instructors in total; 1 in General Education; 1 without a primary department/);
   assert.doesNotMatch(html, /No data yet|Students at Risk/);
   assert.doesNotMatch(html, /<th[^>]*>Pending Requests<\/th>/);
   const managePrograms = html.match(/<a\b[^>]*>Manage programs<\/a>/)?.[0];
@@ -58,7 +65,7 @@ test("administrator activity renders real recent flags without the informational
 test("program head activity renders its scoped audit log", () => {
   const html = render(ProgramLog, "/program-head/activity-log");
   assert.match(html, /Program Audit Student/);
-  assert.match(html, /Program Audit Actor/);
+  assert.doesNotMatch(html, /Program Audit Actor/);
   assert.match(html, />Followed up</);
   assert.match(html, />Instructor</);
   assert.doesNotMatch(html, /role="tab"|Flagged by|<select/);

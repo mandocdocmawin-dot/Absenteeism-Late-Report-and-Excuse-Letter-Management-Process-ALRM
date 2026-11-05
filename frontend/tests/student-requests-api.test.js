@@ -115,7 +115,7 @@ test("create and update preserve backend field errors after local validation suc
   const errors = { proof_types: ["Invalid array."], "proof_types.0": ["Invalid proof label."] };
   mockApiFetch(async () => Response.json({ message: "Validation failed.", errors }, { status: 422 }));
   for (const submit of [
-    () => createStudentRequest({ class_id: "class-one", type: "late", subjects_missed: "Math", minutes_late: 5, reason: "Traffic", guardian_name: "Alex Parent", contact_number: "09123456789", proof_types: [] }),
+    () => createStudentRequest({ class_id: "class-one", type: "late", subjects_missed: "Math", minutes_late: 5, start_date_of_absence: "2026-11-02", reason: "Traffic", guardian_name: "Alex Parent", contact_number: "09123456789", proof_types: [], evidence_file_url: "attachment-one" }),
     () => updateStudentRequest("request-one", { proof_types: [] }),
   ]) {
     await assert.rejects(submit, (error) => {

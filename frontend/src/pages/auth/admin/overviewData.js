@@ -42,6 +42,7 @@ export function auditActivity(logs = [], { classes = [], requests = [], instruct
     const instructor = historicalInstructorName(request, "", instructors)
       || historicalInstructorName(matchingRequest, "", instructors)
       || historicalInstructor(matchingClass, instructors)?.name
+      || (["administrator", "program_head", "instructor"].includes(log.actor?.role) ? log.actor?.name : "")
       || "—";
     return { id: log.id, requestId: request.id || "", date: log.timestamp, student: request.student?.name || request.enrollment?.student?.name || "Unavailable", studentId: "", email: "", subject: course.subject_name || "Unavailable", classId: course.id || "", type: request.type === "absence" ? "Absent" : request.type === "late" ? "Late" : "Unavailable", action: auditActions[log.action] || normalizeRequestStatusText(log.description) || "Unavailable", instructor, actor: log.actor?.name || "Unavailable", description: normalizeRequestStatusText(log.description || auditActions[log.action] || "Activity recorded") };
   }));

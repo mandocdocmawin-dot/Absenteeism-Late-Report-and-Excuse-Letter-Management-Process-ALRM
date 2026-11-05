@@ -1,7 +1,7 @@
 import { apiRequest } from "./client.js";
 import { getCollection, getCollectionPage } from "./collections.js";
 
-export async function getAdminAssignments({
+export function getAdminClassesPage({
   signal,
   page = 1,
   perPage = 25,
@@ -11,55 +11,52 @@ export async function getAdminAssignments({
   if (filters.search?.trim()) classQuery.set("search", filters.search.trim());
   if (filters.programId) classQuery.set("program_id", filters.programId);
   const classPath = `/api/admin/classes${classQuery.toString() ? `?${classQuery}` : ""}`;
-  const [classes, programs, users] = await Promise.all([
-    getCollectionPage(classPath, { signal, page, perPage }),
-    getCollection("/api/admin/programs", { signal }),
-    getCollection("/api/admin/users?role=instructor&status=approved", {
-      signal,
-    }),
+  return getCollectionPage(classPath, { signal, page, perPage });
+}
+
+export function getAdminPrograms({ signal } = {}) {
+  return getCollection("/api/admin/programs", { signal });
+}
+
+export async function getApprovedInstructors({ signal } = {}) {
+  const users = await getCollection(
+    "/api/admin/users?role=instructor&status=approved",
+    { signal },
+  );
+  return users.filter(
+    (user) => user.role === "instructor" && user.status === "approved",
+  );
+}
+
+export async function getAdminAssignments(options = {}) {
+  const [classes, programs, instructors] = await Promise.all([
+    getAdminClassesPage(options),
+    getAdminPrograms(options),
+    getApprovedInstructors(options),
   ]);
   return {
     classes: classes.data,
     classesMeta: classes.meta,
     programs,
-    instructors: users.filter(
-      (user) => user.role === "instructor" && user.status === "approved",
-    ),
+    instructors,
   };
 }
 
-export function getAdminClass(classId) {
-  return apiRequest(`/api/admin/classes/${encodeURIComponent(classId)}`);
+export function getAdminAssignmentCandidates({ signal } = {}) {
+  return getCollection("/api/admin/classes", { signal });
 }
 
-export async function setClassInstructor(classId, instructorId) {
+export async function changeTeachingAssignment(classId, payload) {
   const id = String(classId || "").trim();
-  const normalizedInstructorId =
-    instructorId === null ? null : String(instructorId || "").trim();
   if (!id) throw new Error("Select an existing class.");
-  if (normalizedInstructorId === "")
-    throw new Error("Select an approved instructor.");
 
-  const updated = await apiRequest(
-    `/api/admin/classes/${encodeURIComponent(id)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ instructor_id: normalizedInstructorId }),
-    },
+  const result = await apiRequest(
+    `/api/admin/classes/${encodeURIComponent(id)}/assignment`,
+    { method: "POST", body: JSON.stringify(payload) },
   );
-  const confirmedInstructorId = updated?.instructor_id ?? null;
-  if (
-    String(updated?.id) !== id ||
-    confirmedInstructorId !== normalizedInstructorId
-  ) {
-    throw new Error(
-      "The server did not confirm the instructor assignment. Reload the page before trying again.",
-    );
+  if (!Array.isArray(result?.classes)
+    || !result.classes.some((item) => String(item?.id) === id)) {
+    throw new Error("The server did not confirm the teaching assignment change. Reload the page before trying again.");
   }
-  return updated;
-}
-
-export function assignClassInstructor(classId, instructorId) {
-  if (instructorId === null) throw new Error("Select an approved instructor.");
-  return setClassInstructor(classId, instructorId);
+  return result;
 }
