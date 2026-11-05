@@ -15,6 +15,8 @@
 
 Student `threshold` contains `used`, `limit`, `status`, and `remaining_semester_percentage`. The closest class is selected by usage ratio; overall status is the highest severity among trackers. These values need not describe the same tracker.
 
+`remaining_semester_percentage` is `max(0, (absence_limit_rate - used / total_semester_hours) * 100)`, rounded to two decimals (zero when semester hours are zero). It starts at exactly 20% with no absences. The whole-hour rounding of the IR limit does not increase this percentage; the percentage can reach zero before the rounded IR hour limit is reached.
+
 Attendance status values are `safe`, `warning`, `critical`, and uppercase `IR`. The current policy uses class meeting hours: `used = total_absences × unitsPerMeeting + floor(total_lates / 3)`. Warning and critical correspond to one and two weeks of class hours; IR is the allowable absence-hours limit, based on 20% of semester hours rounded up to a whole hour for every subject. `converted_absences` separately equals `total_absences + floor(total_lates / 3)`. Do not implement a fixed 2/3-absence threshold from the older README/report; see `AttendanceTracker` and `ClassModel`.
 
 Program-head students, instructors, requests, dashboard, and report export require headed programs. Requests optionally filter `status` by `pending`, `approved`, `noted`, or `invalid`; unfiltered lists may also contain cancelled requests. Flagged-student lists optionally filter `status=open|resolved` and include flags escalated directly to the caller OR belonging to their headed programs. This flag-list scope is broader than report-export scope, which always uses headed programs.

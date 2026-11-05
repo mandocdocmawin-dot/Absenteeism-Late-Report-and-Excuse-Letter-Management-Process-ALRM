@@ -85,9 +85,10 @@ class AttendanceTracker extends Model
     {
         $total = $this->enrollment->class->totalSemesterHours();
 
-        $remainingHours = max(0, round($this->allowedUnits() - $this->unitsUsed(), 2));
-
-        return $total > 0 ? round($remainingHours / $total * 100, 2) : 0;
+        // Keep the percentage allowance exact; only the IR hour limit is rounded up.
+        return $total > 0
+            ? round(max(0, config('alrm.absence_limit_rate') * 100 - $this->unitsUsed() / $total * 100), 2)
+            : 0;
     }
 
     /**
