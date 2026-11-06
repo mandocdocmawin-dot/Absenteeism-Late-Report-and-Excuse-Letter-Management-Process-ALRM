@@ -41,7 +41,7 @@ class AdminDashboardController extends Controller
             'open_followup_flags'     => FollowupFlag::whereHas('request.enrollment.class', fn ($q) => $q->forAcademicPeriod())->where('status', 'open')->count(),
             'programs_summary' => Program::withCount([
                     'classes' => fn ($q) => $q->forAcademicPeriod(),
-                    'users as student_count' => fn ($q) => $q->where('role', 'student'),
+                    'students as student_count',
                 ])
                 ->get(['id', 'program_name', 'program_head_id']),
 
