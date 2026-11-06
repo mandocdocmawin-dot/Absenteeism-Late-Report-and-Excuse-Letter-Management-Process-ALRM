@@ -21,15 +21,23 @@ class InstructorDashboardController extends Controller
             ->get();
 
         $flaggedStudents = $classes->flatMap(function ($class) {
-            return $class->enrollments->filter(function ($enrollment) {
+            return $class->enrollments->filter(function ($enrollment) use ($class) {
+                $enrollment->setRelation('class', $class);
+                $enrollment->attendanceTracker?->setRelation('enrollment', $enrollment);
+
                 return $enrollment->attendanceTracker
-                    && in_array($enrollment->attendanceTracker->status, ['warning', 'critical', 'IR'], true);
+                    && in_array($enrollment->attendanceTracker->subjectStatus(), ['warning', 'critical', 'IR'], true);
             })->map(function ($enrollment) use ($class) {
                 return [
                     'student' => $enrollment->student->only(['id', 'name']),
                     'class' => $class->subject_name,
-                    'status' => $enrollment->attendanceTracker->status,
-                    'absences' => $enrollment->attendanceTracker->converted_absences,
+                    'class_id' => $class->id,
+                    'status' => $enrollment->attendanceTracker->subjectStatus(),
+                    'absences' => $enrollment->attendanceTracker->total_absences,
+                    'converted_absences' => $enrollment->attendanceTracker->converted_absences,
+                    'used_hours' => $enrollment->attendanceTracker->unitsUsed(),
+                    'absence_percentage' => $enrollment->attendanceTracker->absencePercentage(),
+                    'ir_absence_limit' => config('alrm.subject_ir_absences'),
                 ];
             });
         })->values();

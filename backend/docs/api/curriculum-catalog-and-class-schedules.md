@@ -104,8 +104,13 @@ the class update itself; the existing attendance automation handles notification
 ## Attendance thresholds
 
 Academic units and lecture/lab units are catalog data, **not** contact hours.
-No lecture/laboratory conversion multiplier is assumed. The existing configured
-warning, critical, IR, and three-lates-to-one-hour policies remain in effect.
+No lecture/laboratory conversion multiplier is assumed. Subject warning and
+critical stages remain based on one and two weeks of contact hours. Subject IR
+is reached at three recorded absences, independently of hours. The student's
+overall 20% allowance uses the combined semester contact hours of all enrolled
+subjects. Three invalid lates still contribute one hour to missed hours; they
+do not count as three absences for subject IR. See
+[dashboards and program monitoring](dashboards-and-program-monitoring.md).
 
 All decided absence requests (`approved`, `noted`, or `invalid`) count toward
 attendance thresholds. Valid lates do not count; only invalid late requests

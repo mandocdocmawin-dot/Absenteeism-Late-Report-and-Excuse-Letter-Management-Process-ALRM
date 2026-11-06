@@ -12,13 +12,14 @@ use App\Services\AttendanceThresholdNotifier;
 use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\SecurityTestCase;
 
 class ProgramHeadAttendanceAlertsTest extends SecurityTestCase
 {
     protected function user(string $role = 'student', array $attributes = []): User
     {
-        $user = parent::user($role, ['google_id' => 'google-'.\Illuminate\Support\Str::uuid(), ...$attributes]);
+        $user = parent::user($role, ['google_id' => 'google-'.Str::uuid(), ...$attributes]);
         $user->forceFill(['email_notifications_enabled' => true])->save();
 
         return $user;
@@ -104,11 +105,11 @@ class ProgramHeadAttendanceAlertsTest extends SecurityTestCase
             $this->assertSame(4, UserNotification::where('user_id', $head->id)->count());
             $this->assertDatabaseHas('notifications', [
                 'user_id' => $head->id, 'channel' => 'in_app', 'type' => 'threshold_warning',
-                'message' => $student->name.' reached the preventive absence threshold in Security (6.25% of semester class hours; 3 of 10 allowable units; 14.58% of semester hours remaining before the IR limit).',
+                'message' => $student->name." reached the preventive absence threshold in Security (1 recorded absences; subject IR at 3 absences; 3 missed hours; 6.25% of this subject's semester hours).",
             ]);
             $this->assertDatabaseHas('notifications', [
                 'user_id' => $head->id, 'channel' => 'in_app', 'type' => 'threshold_critical',
-                'message' => $student->name.' reached the critical absence threshold in Security (12.5% of semester class hours; 6 of 10 allowable units; 8.33% of semester hours remaining before the IR limit). Consultation is required.',
+                'message' => $student->name." reached the critical absence threshold in Security (2 recorded absences; subject IR at 3 absences; 6 missed hours; 12.5% of this subject's semester hours). Consultation is required.",
             ]);
             Mail::assertQueued(ProgramHeadAttendanceAlertMail::class, fn ($mail) => $mail->hasTo($head->email) && $mail->alertStatus === 'warning');
             Mail::assertQueued(ProgramHeadAttendanceAlertMail::class, fn ($mail) => $mail->hasTo($head->email) && $mail->alertStatus === 'critical');
@@ -189,7 +190,7 @@ class ProgramHeadAttendanceAlertsTest extends SecurityTestCase
             $this->assertStringContainsString('images/mail/lv-logo.png', $html);
             $this->assertStringContainsString('&lt;script&gt;', $html);
             $this->assertStringNotContainsString('<script>', $html);
-            $this->assertStringContainsString('12 of 10 allowable units', $html);
+            $this->assertStringContainsString('12 hours', $html);
             $this->assertStringContainsString(match ($status) {
                 'IR' => 'IR — drop limit reached', 'critical' => 'Critical — consultation required', default => 'Preventive Warning',
             }, $html);

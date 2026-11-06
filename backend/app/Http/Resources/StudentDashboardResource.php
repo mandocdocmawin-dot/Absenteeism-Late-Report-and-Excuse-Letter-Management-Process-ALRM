@@ -13,19 +13,20 @@ class StudentDashboardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'total_classes'        => $this->resource['total_classes'],
-            'unexcused_absences'   => $this->resource['unexcused_absences'],
-            'excused_absences'     => $this->resource['excused_absences'],
-            'lates_recorded'       => $this->resource['lates_recorded'],
-            'pending_requests'     => $this->resource['pending_requests'],
-            'threshold'            => $this->resource['threshold'],
+            'total_classes' => $this->resource['total_classes'],
+            'unexcused_absences' => $this->resource['unexcused_absences'],
+            'excused_absences' => $this->resource['excused_absences'],
+            'lates_recorded' => $this->resource['lates_recorded'],
+            'pending_requests' => $this->resource['pending_requests'],
+            'threshold' => $this->resource['threshold'],
+            'subject_thresholds' => $this->resource['subject_thresholds'],
             'unread_notifications' => $this->resource['unread_notifications'],
             'recent_notifications' => $this->resource['recent_notifications']->map(fn ($notification) => [
-                'id'        => $notification->id,
-                'type'      => $notification->type,
-                'message'   => $notification->message,
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'message' => $notification->message,
                 'date_sent' => $notification->date_sent,
-                'is_read'   => $notification->is_read,
+                'is_read' => $notification->is_read,
             ])->values(),
         ];
     }

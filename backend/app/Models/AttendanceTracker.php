@@ -59,7 +59,7 @@ class AttendanceTracker extends Model
         );
     }
 
-    /** Allowable absence units ng class (20% ng total hours). */
+    /** Reference 20% hours allowance for this class; subject IR uses absence count. */
     public function allowedUnits(): float
     {
         return $this->enrollment->class->allowedAbsenceUnits();
@@ -85,34 +85,32 @@ class AttendanceTracker extends Model
     {
         $total = $this->enrollment->class->totalSemesterHours();
 
-        // Keep the percentage allowance exact; only the IR hour limit is rounded up.
+        // The subject-hours percentage is independent of the subject IR absence count.
         return $total > 0
             ? round(max(0, config('alrm.absence_limit_rate') * 100 - $this->unitsUsed() / $total * 100), 2)
             : 0;
     }
 
-    /**
-     * Policy: 3 lates = 1 absent hour.
-     * warning → one week's class hours; critical → two weeks, with consultation.
-     * IR → allowable absence limit reached (20%, rounded up to a whole hour).
-     * Tawagin tuwing nagbabago ang total_lates o total_absences.
-     */
-    public function recompute(): void
+    /** Subject risk is separate from the overall semester-hours allowance. */
+    public function subjectStatus(): string
     {
-        $this->converted_absences = $this->total_absences + (int) floor($this->total_lates / 3);
-
         $class = $this->enrollment->class;
-        $total = $class->totalSemesterHours();
         $used = $this->unitsUsed();
 
-        $this->status = match (true) {
-            $total <= 0 => 'safe',
-            $used >= $class->allowedAbsenceUnits() => 'IR',
+        return match (true) {
+            $this->total_absences >= config('alrm.subject_ir_absences') => 'IR',
+            $class->totalSemesterHours() <= 0 => 'safe',
             $used >= $class->criticalAbsenceUnits() => 'critical',
             $used >= $class->preventiveAbsenceUnits() => 'warning',
             default => 'safe',
         };
+    }
 
+    /** Three invalid lates still contribute one hour, but do not count as three absences. */
+    public function recompute(): void
+    {
+        $this->converted_absences = $this->total_absences + (int) floor($this->total_lates / 3);
+        $this->status = $this->subjectStatus();
         $this->save();
     }
 }

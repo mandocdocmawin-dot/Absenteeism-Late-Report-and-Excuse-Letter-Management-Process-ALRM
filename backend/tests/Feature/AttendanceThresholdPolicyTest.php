@@ -89,37 +89,26 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
         $this->assertSame((float) $converted, $tracker->unitsUsed());
     }
 
-    public function test_subject_hours_determine_all_three_stages_and_remaining_percentages(): void
+    public function test_three_recorded_absences_are_ir_regardless_of_subject_hours(): void
     {
         $request = $this->requestFor($this->user());
         $tracker = AttendanceTracker::create([
             'enrollment_id' => $request->enrollment_id, 'total_lates' => 0,
             'total_absences' => 0, 'converted_absences' => 0, 'status' => 'safe',
         ]);
-
-        foreach ([
-            [3, 10.0, [2 => 'safe', 3 => 'warning', 5 => 'warning', 6 => 'critical', 9 => 'critical', 10 => 'IR', 11 => 'IR'], [3 => 13.75, 6 => 7.5, 10 => 0.0]],
-            [5, 16.0, [4 => 'safe', 5 => 'warning', 9 => 'warning', 10 => 'critical', 15 => 'critical', 16 => 'IR', 17 => 'IR'], [5 => 13.75, 10 => 7.5, 16 => 0.0]],
-            [2, 7.0, [1 => 'safe', 2 => 'warning', 3 => 'warning', 4 => 'critical', 6 => 'critical', 7 => 'IR'], [6 => 1.25, 7 => 0.0]],
-            [1, 4.0, [0 => 'safe', 1 => 'warning', 2 => 'critical', 3 => 'critical', 4 => 'IR'], []],
-            [4, 13.0, [3 => 'safe', 4 => 'warning', 8 => 'critical', 12 => 'critical', 13 => 'IR'], []],
-        ] as [$weeklyHours, $limit, $boundaries, $remaining]) {
-            // One-hour meetings let us exercise exact unit boundaries.
-            $tracker->enrollment->class->forceFill(['weekly_hours' => $weeklyHours, 'meetings_per_week' => $weeklyHours])->save();
-            $this->assertSame($limit, $tracker->allowedUnits());
-            foreach ($boundaries as $absences => $status) {
+        foreach ([1, 2, 3, 4, 5] as $weeklyHours) {
+            $tracker->enrollment->class->forceFill(['weekly_hours' => $weeklyHours, 'meetings_per_week' => 1])->save();
+            foreach ([0 => 'safe', 1 => 'warning', 2 => 'critical', 3 => 'IR', 4 => 'IR'] as $absences => $status) {
                 $tracker->total_absences = $absences;
                 $tracker->recompute();
-                $this->assertSame($status, $tracker->fresh()->status, "Weekly hours: {$weeklyHours}, units: {$absences}");
-                $this->assertSame((float) $absences, $tracker->unitsUsed());
-                if (array_key_exists($absences, $remaining)) {
-                    $this->assertSame($remaining[$absences], $tracker->remainingSemesterPercentage());
-                }
+                $this->assertSame($status, $tracker->fresh()->status);
+                $this->assertSame((float) ($absences * $weeklyHours), $tracker->unitsUsed());
+                $this->assertSame(round($absences / 16 * 100, 2), $tracker->absencePercentage());
             }
         }
     }
 
-    public function test_drop_limit_waits_for_the_rounded_whole_hour_with_fractional_absences(): void
+    public function test_subject_ir_uses_absence_count_instead_of_the_hour_allowance(): void
     {
         $request = $this->requestFor($this->user());
         $request->enrollment->class->update(['weekly_hours' => 2, 'meetings_per_week' => 1]);
@@ -128,20 +117,15 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
             'total_lates' => 0, 'total_absences' => 1,
             'converted_absences' => 0, 'status' => 'safe',
         ]);
-
-        foreach ([
-            [6.4, 'critical', 0.0],
-            [6.99, 'critical', 0.0],
-            [7.0, 'IR', 0.0],
-            [7.5, 'IR', 0.0],
-        ] as [$hours, $status, $remainingPercentage]) {
+        foreach ([6.4, 6.99, 7.0, 7.5] as $hours) {
             $tracker->absence_hours = $hours;
             $tracker->recompute();
-
-            $this->assertSame(7.0, $tracker->allowedUnits());
-            $this->assertSame($status, $tracker->fresh()->status);
-            $this->assertSame($remainingPercentage, $tracker->remainingSemesterPercentage());
+            $this->assertSame('critical', $tracker->fresh()->status);
         }
+        $tracker->absence_hours = 1;
+        $tracker->total_absences = 3;
+        $tracker->recompute();
+        $this->assertSame('IR', $tracker->fresh()->status);
     }
 
     public function test_three_lates_add_one_hour_independent_of_meeting_duration(): void
@@ -202,7 +186,7 @@ class AttendanceThresholdPolicyTest extends SecurityTestCase
 
         $this->bearer($student)->getJson('/api/dashboard')->assertOk()
             ->assertJsonPath('data.threshold.status', 'critical')
-            ->assertJsonPath('data.threshold.limit', 10)
+            ->assertJsonPath('data.threshold.limit', 9.6)
             ->assertJsonPath('data.threshold.remaining_semester_percentage', 7.5);
         $this->bearer($class->instructor)->getJson('/api/instructor/dashboard')->assertOk()
             ->assertJsonPath('data.flagged_students.0.status', 'critical');

@@ -46,13 +46,14 @@ class AttendanceThresholdNotifier
             $used = $tracker->unitsUsed();
             $limit = $tracker->allowedUnits();
             $percentage = $tracker->absencePercentage();
-            $remaining = $tracker->remainingSemesterPercentage();
+            $absences = $tracker->total_absences;
+            $irAbsenceLimit = config('alrm.subject_ir_absences');
             $stage = match ($tracker->status) {
                 'warning' => 'preventive absence threshold',
                 'critical' => 'critical absence threshold',
                 'IR' => 'IR drop limit',
             };
-            $message = "{$student->name} reached the {$stage} in {$class->subject_name} ({$percentage}% of semester class hours; {$used} of {$limit} allowable units; {$remaining}% of semester hours remaining before the IR limit).";
+            $message = "{$student->name} reached the {$stage} in {$class->subject_name} ({$absences} recorded absences; subject IR at {$irAbsenceLimit} absences; {$used} missed hours; {$percentage}% of this subject's semester hours).";
             if (in_array($tracker->status, ['critical', 'IR'], true)) {
                 $message .= ' Consultation is required.';
             }
