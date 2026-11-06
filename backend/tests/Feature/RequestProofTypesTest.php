@@ -56,15 +56,16 @@ class RequestProofTypesTest extends SecurityTestCase
         }
     }
 
-    public function test_update_preserves_omitted_proof_types_and_allows_clearing_them(): void
+    public function test_update_rejects_omitted_or_empty_proof_types(): void
     {
         foreach ([[], ['proof_types' => []], ['proof_types' => null]] as $extra) {
             $payload = $this->payload() + $extra;
             $owner = $this->user();
             $model = $this->requestFor($owner);
             $model->update(['proof_types' => ['Medical Certificate']]);
-            $response = $this->bearer($owner)->patchJson('/api/requests/'.$model->id, $payload)->assertOk();
-            $this->assertSame(array_key_exists('proof_types', $extra) ? $extra['proof_types'] : ['Medical Certificate'], $response->json('data.proof_types'));
+            $this->bearer($owner)->patchJson('/api/requests/'.$model->id, $payload)
+                ->assertUnprocessable()->assertJsonValidationErrors('proof_types');
+            $this->assertSame(['Medical Certificate'], $model->fresh()->proof_types);
         }
     }
 
@@ -85,6 +86,7 @@ class RequestProofTypesTest extends SecurityTestCase
             'minutes_late' => 23,
             'start_date_of_absence' => '2026-10-21',
             'reason' => 'may sakit po e',
+            'evidence_type' => 'image/jpeg',
         ];
     }
 }

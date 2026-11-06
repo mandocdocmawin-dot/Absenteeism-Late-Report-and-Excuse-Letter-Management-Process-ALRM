@@ -77,6 +77,8 @@ class RequestOccurrenceDateTest extends SecurityTestCase
             'subjects_missed' => 'Security',
             'minutes_late' => $type === 'late' ? 15 : null,
             'reason' => 'Transport delay',
+            'evidence_type' => 'application/pdf',
+            'proof_types' => ['Medical Certificate'],
             'guardian_name' => 'Parent Name',
             'contact_number' => '09123456789',
         ];

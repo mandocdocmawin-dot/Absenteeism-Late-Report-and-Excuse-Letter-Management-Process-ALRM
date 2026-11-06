@@ -99,6 +99,8 @@ class ActivityNotificationTest extends SecurityTestCase
         $response = $this->bearer($student)->postJson('/api/requests', [
             'class_id' => $fixture->enrollment->class_id,
             'type' => 'absence', 'subjects_missed' => 'Security',
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
+            'end_date_of_absence' => '2026-10-23',
             'reason' => 'Medical appointment', 'start_date_of_absence' => '2026-10-23',
             'evidence_file_url' => $this->unusedEvidence($student)->id,
             'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',

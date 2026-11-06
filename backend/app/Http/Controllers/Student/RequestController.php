@@ -52,7 +52,7 @@ class RequestController extends Controller
             'subjects_missed' => ['required', 'string', 'max:255'],
             'minutes_late' => ['required_if:type,late', 'nullable', 'integer', 'min:1', 'max:999'],
             'start_date_of_absence' => ['required', 'date'],
-            'end_date_of_absence' => ['nullable', 'date', 'after_or_equal:start_date_of_absence'],
+            'end_date_of_absence' => ['required_if:type,absence', 'nullable', 'date', 'after_or_equal:start_date_of_absence'],
             'reason' => ['required', 'string', 'max:600'],
             'evidence_file_url' => [
                 'required',
@@ -61,8 +61,8 @@ class RequestController extends Controller
                     ->where('user_id', $httpRequest->user()->id)
                     ->whereNull('excuse_request_id'),
             ],
-            'evidence_type' => ['nullable', 'string', 'max:100'],
-            'proof_types' => ['nullable', 'array', 'list', 'max:6'],
+            'evidence_type' => ['required', 'string', 'max:100'],
+            'proof_types' => ['required', 'array', 'list', 'min:1', 'max:6'],
             'proof_types.*' => ['required', 'string', 'distinct', Rule::in(ExcuseRequest::PROOF_TYPES)],
             'guardian_name' => ['required', 'string', 'min:2', 'max:60', 'regex:/^[^\d]*$/'],
             'contact_number' => ['required', 'regex:/^(09\d{9}|\+639\d{9})$/'],
@@ -202,11 +202,11 @@ class RequestController extends Controller
             'subjects_missed' => ['required', 'string', 'max:255'],
             'minutes_late' => ['required_if:type,late', 'nullable', 'integer', 'min:1', 'max:999'],
             'start_date_of_absence' => ['required', 'date'],
-            'end_date_of_absence' => ['nullable', 'date', 'after_or_equal:start_date_of_absence'],
-            'reason' => ['required', 'string', 'max:500'],
+            'end_date_of_absence' => ['required_if:type,absence', 'nullable', 'date', 'after_or_equal:start_date_of_absence'],
+            'reason' => ['required', 'string', 'max:600'],
             'evidence_file_url' => ['nullable', 'uuid'],
-            'evidence_type' => ['nullable', 'string', 'max:100'],
-            'proof_types' => ['nullable', 'array', 'list', 'max:6'],
+            'evidence_type' => ['required', 'string', 'max:100'],
+            'proof_types' => ['required', 'array', 'list', 'min:1', 'max:6'],
             'proof_types.*' => ['required', 'string', 'distinct', Rule::in(ExcuseRequest::PROOF_TYPES)],
         ]);
 

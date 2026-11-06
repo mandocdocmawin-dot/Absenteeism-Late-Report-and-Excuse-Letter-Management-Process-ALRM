@@ -128,6 +128,7 @@ class ApiSecurityTest extends SecurityTestCase
         $existing = $this->requestFor($owner);
         $payload = ['class_id' => $existing->enrollment->class_id, 'type' => 'late',
             'subjects_missed' => 'Security', 'minutes_late' => 10, 'reason' => 'Bus delay',
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
             'start_date_of_absence' => '2026-10-21',
             'evidence_file_url' => $this->unusedEvidence($owner)->id,
             'guardian_name' => 'Guardian', 'contact_number' => '09123456789'];
@@ -263,6 +264,7 @@ class ApiSecurityTest extends SecurityTestCase
         $this->bearer($owner)->patchJson('/api/requests/'.$request->id, [
             'type' => 'late', 'subjects_missed' => 'Security', 'minutes_late' => 10,
             'reason' => 'Updated reason', 'status' => 'approved', 'reviewed_by' => $owner->id,
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
             'start_date_of_absence' => '2026-10-21',
         ])->assertOk()->assertJsonPath('data.status', 'pending');
         $this->assertNull($request->fresh()->reviewed_by);
@@ -279,6 +281,7 @@ class ApiSecurityTest extends SecurityTestCase
         $this->bearer($owner)->patchJson('/api/requests/'.$request->id, [
             'type' => 'late', 'subjects_missed' => 'Security', 'minutes_late' => 10,
             'reason' => 'Updated reason', 'evidence_file_url' => (string) Str::uuid(),
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
             'start_date_of_absence' => '2026-10-21',
         ])->assertUnprocessable();
         $this->assertNull($request->fresh()->evidence_file_url);
