@@ -66,11 +66,14 @@ class AttendanceThresholdNotifier
                     })->latest('date_reviewed')->first();
                 if ($flagRequest && $heads->isNotEmpty()) {
                     $head = $heads->firstWhere('id', $program->program_head_id) ?? $heads->first();
-                    FollowupFlag::firstOrCreate(['request_id' => $flagRequest->id], [
+                    $flag = FollowupFlag::firstOrCreate(['request_id' => $flagRequest->id], [
                         'flagged_date' => now(),
                         'escalated_to' => $head->id,
                         'status' => 'open',
                     ]);
+                    if ($flag->wasRecentlyCreated) {
+                        app(AuditLoggerService::class)->logAutomaticFlag($flag);
+                    }
                 }
             }
 

@@ -24,7 +24,6 @@ class ActivityNotificationTest extends SecurityTestCase
         $coHead = $this->user('instructor');
         $coHead->additionalHeadedPrograms()->attach($program);
         $admin = $this->user('administrator');
-        // Matching administrator and head assignments must still deliver once.
         $admin->additionalHeadedPrograms()->attach($program);
         $otherAdmin = $this->user('administrator');
         $outsider = $this->user('program_head');

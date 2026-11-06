@@ -12,6 +12,7 @@ class AuditLogResource extends JsonResource
         'updated_request' => 'Updated a request',
         'cancelled_request' => 'Cancelled a request',
         'followed_up_request' => 'Followed up a request',
+        'flagged_request' => 'Flagged',
         'decided_request_approved' => 'Approved a request',
         'decided_request_noted' => 'Noted a request',
         'decided_request_invalid' => 'Marked a request invalid',

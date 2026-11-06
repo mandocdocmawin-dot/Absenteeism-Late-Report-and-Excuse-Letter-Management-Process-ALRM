@@ -22,7 +22,7 @@ class AuditLogController extends Controller
 
         $filters = $request->validate([
             'role' => ['sometimes', Rule::in(['student', 'instructor'])],
-            'action' => ['sometimes', Rule::in(array_keys(AuditLogResource::ACTIONS))],
+            'action' => ['sometimes', Rule::in([...array_keys(AuditLogResource::ACTIONS), 'Flagged'])],
             'user_id' => ['sometimes', 'uuid'],
             'request_id' => ['sometimes', 'uuid'],
             'class_id' => ['sometimes', 'uuid'],
@@ -30,6 +30,10 @@ class AuditLogController extends Controller
             'from' => ['sometimes', 'date_format:Y-m-d'],
             'to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
+
+        if (($filters['action'] ?? null) === 'Flagged') {
+            $filters['action'] = 'flagged_request';
+        }
 
         $programIds = null;
         if ($user->role === 'program_head') {
@@ -41,8 +45,13 @@ class AuditLogController extends Controller
         $query = AuditLog::query()
             ->select(['id', 'user_id', 'action', 'table_affected', 'record_id', 'timestamp'])
             ->whereIn('action', array_keys(AuditLogResource::ACTIONS))
-            ->whereHas('user', function ($query) use ($filters) {
-                $query->whereIn('role', isset($filters['role']) ? [$filters['role']] : ['student', 'instructor']);
+            ->where(function ($query) use ($filters) {
+                $query->whereHas('user', function ($query) use ($filters) {
+                    $query->whereIn('role', isset($filters['role']) ? [$filters['role']] : ['student', 'instructor']);
+                });
+                if (! isset($filters['role'])) {
+                    $query->orWhere(fn ($query) => $query->whereNull('user_id')->where('action', 'flagged_request'));
+                }
             })
             ->where(function ($query) use ($programIds, $filters) {
                 $scope = function ($query) use ($programIds, $filters) {

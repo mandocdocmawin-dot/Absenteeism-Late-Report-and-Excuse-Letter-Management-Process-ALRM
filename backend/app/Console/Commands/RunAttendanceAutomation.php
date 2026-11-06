@@ -7,8 +7,10 @@ use App\Models\ExcuseRequest;
 use App\Models\FollowupFlag;
 use App\Models\UserNotification;
 use App\Services\AttendanceThresholdNotifier;
+use App\Services\AuditLoggerService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class RunAttendanceAutomation extends Command
 {
@@ -72,22 +74,25 @@ class RunAttendanceAutomation extends Command
                 continue;
             }
 
-            FollowupFlag::create([
-                'request_id' => $request->id,
-                'flagged_date' => now(),
-                'escalated_to' => $programHead->id,
-                'status' => 'open',
-            ]);
+            DB::transaction(function () use ($request, $programHead) {
+                $flag = FollowupFlag::create([
+                    'request_id' => $request->id,
+                    'flagged_date' => now(),
+                    'escalated_to' => $programHead->id,
+                    'status' => 'open',
+                ]);
+                app(AuditLoggerService::class)->logAutomaticFlag($flag);
 
-            UserNotification::create([
-                'user_id' => $programHead->id,
-                'request_id' => $request->id,
-                'type' => 'followup_flag',
-                'message' => "A {$request->type} request has gone unanswered past the response window.",
-                'channel' => 'in_app',
-                'date_sent' => now(),
-                'is_read' => false,
-            ]);
+                UserNotification::create([
+                    'user_id' => $programHead->id,
+                    'request_id' => $request->id,
+                    'type' => 'followup_flag',
+                    'message' => "A {$request->type} request has gone unanswered past the response window.",
+                    'channel' => 'in_app',
+                    'date_sent' => now(),
+                    'is_read' => false,
+                ]);
+            });
 
             $flagged++;
         }

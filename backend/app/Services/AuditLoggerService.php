@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\AuditLogResource;
 use App\Models\AuditLog;
+use App\Models\FollowupFlag;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,18 @@ use Illuminate\Support\Facades\DB;
 
 class AuditLoggerService
 {
+    /** Automatic flagging is a system event; existing flag alerts handle notifications. */
+    public function logAutomaticFlag(FollowupFlag $flag): AuditLog
+    {
+        return AuditLog::create([
+            'user_id' => null,
+            'action' => 'flagged_request',
+            'table_affected' => 'followup_flags',
+            'record_id' => $flag->id,
+            'timestamp' => $flag->flagged_date,
+        ]);
+    }
+
     public function log(string $action, string $tableAffected, int|string $recordId, ?array $details = null): AuditLog
     {
         return DB::transaction(function () use ($action, $tableAffected, $recordId, $details) {
