@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\RequestAttachment;
 use App\Models\User;
 use App\Support\EvidenceImageProcessor;
-use App\Support\EvidencePdfValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,13 +39,7 @@ class EvidenceController extends Controller
             throw ValidationException::withMessages(['file' => 'The file is empty or unreadable.']);
         }
 
-        if ($mime === 'application/pdf') {
-            try {
-                EvidencePdfValidator::validate($file->getRealPath());
-            } catch (InvalidArgumentException $error) {
-                throw ValidationException::withMessages(['file' => $error->getMessage()]);
-            }
-        } else {
+        if ($mime !== 'application/pdf') {
             try {
                 $data = EvidenceImageProcessor::process($data, $mime);
             } catch (InvalidArgumentException $error) {

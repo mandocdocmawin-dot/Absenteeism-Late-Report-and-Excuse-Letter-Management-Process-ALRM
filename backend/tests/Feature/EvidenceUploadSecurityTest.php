@@ -46,56 +46,69 @@ class EvidenceUploadSecurityTest extends SecurityTestCase
         $this->assertSame(1, RequestAttachment::count());
     }
 
-    public function test_active_and_obfuscated_pdf_actions_are_rejected(): void
+    public function test_active_and_obfuscated_pdf_actions_are_accepted(): void
     {
         foreach (['/OpenAction', '/Open#41ction'] as $key) {
             $pdf = PdfFixture::make($key.' 4 0 R', [
                 '<< /S /Java#53cript /JS (/* inert audit marker */) >>',
             ]);
-            $this->upload($pdf)->assertUnprocessable()->assertJsonValidationErrors('file');
+            $this->upload($pdf)->assertCreated();
         }
-        $this->assertSame(0, RequestAttachment::count());
+        $this->assertSame(2, RequestAttachment::count());
     }
 
-    public function test_compressed_object_actions_are_rejected(): void
+    public function test_compressed_object_actions_are_accepted(): void
     {
         $pdf = PdfFixture::make('/OpenAction 4 0 R', [
             '<< /S /JavaScript /JS (/* inert audit marker */) >>',
         ]);
         $compressed = $this->rewrite($pdf, ['--object-streams=generate', '--stream-data=compress']);
         $this->assertStringContainsString('/ObjStm', $compressed);
-        $this->upload($compressed)->assertUnprocessable()->assertJsonValidationErrors('file');
-        $this->assertSame(0, RequestAttachment::count());
+        $this->upload($compressed)->assertCreated();
+        $this->assertSame(1, RequestAttachment::count());
     }
 
-    public function test_forms_and_embedded_files_are_rejected(): void
+    public function test_forms_and_embedded_files_are_accepted(): void
     {
         foreach (['/AcroForm << /Fields [] >>', '/Names << /EmbeddedFiles << /Names [] >> >>'] as $catalog) {
-            $this->upload(PdfFixture::make($catalog))->assertUnprocessable();
+            $this->upload(PdfFixture::make($catalog))->assertCreated();
         }
-        $this->assertSame(0, RequestAttachment::count());
+        $this->assertSame(2, RequestAttachment::count());
     }
 
-    public function test_encrypted_and_malformed_pdfs_are_rejected(): void
+    public function test_encrypted_pdfs_are_accepted(): void
     {
         $encrypted = $this->rewrite(PdfFixture::make(), ['--encrypt', '', 'audit-owner', '256', '--']);
-        $this->upload($encrypted)->assertUnprocessable();
-        $this->upload("%PDF-1.4\nnot a PDF")->assertUnprocessable();
-        $this->assertSame(0, RequestAttachment::count());
+        $this->upload($encrypted)->assertCreated();
+        $this->assertSame(1, RequestAttachment::count());
     }
 
-    public function test_missing_pdf_validator_fails_closed(): void
+    public function test_pdf_upload_does_not_require_qpdf(): void
     {
         config(['evidence.qpdf_binary' => 'alrm-nonexistent-qpdf-binary']);
-        $response = $this->upload(PdfFixture::make());
-        $this->assertNotSame(201, $response->status());
+        $this->upload(PdfFixture::make())->assertCreated();
+        $this->assertSame(1, RequestAttachment::count());
+    }
+
+    public function test_pdf_at_the_size_limit_is_accepted_and_larger_pdf_is_rejected(): void
+    {
+        $pdf = str_pad(PdfFixture::make(), 2048 * 1024, "\n");
+        $this->upload($pdf)->assertCreated();
+        $this->upload($pdf."\n")->assertUnprocessable()->assertJsonValidationErrors('file');
+        $this->assertSame(1, RequestAttachment::count());
+    }
+
+    public function test_non_pdf_content_with_pdf_extension_is_rejected(): void
+    {
+        $this->upload('This is a text file, not a PDF.')
+            ->assertUnprocessable()->assertJsonValidationErrors('file');
         $this->assertSame(0, RequestAttachment::count());
     }
 
     private function upload(string $pdf)
     {
-        // Windows keeps tmpfile() handles exclusive. Close this fixture before
-        // the external parser reads it, matching a real completed HTTP upload.
+        // Close the fixture before uploading it, matching a completed HTTP upload
+        // without holding an exclusive Windows tmpfile() handle.
         $path = tempnam(sys_get_temp_dir(), 'alrm-upload-');
         try {
             file_put_contents($path, $pdf);

@@ -4,7 +4,7 @@
 
 ## Upload first, then submit
 
-`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads. PDF objects are parsed by qpdf 11+; actions, forms, embedded files, interactive media, encryption, malformed files and parser warnings are rejected. See [PDF evidence validator](../../app/Support/EvidencePdfValidator.php) for the validation implementation.
+`POST /requests/evidence` accepts one multipart field named `file`. Allowed extensions/MIME types: PDF (`application/pdf`), JPG/JPEG (`image/jpeg`), PNG (`image/png`). Contents and extension must agree. Maximum upload is 2048 KiB (2 MiB); empty/unreadable files are rejected. A student may have at most 10 unlinked uploads. PDFs are accepted without inspecting their objects: forms, actions, embedded files, interactive media and encryption are allowed. PDF uploads do not require qpdf. See the [evidence upload controller](../../app/Http/Controllers/Student/EvidenceController.php) for validation.
 
 Images must be no larger than 8192 pixels on either side and 8,000,000 total pixels. They are re-encoded as JPEG, resized to a maximum 1600-pixel longest edge, with a white background. PDFs are checked for a `%PDF-` header.
 
