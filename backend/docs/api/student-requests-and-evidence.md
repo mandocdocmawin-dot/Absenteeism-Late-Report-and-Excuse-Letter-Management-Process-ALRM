@@ -35,11 +35,11 @@ Despite its name, `data.path` is an attachment UUID. Submit it as `evidence_file
 | `subjects_missed` | Yes | String ≤255 |
 | `minutes_late` | When `type=late` | Nullable integer, 1–999 when present |
 | `start_date_of_absence` | Yes, for both types | Occurrence date, including late requests |
-| `end_date_of_absence` | No | Nullable date on/after start |
+| `end_date_of_absence` | When `type=absence` | Date on/after start; use the same date for a one-day absence. Optional for late requests |
 | `reason` | Yes | String ≤600 on create |
 | `evidence_file_url` | Yes | Required owned, unlinked attachment UUID |
-| `evidence_type` | No | Nullable string ≤100 |
-| `proof_types` | No | Nullable list, maximum 6 distinct allowed strings |
+| `evidence_type` | Yes | Nonempty string ≤100; send the MIME type returned by the evidence upload |
+| `proof_types` | Yes | List of 1–6 distinct allowed strings; omitted, null, and empty selections are rejected |
 | `guardian_name` | Yes | String 2–60 characters, no digits |
 | `contact_number` | Yes | Philippine number matching `09` + 9 digits or `+639` + 9 digits |
 
@@ -58,7 +58,7 @@ The backend derives enrollment and active teaching assignment from the caller an
 
 `GET /requests` is scoped to the student and loads `enrollment.class`. `GET /requests/{request}` also loads `followupFlag`. The detail route is in the student group even though the shared evidence policy supports staff access.
 
-`PATCH /requests/{request}` requires the full editable set: `type`, `subjects_missed`, `start_date_of_absence`, `reason`, and `minutes_late` when late. Optional fields are `end_date_of_absence`, `evidence_file_url`, `evidence_type`, and `proof_types`, with create rules except **reason is limited to 500 characters on update**. Class, enrollment, guardian, contact, and review fields are not editable here. Omit `evidence_file_url` or send its current value; changing/removing it is rejected with `422`.
+`PATCH /requests/{request}` requires the full editable set: `type`, `subjects_missed`, `start_date_of_absence`, `reason`, `evidence_type`, and `proof_types`, plus `minutes_late` when late or `end_date_of_absence` when absent. The same validation rules apply as on create, including a 600-character reason limit and at least one proof type. Missing or blank required fields return `422` with field errors and do not save changes. Class, enrollment, guardian, contact, and review fields are not editable here. Omit `evidence_file_url` or send its current value; changing/removing it is rejected with `422`.
 
 Only the owner of a pending request may edit or cancel it. The policy generally rejects reviewed requests with `403`; update also contains a `422` reviewed-state check and a transactional `409` conflict check. Do not assume every state conflict has the same status.
 

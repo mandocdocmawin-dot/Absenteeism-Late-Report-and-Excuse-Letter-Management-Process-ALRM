@@ -177,6 +177,8 @@ class TeachingAssignmentTest extends SecurityTestCase
         $this->bearer($student)->getJson('/api/classes')->assertOk()->assertJsonCount(0, 'data');
         $payload = [
             'class_id' => $class->id, 'type' => 'absence', 'subjects_missed' => 'Spoofed Subject',
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
+            'end_date_of_absence' => '2026-10-29',
             'start_date_of_absence' => '2026-10-29', 'reason' => 'Illness again',
             'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
             'class_snapshot' => ['subject_name' => 'Spoofed Subject'],
@@ -265,6 +267,8 @@ class TeachingAssignmentTest extends SecurityTestCase
             'class_id' => $class->id, 'teaching_assignment_id' => $fixture->teaching_assignment_id,
             'evidence_file_url' => $this->unusedEvidence($student)->id,
             'type' => 'absence', 'subjects_missed' => 'Security', 'reason' => 'New reason',
+            'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
+            'end_date_of_absence' => '2026-10-30',
             'start_date_of_absence' => '2026-10-30', 'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
         ])->assertConflict();
         $this->assertSame(1, ExcuseRequest::count());

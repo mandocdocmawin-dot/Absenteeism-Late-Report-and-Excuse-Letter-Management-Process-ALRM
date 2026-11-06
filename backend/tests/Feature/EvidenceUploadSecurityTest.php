@@ -19,6 +19,8 @@ class EvidenceUploadSecurityTest extends SecurityTestCase
             $payload = [
                 'class_id' => $fixture->enrollment->class_id, 'type' => $type,
                 'subjects_missed' => 'Security', 'reason' => 'Illness', 'minutes_late' => 5,
+                'evidence_type' => 'application/pdf', 'proof_types' => ['Medical Certificate'],
+                'end_date_of_absence' => '2026-10-22',
                 'start_date_of_absence' => '2026-10-22',
                 'guardian_name' => 'Parent Name', 'contact_number' => '09123456789',
             ];
