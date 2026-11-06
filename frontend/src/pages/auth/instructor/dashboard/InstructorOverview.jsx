@@ -42,7 +42,16 @@ function SemesterSummary({ courses }) {
 function AttendanceNotice({ flags }) {
   return <section aria-labelledby="attendance-notice-title" className="flex min-w-0 flex-wrap items-center justify-between gap-4 rounded-[4px] border border-[#D0D0D0] bg-white px-5 py-4">
     <div className="flex min-w-0 flex-1 items-start gap-3"><span className="rounded-[4px] bg-blue-100 p-1 text-[#0969FF]"><Info aria-hidden="true" className="size-4" /></span><div className="min-w-0"><h2 id="attendance-notice-title" className="text-sm font-semibold">Attendance Notice</h2>
-      {flags.length ? <ul className="mt-1 space-y-1 text-xs leading-5 text-slate-600">{flags.map((flag, index) => <li key={`${flag.student?.id}-${flag.class}-${index}`} className="break-words">{flag.student?.name || "A student"} has {flag.absences ?? "recorded"} converted absences in {flag.class || "an assigned class"}. {flag.status === "IR" ? "Incident report" : flag.status === "critical" ? "Critical threshold — consultation required" : "Attendance warning"}.</li>)}</ul> : <p className="mt-1 text-xs text-slate-600">No attendance warnings for your classes.</p>}
+      {flags.length ? <ul className="mt-1 space-y-1 text-xs leading-5 text-slate-600">{flags.map((flag, index) => {
+        const details = [
+          `${flag.absences ?? "Unknown"} recorded absences`,
+          flag.converted_absences != null && `${flag.converted_absences} converted absences`,
+          flag.used_hours != null && `${flag.used_hours} missed hours`,
+          flag.absence_percentage != null && `${flag.absence_percentage}% of subject hours`,
+          flag.ir_absence_limit != null && `IR at ${flag.ir_absence_limit} absences`,
+        ].filter(Boolean).join("; ");
+        return <li key={`${flag.student?.id}-${flag.class_id || flag.class}-${index}`} className="break-words">{flag.student?.name || "A student"} in {flag.class || "an assigned class"}: {details}. {flag.status === "IR" ? "Incident report" : flag.status === "critical" ? "Critical threshold — consultation required" : "Attendance warning"}.</li>;
+      })}</ul> : <p className="mt-1 text-xs text-slate-600">No attendance warnings for your classes.</p>}
     </div></div>
     <Link to="/instructor/class-requests" className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-[4px] bg-[#D5E4FF] px-4 text-xs font-medium text-[#203B82] hover:bg-blue-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">View Requests</Link>
   </section>;

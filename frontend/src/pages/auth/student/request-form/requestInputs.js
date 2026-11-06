@@ -6,13 +6,20 @@ export function prepareRequestInput(data, partial = false) {
   const errors = {};
   if (!partial || Object.hasOwn(data, 'type')) errors.type = ['absence', 'late'].includes(data.type) ? '' : 'Select an available request type.';
   if (!partial) {
-    for (const [key, label] of [['class_id', 'Class'], ['teaching_assignment_id', 'Teaching assignment'], ['reason', 'Reason'], ['subjects_missed', 'Subject'], ['guardian_name', "Parent or guardian's name"], ['contact_number', 'Contact number']]) {
+    for (const [key, label] of [['class_id', 'Class'], ['teaching_assignment_id', 'Teaching assignment'], ['reason', 'Reason'], ['subjects_missed', 'Subject'], ['evidence_file_url', 'Attachment'], ['evidence_type', 'Attachment type'], ['proof_types', 'Supporting document type'], ['guardian_name', "Parent or guardian's name"], ['contact_number', 'Contact number']]) {
       if (!Object.hasOwn(data, key)) errors[key] = `${label} is required.`;
     }
     if (data.type === 'late' && data.minutes_late == null) errors.minutes_late = 'Enter minutes late.';
+    if (data.type === 'absence' && !data.end_date_of_absence) errors.end_date_of_absence = 'Choose the end date of absence.';
+  } else {
+    for (const [key, label] of [['type', 'Request type'], ['subjects_missed', 'Subject'], ['reason', 'Reason'], ['start_date_of_absence', 'Occurrence date'], ['evidence_type', 'Attachment type'], ['proof_types', 'Supporting document type']]) {
+      if (!Object.hasOwn(data, key)) errors[key] = `${label} is required.`;
+    }
+    if (data.type === 'late' && data.minutes_late == null) errors.minutes_late = 'Enter minutes late.';
+    if (data.type === 'absence' && !data.end_date_of_absence) errors.end_date_of_absence = 'Choose the end date of absence.';
   }
   if ((!partial || Object.hasOwn(data, 'type')) && !data.start_date_of_absence) errors.start_date_of_absence = data.type === 'late' ? 'Choose the date of tardiness.' : 'Choose the start date of absence.';
-  for (const [key, label, max, multiline] of [['reason', 'Reason', data.type === 'absence' ? 600 : 100, true], ['subjects_missed', 'Subject', 255, false], ['guardian_name', "Parent or guardian's name", 50, false]]) {
+  for (const [key, label, max, multiline] of [['reason', 'Reason', 600, true], ['subjects_missed', 'Subject', 255, false], ['evidence_type', 'Attachment type', 100, false], ['guardian_name', "Parent or guardian's name", 50, false]]) {
     if (!Object.hasOwn(data, key)) continue;
     payload[key] = sanitizeText(data[key], { multiline });
     errors[key] = textError(payload[key], label, { min: key === 'guardian_name' ? 2 : 1, max, multiline, ...(key === 'guardian_name' ? { pattern: personNamePattern } : {}) });
@@ -38,7 +45,7 @@ export function prepareRequestInput(data, partial = false) {
   if (data.start_date_of_absence && data.end_date_of_absence && data.end_date_of_absence < data.start_date_of_absence) errors.end_date_of_absence = 'End date must be the same as or later than the start date.';
   if (Object.hasOwn(data, 'proof_types')) {
     const proofs = data.proof_types;
-    errors.proof_types = Array.isArray(proofs) && proofs.length <= proofOptions.length && new Set(proofs).size === proofs.length && proofs.every(proof => proofOptions.includes(proof)) ? '' : 'Select valid, distinct supporting document types.';
+    errors.proof_types = Array.isArray(proofs) && proofs.length >= 1 && proofs.length <= proofOptions.length && new Set(proofs).size === proofs.length && proofs.every(proof => proofOptions.includes(proof)) ? '' : 'Select one to six valid, distinct supporting document types.';
   }
   assertValidInputs(errors);
   return payload;

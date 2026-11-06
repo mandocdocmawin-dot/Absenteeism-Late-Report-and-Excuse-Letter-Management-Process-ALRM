@@ -115,13 +115,6 @@ function RequestEditForm({ record, onSaved, onCancel }) {
             <input type="date" required value={form[name]} min={name === "end_date_of_absence" ? form.start_date_of_absence : undefined} onChange={(event) => change(name, event.target.value)} aria-invalid={Boolean(errors[name])} className={control} />
             {fieldError(name) && <span role="alert" className="text-red-600">{fieldError(name)}</span>}
           </label>)}
-          <fieldset disabled={saving} aria-describedby={proofError ? "edit-proof-errors" : undefined} className="grid gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <legend className="px-1 text-sm font-semibold">Supporting Documents / Proof of Absence</legend>
-            {proofOptions.map((proof) => <label key={proof} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.proof_types.includes(proof)} aria-invalid={Boolean(proofError)} onChange={() => change("proof_types", form.proof_types.includes(proof) ? form.proof_types.filter((value) => value !== proof) : [...form.proof_types, proof])} />{proof}
-            </label>)}
-            {proofError && <p id="edit-proof-errors" role="alert" className="text-sm text-red-600">{proofError}</p>}
-          </fieldset>
         </> : <>
         <label className="grid gap-2 text-sm">Date of tardiness
           <input type="date" required value={form.start_date_of_absence} onChange={(event) => change("start_date_of_absence", event.target.value)} aria-invalid={Boolean(errors.start_date_of_absence)} className={control} />
@@ -131,7 +124,13 @@ function RequestEditForm({ record, onSaved, onCancel }) {
           <input type="number" required min={1} max={999} value={form.minutes_late} onChange={(event) => change("minutes_late", event.target.value)} aria-invalid={Boolean(errors.minutes_late)} className={control} />
           {fieldError("minutes_late") && <span role="alert" className="text-red-600">{fieldError("minutes_late")}</span>}
         </label></>}
-        {form.type !== "absence" && proofError && <p role="alert" className="text-sm text-red-600">{proofError}</p>}
+        <fieldset disabled={saving} aria-describedby={proofError ? "edit-proof-errors" : undefined} className="grid gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+          <legend className="px-1 text-sm font-semibold">Supporting document types</legend>
+          {proofOptions.map((proof) => <label key={proof} className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.proof_types.includes(proof)} aria-invalid={Boolean(proofError)} onChange={() => change("proof_types", form.proof_types.includes(proof) ? form.proof_types.filter((value) => value !== proof) : [...form.proof_types, proof])} />{proof}
+          </label>)}
+          {proofError && <p id="edit-proof-errors" role="alert" className="text-sm text-red-600">{proofError}</p>}
+        </fieldset>
         <p className="text-xs text-slate-500">The existing attachment is kept when you save these changes.</p>
       </>}
       <div className="flex justify-end gap-2">

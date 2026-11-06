@@ -1,11 +1,11 @@
 import { ErrorState } from "@/components/common/ErrorState";
 import LoadingSkeleton from "@/components/loading/LoadingSkeleton";
 import ProgramHeadOverview from "./ProgramHeadOverview";
-import { FlaggedRecords, RequestRecords } from "./ProgramHeadRecords";
+import { FlaggedRecords } from "./ProgramHeadRecords";
 import { useProgramHeadRecords } from "./useProgramHeadRecords";
 
 export function ProgramHeadDashboard({ view = "dashboard" }) {
-  const needed = view === "flagged" ? ["flags"] : view === "requests" ? ["requests"] : ["dashboard", "flags", "requests"];
+  const needed = view === "flagged" ? ["flags"] : ["dashboard", "flags", "requests"];
   const { dashboard, flags, requests, errors, resourceLoading, ready, refresh } = useProgramHeadRecords(needed);
   const loading = needed.some((key) => resourceLoading[key]);
   const waiting = needed.some((key) => resourceLoading[key] && !ready[key]);
@@ -17,6 +17,5 @@ export function ProgramHeadDashboard({ view = "dashboard" }) {
     {view === "dashboard" ? <ProgramHeadOverview dashboard={dashboard} flags={flags} requests={requests} errors={errors} resourceLoading={resourceLoading} ready={ready} /> : null}
     {failed ? <button type="button" onClick={refresh} className="text-sm font-medium text-blue-800 underline dark:text-blue-300">Retry loading</button> : null}
     {view === "flagged" && !waiting && !errors.flags ? <FlaggedRecords flags={flags} onRefresh={refresh} /> : null}
-    {view === "requests" && !waiting && !errors.requests ? <RequestRecords requests={requests} /> : null}
   </div>;
 }

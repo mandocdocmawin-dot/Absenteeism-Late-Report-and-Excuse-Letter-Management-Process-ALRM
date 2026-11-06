@@ -1,10 +1,10 @@
 import { absenceReasonOptions, LIMITS, proofOptions, requestOptions } from "../constants";
 import { classLabel } from "../utils";
 import ReviewAttachment from "./ReviewAttachment";
-import ReviewCheckboxGroup from "./ReviewCheckboxGroup";
+import ReviewRadioGroup from "./ReviewRadioGroup";
 import ReviewField from "./ReviewField";
 
-export default function RequestReviewEditor({ form, user, classes, classesLoading, classesError, fieldErrors = {}, updateField, toggleListField, disabled }) {
+export default function RequestReviewEditor({ form, user, classes, classesLoading, classesError, fieldErrors = {}, updateField, disabled }) {
   const isAbsence = form.requestType === "absence";
   const fields = [
     { name: "requestType", label: "Request type", options: requestOptions },
@@ -28,10 +28,19 @@ export default function RequestReviewEditor({ form, user, classes, classesLoadin
   ];
   return <fieldset disabled={disabled} aria-label="Edit request details" className="grid min-w-0 gap-x-6 gap-y-5 sm:grid-cols-2">
     {fields.map((field) => <ReviewField key={field.name} value={form[field.name]} error={fieldErrors[field.name]} onChange={(value) => updateField(field.name, value)} {...field} />)}
-    {isAbsence && <>
-      <ReviewCheckboxGroup name="absenceReasons" label="Reason of absence" options={absenceReasonOptions} selected={form.absenceReasons} onToggle={toggleListField} error={fieldErrors.absenceReasons} />
-      <ReviewCheckboxGroup name="proof_types" label="Supporting document types" options={proofOptions} selected={form.proof_types || []} onToggle={toggleListField} error={fieldErrors.proof_types} />
-    </>}
+    {isAbsence && <ReviewRadioGroup name="absenceReasons" label="Reason of absence" options={absenceReasonOptions} selected={form.absenceReasons} onChange={updateField} error={fieldErrors.absenceReasons} />}
+    <fieldset className="grid gap-2 sm:col-span-2">
+      <legend className="text-sm font-semibold">Supporting document types</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {proofOptions.map((proof) => <label key={proof} className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="proof_types" value={proof} checked={(form.proof_types || []).includes(proof)} onChange={(event) => updateField("proof_types", event.target.checked
+            ? [...(form.proof_types || []), proof]
+            : (form.proof_types || []).filter((item) => item !== proof))} aria-invalid={Boolean(fieldErrors.proof_types)} />
+          {proof}
+        </label>)}
+      </div>
+      {fieldErrors.proof_types && <span role="alert" className="text-sm text-red-600">{fieldErrors.proof_types}</span>}
+    </fieldset>
     <ReviewAttachment file={form.evidenceFile} error={fieldErrors.evidenceFile} />
   </fieldset>;
 }

@@ -53,14 +53,13 @@ function StudentRequestForm() {
           {step === 4 && (
             <DetailsStep
               {...common}
-              toggleListField={f.toggleListField}
               classes={f.classes}
               classesLoading={f.classesLoading}
               classesError={f.classesError}
             />
           )}
           {step === 5 && (
-            <AttachmentStep {...common} toggleListField={f.toggleListField} />
+            <AttachmentStep {...common} />
           )}
           {step === 6 && (
             <ReviewStep
@@ -72,7 +71,6 @@ function StudentRequestForm() {
               reviewEditing={f.reviewEditing}
               onStartEdit={f.startReviewEdit}
               onSaveEdit={f.saveReviewEdit}
-              toggleListField={f.toggleListField}
               submitting={f.submitting}
               uploading={f.uploading}
             />

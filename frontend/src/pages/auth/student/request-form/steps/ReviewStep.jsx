@@ -25,7 +25,6 @@ export default function ReviewStep({
   reviewEditing,
   onStartEdit,
   onSaveEdit,
-  toggleListField,
 }) {
   return (
     <RequestShell requestType={form.requestType} step={step}>
@@ -37,7 +36,7 @@ export default function ReviewStep({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <RequestSummary form={form} user={user} classes={classes} classesLoading={classesLoading} classesError={classesError} editing={reviewEditing} onStartEdit={onStartEdit} onSaveEdit={onSaveEdit} disabled={submitting} fieldErrors={fieldErrors} updateField={updateField} toggleListField={toggleListField} />
+      <RequestSummary form={form} user={user} classes={classes} classesLoading={classesLoading} classesError={classesError} editing={reviewEditing} onStartEdit={onStartEdit} onSaveEdit={onSaveEdit} disabled={submitting} fieldErrors={fieldErrors} updateField={updateField} />
       {uploading && <UploadProgress label="Uploading supporting document..." />}
       <SectionBox
         invalid={Boolean(fieldErrors.declaration)}

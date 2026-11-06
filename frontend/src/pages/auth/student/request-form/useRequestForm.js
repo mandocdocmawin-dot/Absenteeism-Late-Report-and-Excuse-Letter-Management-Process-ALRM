@@ -11,6 +11,10 @@ import {
   profileDefaults,
 } from "./utils";
 
+export function isTeachingAssignmentConflict(error) {
+  return error?.status === 409 && /assignment changed/i.test(error?.message || "");
+}
+
 export default function useRequestForm() {
   const { user, refreshUser } = useAuth();
   const storedProfile = useMemo(() => getStoredProfileSetup(user), [user]);
@@ -94,21 +98,6 @@ export default function useRequestForm() {
         proof_types: [],
         evidenceFile: step === LAST_STEP ? current.evidenceFile : null,
         declaration: false,
-      };
-    });
-    setFieldErrors((current) => ({ ...current, [name]: "" }));
-    setError("");
-  }
-
-  function toggleListField(name, value) {
-    setForm((current) => {
-      const selected = current[name] || [];
-
-      return {
-        ...current,
-        [name]: selected.includes(value)
-          ? selected.filter((item) => item !== value)
-          : [...selected, value],
       };
     });
     setFieldErrors((current) => ({ ...current, [name]: "" }));
@@ -208,7 +197,7 @@ export default function useRequestForm() {
       setSubmitted(true);
       refreshUser({ silent: true }).catch(() => {});
     } catch (submitError) {
-      if (submitError?.status === 409) {
+      if (isTeachingAssignmentConflict(submitError)) {
         try {
           const refreshedClasses = await requestCachedResource(classesCacheKey, () => getStudentClasses(), { force: true });
           setClasses(refreshedClasses);
@@ -263,7 +252,6 @@ export default function useRequestForm() {
     error,
     fieldErrors,
     updateField,
-    toggleListField,
     handleRadioClick,
     nextStep,
     previousStep,

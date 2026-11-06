@@ -129,6 +129,18 @@ test("the dashboard renders the supplied layout with report labels, real identit
   assert.doesNotMatch(html, />Approve<|>Mark Invalid<|Requests for review/);
 });
 
+test("attendance notice separates recorded absences, late conversions, and subject IR metrics", async () => {
+  const { buildInstructorOverview } = await load("overviewData.js");
+  const Overview = (await load("InstructorOverview.jsx")).default;
+  const snapshot = { ...dashboard, flagged_students: [{
+    student: { id: "student-one", name: "Alex Cruz" }, class: "Data Structure", class_id: "class-one",
+    status: "IR", absences: 3, converted_absences: 4, used_hours: 8, absence_percentage: 10, ir_absence_limit: 3,
+  }] };
+  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Overview, { user: { name: "Ana Santos" }, overview: buildInstructorOverview(snapshot, [report("one")], now) })));
+  for (const text of ["3 recorded absences", "4 converted absences", "8 missed hours", "10% of subject hours", "IR at 3 absences", "Incident report"]) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /undefined|NaN/);
+});
+
 test("no reports or warnings display honest empty states and no invented courses", async () => {
   const { buildInstructorOverview } = await load("overviewData.js");
   const Overview = (await load("InstructorOverview.jsx")).default;

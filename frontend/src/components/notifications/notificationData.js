@@ -70,15 +70,15 @@ function notificationLabel(type, message) {
 
 function destination(role, requestId, type) {
   const normalized = normalizeRole(role);
-  if (["threshold_critical", "ir_escalation", "attendance_ir"].includes(type)) {
-    if (normalized === "program") return "/program-head/activity-log?tab=flagged";
+  if (normalized === "program") {
+    if (["threshold_critical", "ir_escalation", "attendance_ir"].includes(type)) return "/program-head/activity-log?tab=flagged";
+    return "/program-head/activity-log";
   }
   if (["account_role_changed", "account_status_changed"].includes(type)) return "/settings";
   if (type === "pending_staff_approval") return "/user-management";
   if (type === "class_assignment") return "/instructor/class-records";
   if (type === "program_head_assignment") return "/program-head/instructors";
   if (normalized === "instructor") return `/instructor/class-requests${requestId ? `?request=${encodeURIComponent(requestId)}` : ""}`;
-  if (normalized === "program") return "/program-head/requests";
   if (normalized === "student") return `/student/records${requestId ? `?request=${encodeURIComponent(requestId)}` : ""}`;
   return "/dashboard";
 }

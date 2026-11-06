@@ -298,14 +298,6 @@ test("pending requests expose enabled approve and invalid decisions in the modal
   assert.doesNotMatch(html, /already been reviewed/i);
 });
 
-test("program head request records expose evidence only when the server supplies an indicator", async () => {
-  const { RequestRecords } = await server.ssrLoadModule("/src/pages/auth/programHead/ProgramHeadRecords.jsx");
-  const withEvidence = renderToStaticMarkup(React.createElement(RequestRecords, { requests: [request("with", { evidence_file_url: "attachment-id" }), request("without")] }));
-  assert.equal((withEvidence.match(/View Evidence/g) || []).length, 1);
-  assert.match(withEvidence, /Evidence viewer/);
-  assert.doesNotMatch(withEvidence, /attachment-id/);
-});
-
 test("embedded evidence content renders only supported PDF and image elements", async () => {
   const { EvidenceContent } = await server.ssrLoadModule("/src/components/evidence/EvidenceViewerDialog.jsx");
   const render = state => renderToStaticMarkup(React.createElement(EvidenceContent, { state }));

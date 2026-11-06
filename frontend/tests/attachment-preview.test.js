@@ -52,15 +52,17 @@ test("a selected PDF replaces the drop prompt with a safe document preview and d
   assert.doesNotMatch(html, /<(iframe|embed|object)\b/);
 });
 
-test("the absence proof checklist appears above upload and retains selected proof types", async () => {
-  const html = await renderAttachment(null, {}, { requestType: "absence", proof_types: ["Medical Certificate"] });
-  for (const label of ["Explanation", "Supporting Documents/ Proof of Absence", "Medical Certificate", "Prescription / Medical Record", "Death Certificate / Funeral Notice", "School Activity Endorsement", "Letter from Parent/Guardian", "Others"]) assert.ok(html.includes(label), label);
-  assert.ok(html.indexOf('absence-proof-heading') < html.indexOf('attachment-heading'));
-  const checkboxes = [...html.matchAll(/<input\b[^>]*type="checkbox"[^>]*>/g)].map(([input]) => input);
-  assert.equal(checkboxes.length, 6);
-  assert.ok(checkboxes.every(input => input.includes('name="proof_types"')));
-  assert.ok(checkboxes.find(input => input.includes('value="Medical Certificate"')).includes('checked=""'));
-  assert.doesNotMatch(await renderAttachment(), /absence-proof-heading|Supporting Documents\/ Proof of Absence/);
+test("both request types show multi-choice proof types above the required upload", async () => {
+  for (const requestType of ["absence", "late"]) {
+    const html = await renderAttachment(null, {}, { requestType, proof_types: ["Medical Certificate", "Others"] });
+    for (const label of ["Supporting evidence", "Supporting document types", "Medical Certificate", "Prescription / Medical Record", "Death Certificate / Funeral Notice", "School Activity Endorsement", "Letter from Parent/Guardian", "Others"]) assert.ok(html.includes(label), label);
+    assert.ok(html.indexOf('proof-heading') < html.indexOf('attachment-heading'));
+    const checkboxes = [...html.matchAll(/<input\b[^>]*type="checkbox"[^>]*>/g)].map(([input]) => input);
+    assert.equal(checkboxes.length, 6);
+    assert.ok(checkboxes.every(input => input.includes('name="proof_types"')));
+    assert.ok(checkboxes.find(input => input.includes('value="Medical Certificate"')).includes('checked=""'));
+    assert.ok(checkboxes.find(input => input.includes('value="Others"')).includes('checked=""'));
+  }
 });
 
 test("the final review keeps its attachment read-only before and after Edit for both request types", async () => {

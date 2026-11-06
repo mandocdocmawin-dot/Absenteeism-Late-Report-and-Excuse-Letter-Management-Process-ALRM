@@ -25,7 +25,7 @@ export function buildRequestPayload(form, classes, evidence = null) {
     start_date_of_absence: form.startDateOfAbsence,
     end_date_of_absence: isAbsence ? form.endDateOfAbsence : null,
     reason: buildReason(form, isAbsence),
-    proof_types: isAbsence ? [...(form.proof_types || [])] : [],
+    proof_types: [...(form.proof_types || [])],
     evidence_file_url: evidence?.path || null,
     evidence_type: evidence?.type || null,
     guardian_name: sanitizeText(form.guardianName),
@@ -55,6 +55,7 @@ export function buildRequestEditForm(record) {
     minutes_late: String(record.minutes_late ?? ""),
     start_date_of_absence: record.start_date_of_absence?.slice(0, 10) || "",
     end_date_of_absence: record.end_date_of_absence?.slice(0, 10) || "",
+    evidence_type: record.evidence_type || "",
     proof_types: Array.isArray(record.proof_types) ? [...record.proof_types] : [],
   };
 }
@@ -71,6 +72,7 @@ export function buildRequestUpdatePayload(form) {
     minutes_late: isAbsence ? null : Number(form.minutes_late),
     start_date_of_absence: form.start_date_of_absence,
     end_date_of_absence: isAbsence ? form.end_date_of_absence || null : null,
-    proof_types: isAbsence ? [...(form.proof_types || [])] : [],
+    evidence_type: form.evidence_type || "",
+    proof_types: [...(form.proof_types || [])],
   };
 }

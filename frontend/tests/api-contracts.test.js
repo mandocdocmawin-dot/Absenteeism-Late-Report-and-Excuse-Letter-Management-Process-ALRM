@@ -64,6 +64,7 @@ test("student requests post all fields required by the backend", async () => {
   const requests = captureJsonRequest();
   const payload = {
     class_id: "19b10b16-3f80-43b5-ad10-670b735a84f3",
+    teaching_assignment_id: "29b10b16-3f80-43b5-ad10-670b735a84f3",
     type: "late",
     subjects_missed: "Information Management",
     minutes_late: 15,
@@ -72,8 +73,9 @@ test("student requests post all fields required by the backend", async () => {
     guardian_name: "Alex Parent",
     contact_number: "09123456789",
     reason: "Transport delay",
-    evidence_file_url: null,
-    evidence_type: null,
+    evidence_file_url: "evidence-one",
+    evidence_type: "application/pdf",
+    proof_types: ["Others"],
   };
 
   await createStudentRequest(payload);

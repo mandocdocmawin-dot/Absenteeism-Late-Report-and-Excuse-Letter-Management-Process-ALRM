@@ -20,7 +20,7 @@ function capture() {
 }
 
 const course = { subject_name: 'Data Structures', section: 'BSIS 3', schedule: 'Monday 9 AM', instructor_id: 'instructor-one', program_id: 'program-one', year_level: '3rd', semester: '1st', school_year: '2026-2027' };
-const request = { class_id: 'class-one', type: 'late', subjects_missed: 'Data Structures', reason: 'Traffic delay', minutes_late: 5, start_date_of_absence: '2026-10-20', guardian_name: 'Alex Parent', contact_number: '+639123456789' };
+const request = { class_id: 'class-one', teaching_assignment_id: 'assignment-one', type: 'late', subjects_missed: 'Data Structures', reason: 'Traffic delay', minutes_late: 5, start_date_of_absence: '2026-10-20', evidence_file_url: 'evidence-one', evidence_type: 'application/pdf', proof_types: ['Others'], guardian_name: 'Alex Parent', contact_number: '+639123456789' };
 
 test('account submission normalizes Unicode and control characters while preserving real names', async () => {
   const fetch = capture();
@@ -78,6 +78,19 @@ test('request APIs reject malformed numbers, dates and proof selections before s
   }
   await assert.rejects(() => updateStudentRequest('one', { type: 'absence', reason: 'Illness', start_date_of_absence: '2026-02-30', end_date_of_absence: '2026-03-01' }), error => error.status === 422);
   assert.equal(fetch.mock.callCount(), 0);
+});
+
+test('request create enforces backend-required evidence, proofs, and absence end date before sending', async () => {
+  const fetch = capture();
+  await createStudentRequest(request);
+  for (const missing of ['evidence_file_url', 'evidence_type', 'proof_types']) {
+    const payload = { ...request };
+    delete payload[missing];
+    await assert.rejects(() => createStudentRequest(payload), error => error.status === 422 && Boolean(error.validationErrors?.[missing]));
+  }
+  await assert.rejects(() => createStudentRequest({ ...request, proof_types: [] }), error => error.status === 422 && Boolean(error.validationErrors?.proof_types));
+  await assert.rejects(() => createStudentRequest({ ...request, type: 'absence', minutes_late: null }), error => error.status === 422 && Boolean(error.validationErrors?.end_date_of_absence));
+  assert.equal(fetch.mock.callCount(), 1);
 });
 
 test('the dashboard API uses the same request validation', async () => {

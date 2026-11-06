@@ -92,3 +92,32 @@ test("the final review cannot unlock profile fields for either request type", as
     assert.doesNotMatch(guardian, /\s(?:readOnly|disabled)=""/);
   }
 });
+
+test("absence reason stays single-choice while proofs are multi-choice for both request types", async () => {
+  const DetailsStep = (await server.ssrLoadModule("/src/pages/auth/student/request-form/steps/DetailsStep.jsx")).default;
+  const AttachmentStep = (await server.ssrLoadModule("/src/pages/auth/student/request-form/steps/AttachmentStep.jsx")).default;
+  const Editor = (await server.ssrLoadModule("/src/pages/auth/student/request-form/components/RequestReviewEditor.jsx")).default;
+  const absence = { ...form, requestType: "absence", absenceReasons: ["Family Emergency"], proof_types: ["Medical Certificate"] };
+  const details = renderToStaticMarkup(React.createElement(DetailsStep, {
+    step: 4, form: absence, user, fieldErrors: {}, updateField() {}, classes: [],
+  }));
+  const attachment = (requestType) => renderToStaticMarkup(React.createElement(AttachmentStep, {
+    step: 5, form: { ...absence, requestType }, user, fieldErrors: {}, updateField() {},
+  }));
+  const review = (requestType) => renderToStaticMarkup(React.createElement(Editor, {
+    form: { ...absence, requestType }, user, classes: [], updateField() {},
+  }));
+
+  const radiosNamed = (html, name) => [...html.matchAll(/<input\b[^>]*>/g)]
+    .map(([input]) => input)
+    .filter((input) => input.includes('type="radio"') && input.includes(`name="${name}"`));
+  assert.equal(radiosNamed(details, "absenceReasons").length, 5);
+  assert.equal(radiosNamed(review("absence"), "absenceReasons").length, 5);
+  const checkboxesNamed = (html, name) => [...html.matchAll(/<input\b[^>]*>/g)]
+    .map(([input]) => input)
+    .filter((input) => input.includes('type="checkbox"') && input.includes(`name="${name}"`));
+  for (const requestType of ["absence", "late"]) {
+    assert.equal(checkboxesNamed(attachment(requestType), "proof_types").length, 6);
+    assert.equal(checkboxesNamed(review(requestType), "proof_types").length, 6);
+  }
+});
