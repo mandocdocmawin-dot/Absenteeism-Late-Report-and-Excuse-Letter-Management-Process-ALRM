@@ -24,14 +24,15 @@ test("dashboard attendance keeps overall and per-subject thresholds together", a
   assert.throws(() => dashboardAttendance({ threshold: overall, subject_thresholds: [null] }), /unexpected response/i);
 });
 
-test("student threshold labels the overall allowance and keeps subject IR independent", async () => {
+test("student threshold shows the overall allowance without a subject list", async () => {
   const Threshold = (await server.ssrLoadModule("/src/pages/auth/student/dashboard/AttendanceThreshold.jsx")).default;
   const html = renderToStaticMarkup(React.createElement(Threshold, { threshold: { ...overall, subject_thresholds: subjects } }));
 
-  for (const text of ["Overall Attendance", "Allowance used", "1.92%", "75.2 hours", "18.08%", "Overall status:", "Safe", "Security", "3 absences", "8 hours", "10%", "IR at 3 absences", "Incident Report"]) {
+  for (const text of ["Overall Attendance", "Allowance used", "1.92%", "75.2 hours", "18.08%", "Overall status:", "Safe"]) {
     assert.ok(html.includes(text), text);
   }
   assert.match(html, /role="progressbar"/);
+  assert.doesNotMatch(html, /Subject attendance|Security|IR at 3 absences|Incident Report/);
   assert.doesNotMatch(html, /80%|NaN|Backend result/i);
 });
 
@@ -40,7 +41,7 @@ test("student threshold handles no subjects and unavailable numbers honestly", a
   const html = renderToStaticMarkup(React.createElement(Threshold, {
     threshold: { used: "invalid", limit: null, absence_percentage: undefined, remaining_hours: "", remaining_semester_percentage: null, status: "safe", subject_thresholds: [] },
   }));
-  assert.match(html, /No enrolled subjects available/);
+  assert.doesNotMatch(html, /Subject attendance|No enrolled subjects available/);
   assert.match(html, /Unavailable/);
   assert.doesNotMatch(html, /NaN/);
 });

@@ -47,7 +47,7 @@ export function RecentNotificationsPlaceholder() {
 export default function StudentDashboardPlaceholder() {
   return <>
     <StudentDashboardHeadingPlaceholder />
-    <div className="mt-8 grid gap-5 @[640px]:grid-cols-[minmax(0,1fr)_minmax(0,2.19fr)_minmax(0,1fr)] @[800px]:gap-[26px]">
+    <div className="mt-8 grid auto-rows-fr gap-5 @[960px]:grid-cols-3 @[800px]:gap-[26px]">
       <RecordedMetricPlaceholder /><ThresholdPlaceholder /><RecordedMetricPlaceholder />
     </div>
     <RecentNotificationsPlaceholder />
