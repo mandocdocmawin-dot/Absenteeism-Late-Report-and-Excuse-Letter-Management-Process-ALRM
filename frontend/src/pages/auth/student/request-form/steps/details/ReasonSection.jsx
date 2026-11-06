@@ -9,7 +9,6 @@ export default function ReasonSection({
   form,
   fieldErrors,
   updateField,
-  toggleListField,
 }) {
   if (form.requestType === "absence") {
     return (
@@ -22,9 +21,11 @@ export default function ReasonSection({
               className="flex items-center gap-2 text-sm text-slate-700"
             >
               <input
-                type="checkbox"
+                type="radio"
+                name="absenceReasons"
+                value={reason}
                 checked={form.absenceReasons.includes(reason)}
-                onChange={() => toggleListField("absenceReasons", reason)}
+                onChange={() => updateField("absenceReasons", [reason])}
                 className="accent-[#101C4A]"
               />
               {reason}

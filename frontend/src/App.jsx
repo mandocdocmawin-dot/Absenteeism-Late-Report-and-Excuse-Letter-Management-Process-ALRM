@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import AppErrorBoundary from "./components/AppErrorBoundary";
@@ -89,7 +89,7 @@ function App() {
           <Route path="/programs" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPageLayout><AdminWorkspace view="programs" /></AdminPageLayout></ProtectedRoute>} />
           <Route path="/classes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPageLayout><AdminWorkspace view="classes" /></AdminPageLayout></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPageLayout><AdminWorkspace view="reports" /></AdminPageLayout></ProtectedRoute>} />
-          <Route path="/program-head/requests" element={<ProtectedRoute allowedRoles={["program"]}><ProgramHeadPageLayout><ProgramHeadWorkspace view="requests" /></ProgramHeadPageLayout></ProtectedRoute>} />
+          <Route path="/program-head/requests" element={<ProtectedRoute allowedRoles={["program"]}><Navigate to="/program-head/activity-log" replace /></ProtectedRoute>} />
           <Route path="/program-head/flagged" element={<ProtectedRoute allowedRoles={["program"]}><ProgramHeadPageLayout><ProgramHeadWorkspace view="flagged" /></ProgramHeadPageLayout></ProtectedRoute>} />
           <Route path="/program-head/instructors" element={<ProtectedRoute allowedRoles={["program"]}><ProgramHeadPageLayout><ProgramHeadInstructors /></ProgramHeadPageLayout></ProtectedRoute>} />
           <Route path="/program-head/instructors/:instructorId" element={<ProtectedRoute allowedRoles={["program"]}><ProgramHeadPageLayout><ProgramHeadInstructorDetail /></ProgramHeadPageLayout></ProtectedRoute>} />

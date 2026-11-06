@@ -17,10 +17,18 @@ function loadRequests() {
     isId(item.id) && ["absence", "late"].includes(item.type) && typeof item.status === "string");
 }
 
+export function dashboardAttendance(dashboard) {
+  const subjects = dashboard?.subject_thresholds;
+  if (!isRecord(dashboard?.threshold) || !Array.isArray(subjects)
+    || !subjects.every((subject) => isRecord(subject) && isId(subject.class_id)
+      && typeof subject.subject_name === "string" && typeof subject.status === "string")) {
+    throw new Error("Your attendance threshold is unavailable because the server returned an unexpected response.");
+  }
+  return { ...dashboard.threshold, subject_thresholds: subjects };
+}
+
 async function loadThreshold() {
-  const dashboard = await getStudentDashboard();
-  if (!isRecord(dashboard)) throw new Error("Your attendance threshold is unavailable because the server returned an unexpected response.");
-  return isRecord(dashboard.threshold) ? dashboard.threshold : {};
+  return dashboardAttendance(await getStudentDashboard());
 }
 
 function loadClasses() {

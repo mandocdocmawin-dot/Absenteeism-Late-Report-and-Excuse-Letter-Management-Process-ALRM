@@ -95,8 +95,8 @@ function validateDetails(form, classes, classesError) {
     // NEW
     errors.reason = `Reason must not exceed ${LIMITS.reason} characters.`;
   }
-  if (form.requestType === "absence" && (!Array.isArray(form.absenceReasons) || !form.absenceReasons.length || new Set(form.absenceReasons).size !== form.absenceReasons.length || form.absenceReasons.some(reason => !absenceReasonOptions.includes(reason)))) {
-    errors.absenceReasons = "Select at least one available reason.";
+  if (form.requestType === "absence" && (!Array.isArray(form.absenceReasons) || form.absenceReasons.length !== 1 || !absenceReasonOptions.includes(form.absenceReasons[0]))) {
+    errors.absenceReasons = "Select exactly one available reason.";
   }
 
   return errors;
@@ -119,8 +119,8 @@ export function validateStep({ step, form, classes = [], classesError }) {
   if (step === 4) return validateDetails(form, classes, classesError);
 
   if (step === 5) {
-    if (form.requestType === "absence" && (!Array.isArray(form.proof_types) || new Set(form.proof_types).size !== form.proof_types.length || form.proof_types.some(proof => !proofOptions.includes(proof)))) {
-      return { proof_types: "Select valid supporting document types." };
+    if (!Array.isArray(form.proof_types) || form.proof_types.length < 1 || form.proof_types.length > 6 || new Set(form.proof_types).size !== form.proof_types.length || form.proof_types.some((proof) => !proofOptions.includes(proof))) {
+      return { proof_types: "Select at least one and up to six valid supporting document types." };
     }
     return form.evidenceFile
       ? {}

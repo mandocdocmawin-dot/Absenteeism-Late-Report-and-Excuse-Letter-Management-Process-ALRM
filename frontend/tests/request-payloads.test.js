@@ -21,14 +21,14 @@ test("absence create separates proof labels, reason, attachment MIME and contact
   assert.equal(payload.contact_number, "09000000000");
 });
 
-test("late create sends an empty proof array and a plain explanation", () => {
-  const payload = buildRequestPayload({ ...form, requestType: "late", reason: " may sakit po e ", minutesLate: "23", proof_types: ["Others"] }, classes);
+test("late create sends selected proofs, attachment MIME, and a plain explanation", () => {
+  const payload = buildRequestPayload({ ...form, requestType: "late", reason: " may sakit po e ", minutesLate: "23", proof_types: ["Others"] }, classes, { path: "attachment-2", type: "application/pdf" });
   assert.equal(payload.reason, "may sakit po e");
   assert.equal(payload.minutes_late, 23);
   assert.equal(payload.start_date_of_absence, "2026-10-12");
   assert.equal(payload.end_date_of_absence, null);
-  assert.deepEqual(payload.proof_types, []);
-  assert.equal(payload.evidence_type, null);
+  assert.deepEqual(payload.proof_types, ["Others"]);
+  assert.equal(payload.evidence_type, "application/pdf");
 });
 
 test("late edit preserves its occurrence date", () => {
@@ -36,25 +36,25 @@ test("late edit preserves its occurrence date", () => {
   assert.equal(buildRequestUpdatePayload(edit).start_date_of_absence, "2026-10-12");
 });
 
-test("edit hydrates API proof selections and sends an explicit empty array when cleared", () => {
-  const record = { type: "absence", subjects_missed: "Math", reason: "Family Emergency", start_date_of_absence: "2026-10-12T00:00:00.000000Z", proof_types: ["School Activity Endorsement"] };
+test("edit preserves required proof selections and attachment MIME metadata", () => {
+  const record = { type: "absence", subjects_missed: "Math", reason: "Family Emergency", start_date_of_absence: "2026-10-12T00:00:00.000000Z", end_date_of_absence: "2026-10-12T00:00:00.000000Z", evidence_type: "application/pdf", proof_types: ["School Activity Endorsement"] };
   const edit = buildRequestEditForm(record);
   assert.deepEqual(edit.proof_types, record.proof_types);
   edit.proof_types.push("Others");
   assert.deepEqual(record.proof_types, ["School Activity Endorsement"]);
   assert.equal(edit.start_date_of_absence, "2026-10-12");
-  assert.deepEqual(buildRequestUpdatePayload(edit).proof_types, ["School Activity Endorsement", "Others"]);
-  const cleared = buildRequestUpdatePayload({ ...edit, proof_types: [] });
-  assert.deepEqual(cleared.proof_types, []);
-  assert.equal(Object.hasOwn(cleared, "evidence_file_url"), false);
-  assert.equal(Object.hasOwn(cleared, "evidence_type"), false);
+  const payload = buildRequestUpdatePayload(edit);
+  assert.deepEqual(payload.proof_types, ["School Activity Endorsement", "Others"]);
+  assert.equal(payload.evidence_type, "application/pdf");
+  assert.equal(Object.hasOwn(payload, "evidence_file_url"), false);
 });
 
-test("older records with missing proofs and legacy summaries edit without metadata in the reason", () => {
+test("older records keep legacy summaries out of the reason but expose missing required evidence metadata", () => {
   const edit = buildRequestEditForm({ type: "late", subjects_missed: "Math", minutes_late: 23, reason: "Late by 23 minute(s).\nReason: may sakit po e\nParent/Guardian: Test\nContact: 09000000000" });
   assert.deepEqual(edit.proof_types, []);
   assert.equal(buildRequestUpdatePayload(edit).reason, "may sakit po e");
   assert.equal(buildRequestUpdatePayload(edit).minutes_late, 23);
+  assert.equal(buildRequestUpdatePayload(edit).evidence_type, "");
 });
 
 test("proof validation errors include parent, indexed and wildcard entries", () => {

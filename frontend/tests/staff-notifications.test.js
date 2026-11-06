@@ -281,7 +281,10 @@ test("role-event notifications open the existing page that handles each interact
   assert.equal(activity("instructor", { type: "request_followup", request_id: "request/one" }).href, "/instructor/class-requests?request=request%2Fone");
   assert.equal(activity("admin", { type: "pending_staff_approval" }).href, "/user-management");
   assert.equal(activity("instructor", { type: "class_assignment" }).href, "/instructor/class-records");
-  assert.equal(activity("program_head", { type: "program_head_assignment" }).href, "/program-head/instructors");
+  assert.equal(activity("program_head", { type: "program_head_assignment" }).href, "/program-head/activity-log");
+  assert.equal(activity("program_head", { type: "followup_flag", request_id: "request/four" }).href, "/program-head/activity-log");
+  assert.equal(activity("program_head", { type: "school_notice" }).href, "/program-head/activity-log");
+  assert.equal(activity("program_head", { type: "account_status_changed" }).href, "/program-head/activity-log");
   assert.equal(activity("student", { type: "account_status_changed" }).href, "/settings");
   assert.equal(activity("program_head", { type: "threshold_critical", request_id: "request/two" }).href, "/program-head/activity-log?tab=flagged");
   assert.equal(activity("program_head", { type: "ir_escalation", request_id: "request/three" }).href, "/program-head/activity-log?tab=flagged");
@@ -383,6 +386,14 @@ test("all staff shells have a functional bell and the full notification page is 
   const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
   assert.match(app, /path="\/notifications" element=\{<ProtectedRoute><Notifications/);
   assert.match(app, /<InstructorRequests\s*\/>/);
+});
+
+test("the removed Program Requests page redirects legacy links to the Program Head Activity Log", async () => {
+  const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
+  const legacyLayout = await readFile(new URL("../src/components/layout/AppLayout.jsx", import.meta.url), "utf8");
+  assert.match(app, /path="\/program-head\/requests"[\s\S]*?<Navigate to="\/program-head\/activity-log" replace \/>/);
+  assert.doesNotMatch(app, /ProgramHeadWorkspace view="requests"/);
+  assert.doesNotMatch(legacyLayout, /Program Requests|path: "\/program-head\/requests"/);
 });
 
 test("settings remove Account & Security and use the working shared preference controls", async () => {

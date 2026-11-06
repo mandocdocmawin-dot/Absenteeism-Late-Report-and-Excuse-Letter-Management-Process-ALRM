@@ -37,6 +37,14 @@ test("late and absence details require enrolled classes", () => {
     /enrolled classes/);
 });
 
+test("absence details require exactly one reason", () => {
+  const form = { ...initialForm, requestType: "absence", startDateOfAbsence: "2026-10-13",
+    endDateOfAbsence: "2026-10-14", classId: "class-one" };
+  assert.match(check(form, 4, [enrolledClass]).absenceReasons, /exactly one/i);
+  assert.deepEqual(check({ ...form, absenceReasons: ["Family Emergency"] }, 4, [enrolledClass]), {});
+  assert.match(check({ ...form, absenceReasons: ["Family Emergency", "Personal Reason"] }, 4, [enrolledClass]).absenceReasons, /exactly one/i);
+});
+
 test("declaration is required at final review", () => {
   assert.equal(check(initialForm, 6).declaration, "Confirm the declaration before submitting.");
   assert.deepEqual(check({ ...initialForm, declaration: true }, 6), {});
@@ -44,9 +52,19 @@ test("declaration is required at final review", () => {
 
 test("both request types require a document before advancing from the attachment step", () => {
   for (const requestType of ["absence", "late"]) {
-    const form = { ...initialForm, requestType };
+    const form = { ...initialForm, requestType, proof_types: ["Medical Certificate"] };
     assert.match(check(form, 5).evidenceFile, /upload.*supporting document/i);
     assert.deepEqual(check({ ...form, evidenceFile }, 5), {});
+  }
+});
+
+test("both request types require one to six distinct supporting document types", () => {
+  for (const requestType of ["absence", "late"]) {
+    const form = { ...initialForm, requestType, evidenceFile };
+    assert.match(check(form, 5).proof_types, /at least one/i);
+    assert.deepEqual(check({ ...form, proof_types: ["Medical Certificate", "Others"] }, 5), {});
+    assert.ok(check({ ...form, proof_types: ["Medical Certificate", "Medical Certificate"] }, 5).proof_types);
+    assert.ok(check({ ...form, proof_types: ["Medical Certificate", "Prescription / Medical Record", "Death Certificate / Funeral Notice", "School Activity Endorsement", "Letter from Parent/Guardian", "Others", "Extra"] }, 5).proof_types);
   }
 });
 
@@ -57,7 +75,7 @@ test("removing a required document during review blocks saving edits and submiss
       contactNumber: "09123456789", dateSubmitted: "2026-10-20", classId: "class-one",
       startDateOfAbsence: "2026-10-19", endDateOfAbsence: "2026-10-20",
       absenceReasons: ["Personal Reason"], minutesLate: "15", reason: "Traffic delay",
-      evidenceFile, declaration: true };
+      proof_types: ["Medical Certificate"], evidenceFile, declaration: true };
     assert.equal(firstInvalidRequestStep(form, [enrolledClass]), null);
     const removed = { ...form, evidenceFile: null };
     assert.match(validateReview(removed, [enrolledClass]).evidenceFile, /supporting document/i);
@@ -74,7 +92,7 @@ test("inline review reports errors across student and request fields without req
   for (const name of ["guardianName", "contactNumber", "minutesLate", "startDateOfAbsence", "classId", "reason"]) assert.ok(errors[name], name);
   assert.equal(errors.declaration, undefined);
   assert.deepEqual(validateReview({ ...form, guardianName: "Alex Parent", contactNumber: "09123456789",
-    minutesLate: "15", startDateOfAbsence: "2026-10-20", classId: "class-one", reason: "Traffic delay", evidenceFile }, [enrolledClass]), {});
+    minutesLate: "15", startDateOfAbsence: "2026-10-20", classId: "class-one", reason: "Traffic delay", proof_types: ["Others"], evidenceFile }, [enrolledClass]), {});
 });
 
 test("inline absence review validates dates and reason selection on the final page", () => {
@@ -85,14 +103,14 @@ test("inline absence review validates dates and reason selection on the final pa
   const errors = validateReview(form, [enrolledClass]);
   assert.ok(errors.endDateOfAbsence);
   assert.ok(errors.absenceReasons);
-  assert.deepEqual(validateReview({ ...form, endDateOfAbsence: "2026-10-21", absenceReasons: ["Personal Reason"], evidenceFile }, [enrolledClass]), {});
+  assert.deepEqual(validateReview({ ...form, endDateOfAbsence: "2026-10-21", absenceReasons: ["Personal Reason"], proof_types: ["Medical Certificate"], evidenceFile }, [enrolledClass]), {});
 });
 
 test("submission validation identifies a missing guardian name", () => {
   const form = { ...initialForm, requestType: "late", consent: "agree",
     studentName: "Alex Student", program: "BS in Information Systems", level: "1st year",
     guardianName: "Alex Parent", contactNumber: "09123456789", dateSubmitted: "2026-10-13",
-    minutesLate: "15", startDateOfAbsence: "2026-10-13", classId: "class-one", reason: "Traffic", declaration: true, evidenceFile };
+    minutesLate: "15", startDateOfAbsence: "2026-10-13", classId: "class-one", reason: "Traffic", proof_types: ["Others"], declaration: true, evidenceFile };
   assert.equal(firstInvalidRequestStep(form, [enrolledClass]), null);
   assert.deepEqual(firstInvalidRequestStep({ ...form, guardianName: "" }, [enrolledClass]), {
     step: 3, errors: { guardianName: "Enter a valid parent or guardian's name." },

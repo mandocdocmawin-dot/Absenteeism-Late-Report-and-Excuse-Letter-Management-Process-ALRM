@@ -12,7 +12,6 @@ export default function DetailsStep({
   user,
   fieldErrors,
   updateField,
-  toggleListField,
   classes,
   classesLoading,
   classesError,
@@ -38,7 +37,7 @@ export default function DetailsStep({
         classesError={classesError}
       />
 
-      <ReasonSection {...sectionProps} toggleListField={toggleListField} />
+      <ReasonSection {...sectionProps} />
 
       <FormNavigation onBack={onBack} onNext={onNext} />
     </RequestShell>

@@ -99,7 +99,7 @@ test("server notifications replace matching activity-log notifications for every
   ];
   for (const [action, description, message] of cases) {
     const log = { ...oldLog, id: `audit-${action}`, action, description };
-    const serverItem = { id: `server-${action}`, type: "school_notice", requestId: "request-one", message, date: oldLog.timestamp, isRead: false, href: "/program-head/requests" };
+    const serverItem = { id: `server-${action}`, type: "school_notice", requestId: "request-one", message, date: oldLog.timestamp, isRead: false, href: "/program-head/activity-log" };
     assert.deepEqual(mergeProgramAuditActivity([serverItem], [log], programUser, new Set()), [serverItem], action);
   }
 });

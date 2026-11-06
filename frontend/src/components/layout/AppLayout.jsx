@@ -41,7 +41,6 @@ const navItems = {
   program_head: [
     { label: "Dashboard", path: "/program-head", icon: Home },
     { label: "Flagged Students", path: "/program-head/students/flagged", icon: Users },
-    { label: "Program Requests", path: "/program-head/requests", icon: Files },
   ],
   administrator: [
     { label: "Dashboard", path: "/admin", icon: Home },

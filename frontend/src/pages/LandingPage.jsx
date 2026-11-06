@@ -83,7 +83,7 @@ export default function LandingPage() {
 
       <section id="departments" className="landing-section landing-tinted landing-departments" aria-labelledby="departments-title">
         <div className="landing-container"><div id="departments-title"><SectionHeading title="Departments served">Higher Education Department</SectionHeading></div>
-          <ul className="landing-department-list" aria-label="Programs served">{["BSIS / ACT", "BSA / BSAIS", "BAB", "DSSW"].map((program) => <li key={program}>{program}</li>)}</ul>
+          <ul className="landing-department-list" aria-label="Programs served">{["BSIS / ACT", "BSA / BSAIS", "BAB", "BSSW"].map((program) => <li key={program}>{program}</li>)}</ul>
         </div>
       </section>
     </main>

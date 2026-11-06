@@ -101,22 +101,30 @@ test("request edit reads proof selections from the detail endpoint", async () =>
   assert.ok(requests[0].url.endsWith("/api/requests/request-one"));
 });
 
-test("request update sends selected and cleared proofs via PATCH", async () => {
-  const requests = captureJsonRequest({ success: true, data: { id: "request-one", proof_types: [] } });
-  await updateStudentRequest("request-one", { reason: "Family Emergency", proof_types: ["Others"] });
-  await updateStudentRequest("request-one", { reason: "Family Emergency", proof_types: [] });
+test("request update sends the backend-required editable set via PATCH", async () => {
+  const requests = captureJsonRequest({ success: true, data: { id: "request-one", proof_types: ["Others"] } });
+  await updateStudentRequest("request-one", { type: "late", subjects_missed: "Math", reason: "Traffic", minutes_late: 12, start_date_of_absence: "2026-10-20", end_date_of_absence: null, evidence_type: "application/pdf", proof_types: ["Others"] });
   assert.equal(requests[0].method, "PATCH");
   assert.ok(requests[0].url.endsWith("/api/requests/request-one"));
   assert.deepEqual(requests[0].body.proof_types, ["Others"]);
-  assert.deepEqual(requests[1].body.proof_types, []);
+  assert.equal(requests[0].body.evidence_type, "application/pdf");
+});
+
+test("request update rejects missing required editable fields before PATCH", async () => {
+  const requests = captureJsonRequest({ success: true, data: {} });
+  for (const payload of [
+    { type: "late", subjects_missed: "Math", reason: "Traffic", minutes_late: 12, start_date_of_absence: "2026-10-20", evidence_type: "", proof_types: ["Others"] },
+    { type: "late", subjects_missed: "Math", reason: "Traffic", minutes_late: 12, start_date_of_absence: "2026-10-20", evidence_type: "application/pdf", proof_types: [] },
+  ]) await assert.rejects(() => updateStudentRequest("request-one", payload), error => error.status === 422);
+  assert.equal(requests.length, 0);
 });
 
 test("create and update preserve backend field errors after local validation succeeds", async () => {
   const errors = { proof_types: ["Invalid array."], "proof_types.0": ["Invalid proof label."] };
   mockApiFetch(async () => Response.json({ message: "Validation failed.", errors }, { status: 422 }));
   for (const submit of [
-    () => createStudentRequest({ class_id: "class-one", type: "late", subjects_missed: "Math", minutes_late: 5, reason: "Traffic", guardian_name: "Alex Parent", contact_number: "09123456789", proof_types: [] }),
-    () => updateStudentRequest("request-one", { proof_types: [] }),
+    () => createStudentRequest({ class_id: "class-one", teaching_assignment_id: "assignment-one", type: "late", subjects_missed: "Math", minutes_late: 5, start_date_of_absence: "2026-10-20", reason: "Traffic", evidence_file_url: "evidence-one", evidence_type: "application/pdf", guardian_name: "Alex Parent", contact_number: "09123456789", proof_types: ["Others"] }),
+    () => updateStudentRequest("request-one", { type: "late", subjects_missed: "Math", reason: "Traffic", minutes_late: 12, start_date_of_absence: "2026-10-20", evidence_type: "application/pdf", proof_types: ["Others"] }),
   ]) {
     await assert.rejects(submit, (error) => {
       assert.equal(error.status, 422);

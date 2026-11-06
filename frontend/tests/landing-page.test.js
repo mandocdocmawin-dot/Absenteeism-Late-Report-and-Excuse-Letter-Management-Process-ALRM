@@ -36,13 +36,15 @@ test("anonymous home exposes reference sections and sign-in without requiring a 
   assert.match(html, /href="\/login"/);
   assert.match(html, /Sign in with Google/);
   assert.match(html, /La Verdad Christian College/);
+  assert.match(html, /BSSW/);
+  assert.doesNotMatch(html, /DSSW/);
   assert.match(html, /Privacy Policy/);
   assert.match(html, /Data Privacy Notice/);
 });
 
 test("public preview renders actual student dashboard empty states without account identity", () => {
   const html = render(Preview);
-  for (const text of ["Absences Recorded", "Lates Recorded", "Attendance Threshold", "Unavailable", "Recent Notifications", "No recent request updates."]) assert.ok(html.includes(text), text);
+  for (const text of ["Absences Recorded", "Lates Recorded", "Overall Attendance", "Unavailable", "Recent Notifications", "No recent request updates."]) assert.ok(html.includes(text), text);
   assert.match(html, /Student dashboard preview with anonymous empty data/);
   assert.doesNotMatch(html, /<figcaption/);
   assert.match(html, /inert=""/);
